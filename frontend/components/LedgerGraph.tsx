@@ -12,9 +12,11 @@ import {
   ReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useMemo } from "react";
+import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 
 import type { Decision, Edge } from "../lib/api";
+import { useReducedMotion } from "../lib/motion";
 import { categoryStyle } from "./CategoryBadge";
 
 type DecisionNodeData = {
@@ -25,13 +27,25 @@ type DecisionNodeData = {
   inSubgraph: boolean;
   isAnchor: boolean;
   subgraphActive: boolean;
+  /** Chronological entrance order (0 = oldest). Drives the initial stagger delay. */
+  chronoIndex: number;
+  /** BFS depth from anchor when a subgraph is active (0 = anchor, 1 = direct neighbor, ...). */
+  rippleDepth: number | null;
 };
 
 const NODE_WIDTH = 210;
 const NODE_HEIGHT = 64;
+const CHRONO_STAGGER_S = 0.018;
+const CHRONO_MAX_DELAY_S = 1.2;
+const RIPPLE_STEP_S = 0.14;
 
 function DecisionNode({ data }: NodeProps<FlowNode<DecisionNodeData>>) {
+  const reduced = useReducedMotion();
   const style = categoryStyle(data.category);
+  const chronoDelay = reduced
+    ? 0
+    : Math.min(data.chronoIndex * CHRONO_STAGGER_S, CHRONO_MAX_DELAY_S);
+  const rippleDelay = reduced || data.rippleDepth === null ? 0 : data.rippleDepth * RIPPLE_STEP_S;
   const ring = data.isAnchor
     ? "ring-2 ring-[#d4a24c] shadow-[0_0_24px_var(--accent-glow)] scale-[1.08]"
     : data.selected
@@ -40,16 +54,27 @@ function DecisionNode({ data }: NodeProps<FlowNode<DecisionNodeData>>) {
         ? "ring-1 ring-[#d4a24c]/60 shadow-[0_0_12px_rgba(212,162,76,0.25)]"
         : "shadow-md shadow-black/40";
   const dim = data.subgraphActive && !data.inSubgraph && !data.isAnchor ? "opacity-30" : "";
+
   return (
-    <div
+    <motion.div
       className={`flex flex-col rounded-lg border px-3 py-2 text-left font-mono text-[11px] leading-tight transition-all duration-300 ${ring} ${style.bg} ${style.border} ${style.text} ${dim}`}
       style={{ width: NODE_WIDTH, minHeight: NODE_HEIGHT }}
+      initial={reduced ? false : { opacity: 0, scale: 0.9 }}
+      animate={{
+        opacity: 1,
+        scale: data.isAnchor ? 1.08 : data.selected ? 1.04 : 1,
+      }}
+      transition={{
+        duration: reduced ? 0 : 0.3,
+        delay: chronoDelay + rippleDelay,
+        ease: [0.25, 1, 0.5, 1],
+      }}
     >
       <Handle type="target" position={Position.Left} className="!bg-zinc-600 !border-0" />
       <span className="text-zinc-500">#{data.pr}</span>
       <span className="mt-0.5 line-clamp-3 text-zinc-100">{data.title}</span>
       <Handle type="source" position={Position.Right} className="!bg-zinc-600 !border-0" />
-    </div>
+    </motion.div>
   );
 }
 
@@ -188,6 +213,55 @@ function CategoryLegend({ categories }: { categories: string[] }) {
   );
 }
 
+/**
+ * Breadth-first search from the anchor PR over the undirected edge graph,
+ * stopping at nodes not in `subgraphSet`. Returns depth per PR number so
+ * the caller can stagger the ring-illumination animation radially outward.
+ */
+function bfsDepthsFromAnchor(
+  anchor: number,
+  subgraphSet: Set<number>,
+  edges: Edge[],
+): Map<number, number> {
+  const depths = new Map<number, number>();
+  if (!subgraphSet.has(anchor)) return depths;
+  const adj = new Map<number, number[]>();
+  const push = (from: number, to: number) => {
+    const neighbors = adj.get(from);
+    if (neighbors) {
+      neighbors.push(to);
+    } else {
+      adj.set(from, [to]);
+    }
+  };
+  for (const e of edges) {
+    if (subgraphSet.has(e.from_pr) && subgraphSet.has(e.to_pr)) {
+      push(e.from_pr, e.to_pr);
+      push(e.to_pr, e.from_pr);
+    }
+  }
+  const queue: [number, number][] = [[anchor, 0]];
+  depths.set(anchor, 0);
+  while (queue.length) {
+    const head = queue.shift();
+    if (!head) break;
+    const [cur, d] = head;
+    for (const nb of adj.get(cur) ?? []) {
+      if (!depths.has(nb)) {
+        depths.set(nb, d + 1);
+        queue.push([nb, d + 1]);
+      }
+    }
+  }
+  // Any subgraph node not reached (shouldn't happen if the BFS ran correctly)
+  // gets the max depth + 1 so its ring still appears, just last.
+  const maxD = Math.max(0, ...Array.from(depths.values()));
+  for (const pr of subgraphSet) {
+    if (!depths.has(pr)) depths.set(pr, maxD + 1);
+  }
+  return depths;
+}
+
 export function LedgerGraph({
   decisions,
   edges,
@@ -203,10 +277,29 @@ export function LedgerGraph({
   subgraphAnchorPr?: number | null;
   subgraphPrs?: number[] | null;
 }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    // Give React Flow two frames to run its initial layout/fitView before we
+    // trigger the CSS edge-draw keyframe. Without the delay the stroke-dashoffset
+    // values are wrong on the first paint.
+    const raf1 = requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true)));
+    return () => cancelAnimationFrame(raf1);
+  }, []);
+
   const { nodes, flowEdges, categories, earliest, latest } = useMemo(() => {
     const positions = layoutWithDagre(decisions, edges);
     const subgraphSet = new Set(subgraphPrs ?? []);
     const subgraphActive = subgraphSet.size > 0;
+
+    const chronoOrder = [...decisions].sort((a, b) =>
+      (a.decided_at ?? "").localeCompare(b.decided_at ?? ""),
+    );
+    const chronoIndexByPr = new Map(chronoOrder.map((d, i) => [d.pr_number, i]));
+
+    const depths =
+      subgraphActive && subgraphAnchorPr != null
+        ? bfsDepthsFromAnchor(subgraphAnchorPr, subgraphSet, edges)
+        : null;
 
     const nodes: FlowNode<DecisionNodeData>[] = decisions.map((d) => {
       const inSubgraph = subgraphSet.has(d.pr_number);
@@ -223,6 +316,8 @@ export function LedgerGraph({
           inSubgraph,
           isAnchor,
           subgraphActive,
+          chronoIndex: chronoIndexByPr.get(d.pr_number) ?? 0,
+          rippleDepth: depths?.get(d.pr_number) ?? null,
         },
       };
     });
@@ -261,7 +356,7 @@ export function LedgerGraph({
   }, [decisions, edges, selectedId, subgraphAnchorPr, subgraphPrs]);
 
   return (
-    <div className="relative h-full w-full bg-black">
+    <div className={`relative h-full w-full bg-black ${mounted ? "rf-mounted" : ""}`}>
       <ReactFlow
         nodes={nodes}
         edges={flowEdges}
