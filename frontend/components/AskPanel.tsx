@@ -1,8 +1,10 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import type { Decision } from "../lib/api";
+import { fadeSlideItem, staggerContainer, useReducedMotion } from "../lib/motion";
 import {
   type QueryPhase,
   type SelfCheckResult,
@@ -10,6 +12,7 @@ import {
   startQuery,
   type UsageEvent,
 } from "../lib/query";
+import { CountUp } from "./CountUp";
 import { ReasoningTrace } from "./ReasoningTrace";
 
 type Props = {
@@ -36,6 +39,7 @@ export function AskPanel({
   const [error, setError] = useState<string | null>(null);
   const [selfCheckEnabled, setSelfCheckEnabled] = useState(false);
   const [mode, setMode] = useState<"query" | "impact">("query");
+  const reduced = useReducedMotion();
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
@@ -164,9 +168,15 @@ export function AskPanel({
             {selectedDecision.title.length > 70 ? "…" : ""}
           </p>
         ) : null}
-        <div className="mt-3 flex flex-wrap gap-2">
+        <motion.div
+          key={repo}
+          className="mt-3 flex flex-wrap gap-2"
+          initial="hidden"
+          animate="show"
+          variants={staggerContainer(reduced, 0.06, 0.1)}
+        >
           {suggestedQueries.map((q) => (
-            <button
+            <motion.button
               key={q}
               type="button"
               disabled={busy}
@@ -174,12 +184,13 @@ export function AskPanel({
                 setQuestion(q);
                 run(q);
               }}
-              className="rounded-full border border-zinc-800 px-3 py-1 font-mono text-[11px] text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
+              variants={fadeSlideItem(reduced, 4, 0.22)}
+              className="rounded-full border border-zinc-800 px-3 py-1 font-mono text-[11px] text-zinc-400 transition hover:border-[#d4a24c]/50 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {q}
-            </button>
+            </motion.button>
           ))}
-        </div>
+        </motion.div>
       </form>
 
       <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -221,14 +232,21 @@ export function AskPanel({
         ) : null}
 
         {usage ? (
-          <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950 p-3 font-mono text-[10.5px] text-zinc-500">
+          <motion.div
+            initial={reduced ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={reduced ? { duration: 0 } : { duration: 0.25 }}
+            className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950 p-3 font-mono text-[11px] text-zinc-500"
+          >
             <span>
               input {usage.input_tokens.toLocaleString()} · output{" "}
               {usage.output_tokens.toLocaleString()} · cache read{" "}
               {usage.cache_read_tokens.toLocaleString()} ·{" "}
-              <span className="text-zinc-300">${usage.cost_usd.toFixed(4)}</span>
+              <span className="tabular-nums text-[#d4a24c]">
+                <CountUp value={usage.cost_usd} decimals={4} prefix="$" duration={0.45} />
+              </span>
             </span>
-          </div>
+          </motion.div>
         ) : null}
       </div>
     </div>
@@ -236,6 +254,7 @@ export function AskPanel({
 }
 
 function PhaseBadge({ phase, stats }: { phase: QueryPhase | "idle"; stats: StatsEvent | null }) {
+  const reduced = useReducedMotion();
   const doneLabel = (() => {
     if (!stats) return "Done.";
     if (stats.subgraph_decisions !== undefined) {
@@ -256,6 +275,21 @@ function PhaseBadge({ phase, stats }: { phase: QueryPhase | "idle"; stats: Stats
               ? doneLabel
               : "";
   return (
-    <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">{label}</div>
+    <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-zinc-500">
+      {phase !== "done" && phase !== "idle" ? (
+        <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#d4a24c] shadow-[0_0_8px_var(--accent-glow)] animate-pulse" />
+      ) : null}
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={phase + (stats?.anchor_pr ?? 0)}
+          initial={reduced ? false : { opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduced ? { opacity: 0 } : { opacity: 0, y: -4 }}
+          transition={reduced ? { duration: 0 } : { duration: 0.16 }}
+        >
+          {label}
+        </motion.span>
+      </AnimatePresence>
+    </div>
   );
 }

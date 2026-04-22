@@ -1,9 +1,11 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { categoryStyle } from "../../components/CategoryBadge";
+import { CountUp } from "../../components/CountUp";
 import {
   type IngestDoneEvent,
   type IngestEvent,
@@ -11,6 +13,7 @@ import {
   type IngestPrExtractedEvent,
   startIngest,
 } from "../../lib/ingest";
+import { useReducedMotion } from "../../lib/motion";
 
 type Props = {
   initialRepo: string;
@@ -229,7 +232,18 @@ export function IngestClient({ initialRepo, initialLimit, initialMinDiscussion }
             <Stat label="Alternatives" value={String(counters.alternatives)} />
             <Stat label="Rejected" value={String(counters.rejected)} />
             <Stat label="Errors" value={String(errors.length)} />
-            <Stat label="Cost so far" value={`$${counters.costUsd.toFixed(3)}`} />
+            <Stat
+              label="Cost so far"
+              value={
+                <CountUp
+                  value={counters.costUsd}
+                  decimals={3}
+                  prefix="$"
+                  duration={0.4}
+                  className="tabular-nums"
+                />
+              }
+            />
             <Stat
               label="Cost/PR"
               value={
@@ -284,7 +298,7 @@ export function IngestClient({ initialRepo, initialLimit, initialMinDiscussion }
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <dt className="text-[9px] uppercase tracking-wider text-zinc-600">{label}</dt>
@@ -295,10 +309,10 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function ProgressBar({ pct }: { pct: number }) {
   return (
-    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-900">
+    <div className="relative mt-3 h-1 w-full overflow-hidden rounded-full bg-zinc-900">
       <div
-        className="h-full bg-zinc-300 transition-all duration-200 ease-out"
-        style={{ width: `${pct}%` }}
+        className="relative h-full overflow-hidden rounded-full bg-gradient-to-r from-[#d4a24c] via-[#f0c068] to-[#d4a24c] shimmer transition-all duration-300 ease-out"
+        style={{ width: `${pct}%`, backgroundSize: "200% 100%" }}
       />
     </div>
   );
@@ -316,25 +330,46 @@ function LogColumn({ title, children }: { title: string; children: React.ReactNo
 }
 
 function ClassificationRow({ event }: { event: IngestPrClassifiedEvent }) {
+  const reduced = useReducedMotion();
   const icon = event.accepted ? "●" : "○";
   const tint = event.accepted ? "text-emerald-300" : "text-zinc-500";
   const title = event.title ?? "(unclassified)";
   return (
-    <div className="flex items-start gap-2 rounded px-1 py-1 font-mono text-[11px] leading-tight">
-      <span className={`${tint} pt-0.5`}>{icon}</span>
+    <motion.div
+      layout
+      initial={reduced ? false : { opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={reduced ? { duration: 0 } : { duration: 0.22, ease: "easeOut" }}
+      className="flex items-start gap-2 rounded px-1 py-1 font-mono text-[11px] leading-tight"
+    >
+      <motion.span
+        className={`${tint} pt-0.5`}
+        initial={reduced || !event.accepted ? false : { scale: 0.4 }}
+        animate={{ scale: 1 }}
+        transition={reduced ? { duration: 0 } : { duration: 0.36, ease: "backOut" }}
+      >
+        {icon}
+      </motion.span>
       <span className="shrink-0 text-zinc-500">#{event.pr_number}</span>
       <span className="shrink-0 text-zinc-600">{event.confidence.toFixed(2)}</span>
       <span className={`truncate ${event.accepted ? "text-zinc-100" : "text-zinc-400"}`}>
         {title}
       </span>
-    </div>
+    </motion.div>
   );
 }
 
 function ExtractionRow({ event }: { event: IngestPrExtractedEvent }) {
+  const reduced = useReducedMotion();
   const style = categoryStyle(event.category);
   return (
-    <div className="rounded-md border border-zinc-800 px-2 py-1.5">
+    <motion.div
+      layout
+      initial={reduced ? false : { opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={reduced ? { duration: 0 } : { duration: 0.22, ease: "easeOut" }}
+      className="rounded-md border border-zinc-800 bg-zinc-950/70 px-2 py-1.5"
+    >
       <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider">
         <span className={`rounded px-1.5 py-0.5 ${style.bg} ${style.text} ${style.border} border`}>
           {event.category.replaceAll("_", " ")}
@@ -345,6 +380,6 @@ function ExtractionRow({ event }: { event: IngestPrExtractedEvent }) {
         </span>
       </div>
       <p className="mt-1 font-mono text-[11px] leading-tight text-zinc-100">{event.title}</p>
-    </div>
+    </motion.div>
   );
 }
