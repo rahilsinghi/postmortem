@@ -24,15 +24,17 @@ Get back a cited reasoning chain, traced through actual engineering debates, wit
 
 ## Hero ledgers shipped in the submission
 
-| Repo | Decisions | Citations | Alternatives | Edges |
-|---|--:|--:|--:|--:|
-| `pmndrs/zustand` | 41 | 164 | 83 | 36 |
-| `honojs/hono` | 59 | (≈450) | (≈170) | 27 |
-| `shadcn-ui/ui` | 15 | (≈65) | (≈30) | 6 |
-| `rahilsinghi/postmortem` (self-graphify) | 6 | 14 | 3 | 7 |
-| **Total** | **121** | ~700 | ~285 | **76** |
+| Repo | Decisions | Citations | Alternatives | Edges | Ingestion $ |
+|---|--:|--:|--:|--:|--:|
+| `honojs/hono` | 59 | 751 | 190 | 27 | $31.87 |
+| `pmndrs/zustand` | 41 | 385 | 83 | 36 | $19.99 |
+| `shadcn-ui/ui` | 15 | 181 | 27 | 6 | $7.21 |
+| `rahilsinghi/postmortem` (self-graphify) | 6 | 77 | 5 | 7 | $1.89 |
+| **Total** | **121** | **1,394** | **305** | **76** | **$60.96** |
 
-All four ingested for a combined **~$60** of API spend.
+Numbers are live — sourced from `ingestion_runs` in `.cache/ledger.duckdb` at
+commit time, not hand-tallied. All four ledgers ingested for a combined
+**$60.96** of API spend (12% of the $500 hackathon budget).
 
 ## What makes this possible
 

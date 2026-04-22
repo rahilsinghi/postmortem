@@ -122,14 +122,35 @@ answer cites commit b909f14 and the Day-2 ADR.
 
 Fade.
 
-## Totals at record time (replace before shooting)
+## Verified query metrics (dry-run 2026-04-22)
+
+Four canonical queries, one per hero repo, each with self-check enabled. All
+cited claims verified against the ledger — zero hallucinations.
+
+| Query | Loaded | Input | Output | Cost | Verified |
+|---|---|---:|---:|---:|:---:|
+| zustand — hydrationVersion counter | 41 dec / 164 cit | 252K | 3.1K | $4.02 | 12/12 |
+| hono — Web Standards API rationale | 59 dec / 751 cit | 477K | 2.6K | $7.35 | 11/11 |
+| shadcn-ui — multi-style registry refactor | 15 dec / 60 cit | 112K | 2.3K | $1.85 | 15/15 |
+| self — sub-agents outside Managed Agents | 6 dec / 24 cit | 48K | 2.0K | $0.88 | 7/7 |
+| **4 queries** | | **889K** | **10.0K** | **$14.10** | **45/45** |
+
+All four cite every claim inline. None hallucinated. The hono run hit ~477K
+input tokens — that's where prompt caching (Wave 2) will bite hardest.
+
+## Totals at record time
+
+Sourced from the live ledger (`ingestion_runs` + row counts at commit time).
 
 | | Value |
 |---|---|
-| Hero repos | 3 (zustand, shadcn-ui, hono) + self |
-| Total decisions | 41 + 15 + <hono> + 6 = ? |
-| Total citations | ~600 |
-| Total edges | ~50 |
-| Total dev-time API spend | ~$45 / $500 |
+| Hero repos | 3 (hono, zustand, shadcn-ui) + self |
+| Total decisions | 59 + 41 + 15 + 6 = **121** |
+| Total citations | **1,394** |
+| Total rejected alternatives | **305** |
+| Total edges | **76** |
+| Total ingestion API spend | **$60.96** / $500 (12%) |
+| Largest single ingestion | hono: 194 PRs seen, 59 decisions, $31.87 |
+| Cheapest ingestion | self-graphify: 9 PRs, 6 decisions, $1.89 |
 | Lines of code | ~4,500 (Python + TS) |
 | Days | 5 |
