@@ -1,7 +1,10 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 import type { Decision } from "../lib/api";
 import { splitWithCitations } from "../lib/citations";
+import { useReducedMotion } from "../lib/motion";
 import type { SelfCheckResult } from "../lib/query";
 import { CitationChip } from "./CitationChip";
 
@@ -9,23 +12,16 @@ import { CitationChip } from "./CitationChip";
  * Word-boundary trim: while the stream is live, clip the rendered text at the
  * last whitespace so incomplete words don't flicker in character-by-character.
  * When the stream completes (`streaming=false`), render the full text.
- *
- * This is the "subtle character-by-character reveal" from SPEC §14.4 — we buffer
- * fragments and release them at word boundaries. No timers, no raf loop — the
- * display is a pure function of the buffer length, so React just re-renders on
- * each delta and the user perceives words appearing as atomic units.
  */
 function trimToWordBoundary(text: string): string {
   if (!text) return text;
-  // Allow broader terminators than just space so citation tokens and
-  // punctuation flush immediately.
   const terminators = [" ", "\n", "\t", ".", ",", ";", ":", "]", ")", "—", "-", "!"];
   let cutoff = -1;
   for (const t of terminators) {
     const idx = text.lastIndexOf(t);
     if (idx > cutoff) cutoff = idx;
   }
-  if (cutoff < 0) return ""; // no boundary yet; hold everything
+  if (cutoff < 0) return "";
   return text.slice(0, cutoff + 1);
 }
 
@@ -40,6 +36,7 @@ export function ReasoningTrace({
   selfCheck: SelfCheckResult | null;
   streaming?: boolean;
 }) {
+  const reduced = useReducedMotion();
   if (!text) return null;
 
   const rendered = streaming ? trimToWordBoundary(text) : text;
@@ -54,8 +51,6 @@ export function ReasoningTrace({
     }
   }
 
-  // Split the response into our structured sections. Keep it simple: sections are
-  // introduced by `## `. Everything before the first `##` is a streaming preamble.
   const rawSections = rendered.split(/\n##\s+/g);
   const preamble = rendered.startsWith("## ") ? "" : (rawSections.shift() ?? "");
   const sections = (
@@ -63,21 +58,16 @@ export function ReasoningTrace({
       ? rendered
           .slice(3)
           .split(/\n##\s+/g)
-          .map((block, idx) =>
-            idx === 0
-              ? { heading: block.split("\n")[0], body: block.slice(block.split("\n")[0].length) }
-              : {
-                  heading: block.split("\n")[0],
-                  body: block.slice(block.split("\n")[0].length),
-                },
-          )
+          .map((block) => ({
+            heading: block.split("\n")[0],
+            body: block.slice(block.split("\n")[0].length),
+          }))
       : rawSections.map((block) => ({
           heading: block.split("\n")[0],
           body: block.slice(block.split("\n")[0].length),
         }))
   ).filter((s) => s.heading.trim().length > 0);
 
-  // If nothing matched section headings yet (answer still streaming), render flat.
   if (sections.length === 0) {
     return (
       <RenderSegments
@@ -100,12 +90,22 @@ export function ReasoningTrace({
       ) : null}
       {sections.map((sec, idx) => {
         const isLast = idx === sections.length - 1;
+        const transition = reduced
+          ? { duration: 0 }
+          : { duration: 0.32, ease: [0.25, 1, 0.5, 1] as const };
         return (
-          <section key={`sec-${sec.heading}`}>
-            <h3 className="mb-2 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-              {sec.heading}
+          <motion.section
+            key={`sec-${sec.heading}`}
+            layout
+            initial={reduced ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={transition}
+          >
+            <h3 className="mb-2 flex items-center gap-2 border-b border-zinc-800/70 pb-1 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-400">
+              <span className="text-[#d4a24c]">⊢</span>
+              <span>{sec.heading}</span>
             </h3>
-            <div className="space-y-2 text-[13.5px] leading-relaxed text-zinc-200">
+            <div className="space-y-2 text-[13px] leading-relaxed text-zinc-200">
               <RenderSegments
                 segments={splitWithCitations(sec.body).segments}
                 decisions={decisions}
@@ -113,10 +113,31 @@ export function ReasoningTrace({
                 trailingCursor={showCursor && isLast}
               />
             </div>
-          </section>
+          </motion.section>
         );
       })}
     </div>
+  );
+}
+
+/** Block cursor: fades between accent and white while waiting for the next token. */
+function TypingCursor() {
+  const reduced = useReducedMotion();
+  return (
+    <motion.span
+      aria-hidden
+      className="ml-0.5 inline-block h-[1.1em] w-[0.5em] -translate-y-[1px] rounded-[1px] align-middle"
+      style={{ backgroundColor: "#d4a24c" }}
+      animate={
+        reduced
+          ? {}
+          : {
+              backgroundColor: ["#d4a24c", "#fafafa", "#d4a24c"],
+              opacity: [0.9, 1, 0.9],
+            }
+      }
+      transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+    />
   );
 }
 
@@ -132,7 +153,7 @@ function RenderSegments({
   trailingCursor?: boolean;
 }) {
   return (
-    <div className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-zinc-200">
+    <div className="whitespace-pre-wrap text-[13px] leading-relaxed text-zinc-200">
       {segments.map((seg, idx) => {
         if (seg.kind === "text") {
           // biome-ignore lint/suspicious/noArrayIndexKey: position-based key is correct here
@@ -152,12 +173,7 @@ function RenderSegments({
           />
         );
       })}
-      {trailingCursor ? (
-        <span
-          aria-hidden
-          className="ml-0.5 inline-block h-[1em] w-[2px] -translate-y-[2px] animate-pulse bg-zinc-400 align-middle"
-        />
-      ) : null}
+      {trailingCursor ? <TypingCursor /> : null}
     </div>
   );
 }
