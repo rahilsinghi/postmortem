@@ -32,6 +32,7 @@ from anthropic.types import TextBlockParam
 
 from app.agents.cost import MODEL_PRICES_PER_MILLION, CostTracker
 from app.agents.json_utils import extract_json
+from app.errors import safe_error_message
 from app.ledger.load import LedgerSnapshot
 from app.query.prompts import QUERY_SYSTEM_PROMPT, SELF_CHECK_SYSTEM_PROMPT
 
@@ -146,7 +147,12 @@ async def stream_query(
                 "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", 0) or 0,
             }
     except Exception as exc:
-        yield _sse_event("error", {"message": f"answer stream failed: {exc!r}"})
+        yield _sse_event(
+            "error",
+            {
+                "message": f"answer stream failed — {safe_error_message(exc, context='query.stream')}"
+            },
+        )
         yield _sse_event("phase", "done")
         return
 
@@ -184,7 +190,12 @@ async def stream_query(
                 messages=[{"role": "user", "content": self_check_payload}],
             )
         except Exception as exc:
-            yield _sse_event("error", {"message": f"self-check failed: {exc!r}"})
+            yield _sse_event(
+                "error",
+                {
+                    "message": f"self-check failed — {safe_error_message(exc, context='query.self_check')}"
+                },
+            )
         else:
             sc_text_parts: list[str] = []
             for block in sc_resp.content:

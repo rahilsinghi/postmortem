@@ -26,6 +26,7 @@ from sse_starlette.sse import EventSourceResponse
 from app.agents.cost import CostTracker
 from app.agents.json_utils import extract_json
 from app.config import get_settings, resolve_secret
+from app.errors import safe_error_message
 from app.ledger.load import load_ledger
 from app.query.impact import (
     IMPACT_SYSTEM_PROMPT,
@@ -146,7 +147,14 @@ async def impact_endpoint(
                 final = await stream.get_final_message()
                 usage = final.usage
         except Exception as exc:
-            yield {"event": "error", "data": json.dumps({"message": f"stream failed: {exc!r}"})}
+            yield {
+                "event": "error",
+                "data": json.dumps(
+                    {
+                        "message": f"stream failed — {safe_error_message(exc, context='impact.stream')}"
+                    }
+                ),
+            }
             yield {"event": "phase", "data": "done"}
             return
 
@@ -186,7 +194,11 @@ async def impact_endpoint(
             except Exception as exc:
                 yield {
                     "event": "error",
-                    "data": json.dumps({"message": f"self-check failed: {exc!r}"}),
+                    "data": json.dumps(
+                        {
+                            "message": f"self-check failed — {safe_error_message(exc, context='impact.self_check')}"
+                        }
+                    ),
                 }
             else:
                 sc_text = "".join(

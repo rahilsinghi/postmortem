@@ -35,6 +35,7 @@ from fastapi import APIRouter, HTTPException, Query
 from sse_starlette.sse import EventSourceResponse
 
 from app.config import get_settings, resolve_secret
+from app.errors import safe_error_message
 from app.ingest import ingest_repo
 
 router = APIRouter(prefix="/api", tags=["ingest"])
@@ -98,7 +99,12 @@ async def stream_ingest(
                     on_event=on_event,
                 )
             except Exception as exc:
-                await queue.put({"type": "error", "message": repr(exc)})
+                await queue.put(
+                    {
+                        "type": "error",
+                        "message": safe_error_message(exc, context="ingest.run"),
+                    }
+                )
             finally:
                 await queue.put(None)  # sentinel
 

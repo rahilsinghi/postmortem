@@ -23,6 +23,7 @@ from anthropic import AsyncAnthropic
 from app.agents.cost import CostTracker
 from app.agents.pipeline import PipelineResult, classify_and_extract
 from app.agents.runner import run_stitcher
+from app.errors import safe_error_message
 from app.github.archaeology import fetch_pr_archaeology, list_recent_merged_prs
 from app.github.client import GitHubClient
 from app.ledger.models import DecisionEdge, DecisionEdgeKind
@@ -146,7 +147,12 @@ async def ingest_repo(
             except Exception as exc:
                 print(f"[ingest] PR fetch/classify error: {exc!r}")
                 summary.extraction_errors += 1
-                await emit({"type": "pr_error", "error": repr(exc)})
+                await emit(
+                    {
+                        "type": "pr_error",
+                        "error": safe_error_message(exc, context="ingest.pr_task"),
+                    }
+                )
                 continue
 
             results.append(result)
@@ -238,9 +244,14 @@ async def ingest_repo(
                 edges = await run_stitcher(
                     anthropic_client, new_decision_summaries, [], tracker=tracker
                 )
-            except (ValueError, Exception) as exc:
+            except Exception as exc:
                 print(f"[ingest] stitcher error (non-fatal): {exc!r}")
-                await emit({"type": "stitcher_error", "message": repr(exc)})
+                await emit(
+                    {
+                        "type": "stitcher_error",
+                        "message": safe_error_message(exc, context="ingest.stitcher"),
+                    }
+                )
                 edges = []
             for edge in edges:
                 from_pr = edge.get("from_pr_number")
