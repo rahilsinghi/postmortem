@@ -100,9 +100,15 @@ def run_toy_session(api_key: str) -> int:
     print(f"[session] agent_id={agent.id}")
 
     print("[session] creating environment...")
+    # Smoke test only runs `echo hello from the sandbox` — zero network access
+    # is required. Keep the config tight to match how production environments
+    # should be configured.
     environment = client.beta.environments.create(
         name="postmortem-smoke-env",
-        config={"type": "cloud", "networking": {"type": "unrestricted"}},
+        config={
+            "type": "cloud",
+            "networking": {"type": "allowlist", "allowed_domains": []},
+        },
     )
     print(f"[session] environment_id={environment.id}")
 
