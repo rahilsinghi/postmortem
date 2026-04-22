@@ -21,6 +21,7 @@ from sse_starlette.sse import EventSourceResponse
 from app.config import get_settings, resolve_secret
 from app.ledger.load import load_ledger
 from app.query.engine import QueryOptions, stream_query
+from app.validators import validate_repo
 
 router = APIRouter(prefix="/api", tags=["query"])
 
@@ -41,8 +42,7 @@ async def query_endpoint(
     effort: str = Query("high", pattern="^(high|xhigh)$"),
     self_check: bool = Query(True),
 ) -> EventSourceResponse:
-    if "/" not in repo:
-        raise HTTPException(status_code=400, detail="repo must be owner/name")
+    validate_repo(repo)
 
     db_path = _resolve_db_path()
     if not db_path.exists():

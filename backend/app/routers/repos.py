@@ -9,6 +9,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.config import get_settings
 from app.ledger.load import list_repos, load_ledger
+from app.validators import validate_slug
 
 router = APIRouter(prefix="/api/repos", tags=["repos"])
 
@@ -33,6 +34,8 @@ async def list_ledger_repos() -> list[dict[str, Any]]:
 
 @router.get("/{owner}/{name}/ledger")
 async def get_ledger(owner: str, name: str) -> dict[str, Any]:
+    validate_slug(owner, "owner")
+    validate_slug(name, "name")
     repo = f"{owner}/{name}"
     db_path = _resolve_db_path()
     if not db_path.exists():

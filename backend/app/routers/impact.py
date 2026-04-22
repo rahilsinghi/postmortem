@@ -35,6 +35,7 @@ from app.query.impact import (
     find_anchor,
 )
 from app.query.prompts import SELF_CHECK_SYSTEM_PROMPT
+from app.validators import validate_repo
 
 router = APIRouter(prefix="/api", tags=["impact"])
 
@@ -64,8 +65,7 @@ async def impact_endpoint(
     max_depth: int = Query(2, ge=1, le=3),
     self_check: bool = Query(False),
 ) -> EventSourceResponse:
-    if "/" not in repo:
-        raise HTTPException(status_code=400, detail="repo must be owner/name")
+    validate_repo(repo)
 
     db_path = _resolve_db_path()
     if not db_path.exists():

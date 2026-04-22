@@ -37,6 +37,7 @@ from sse_starlette.sse import EventSourceResponse
 from app.config import get_settings, resolve_secret
 from app.errors import safe_error_message
 from app.ingest import ingest_repo
+from app.validators import validate_repo
 
 router = APIRouter(prefix="/api", tags=["ingest"])
 
@@ -95,9 +96,7 @@ async def stream_ingest(
     x_ingest_token: str | None = Header(default=None, alias="X-Ingest-Token"),
 ) -> EventSourceResponse:
     _check_ingest_auth(x_ingest_token, token)
-
-    if "/" not in repo:
-        raise HTTPException(status_code=400, detail="repo must be owner/name")
+    validate_repo(repo)
     _check_repo_allowlist(repo)
 
     anthropic_key = resolve_secret("ANTHROPIC_API_KEY")
