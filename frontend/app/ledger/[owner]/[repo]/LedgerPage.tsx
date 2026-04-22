@@ -53,6 +53,7 @@ export function LedgerPage({
             repo={ledger.repo}
             decisions={ledger.decisions}
             suggestedQueries={suggestedQueries}
+            selectedDecision={selected}
           />
         </section>
       </div>

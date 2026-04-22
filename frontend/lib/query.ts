@@ -1,6 +1,6 @@
 import { API_BASE } from "./api";
 
-export type QueryPhase = "retrieving" | "reasoning" | "self_checking" | "done";
+export type QueryPhase = "retrieving" | "reasoning" | "self_checking" | "subgraph" | "done";
 
 export type SelfCheckResult = {
   verified_count?: number;
@@ -33,10 +33,21 @@ export type UsageEvent = {
 
 export type StatsEvent = {
   repo: string;
-  decisions: number;
-  citations: number;
-  alternatives: number;
-  edges: number;
+  // Query mode fields
+  decisions?: number;
+  citations?: number;
+  alternatives?: number;
+  edges?: number;
+  // Impact mode fields
+  anchor_pr?: number;
+  anchor_title?: string;
+  subgraph_decisions?: number;
+  subgraph_edges?: number;
+};
+
+export type SubgraphEvent = {
+  anchor_pr: number;
+  included_prs: number[];
 };
 
 export type QueryEvents = {
@@ -46,19 +57,36 @@ export type QueryEvents = {
   onSelfCheck: (result: SelfCheckResult) => void;
   onUsage: (usage: UsageEvent) => void;
   onError: (message: string) => void;
+  onSubgraph?: (subgraph: SubgraphEvent) => void;
 };
 
 export function startQuery(
   repo: string,
   question: string,
   handlers: QueryEvents,
-  { selfCheck = true, effort = "high" }: { selfCheck?: boolean; effort?: "high" | "xhigh" } = {},
+  {
+    selfCheck = true,
+    effort = "high",
+    anchorPr = null,
+    mode = "query",
+  }: {
+    selfCheck?: boolean;
+    effort?: "high" | "xhigh";
+    anchorPr?: number | null;
+    mode?: "query" | "impact";
+  } = {},
 ): EventSource {
-  const url = new URL(`${API_BASE}/api/query`);
+  const path = mode === "impact" ? "/api/impact" : "/api/query";
+  const url = new URL(`${API_BASE}${path}`);
   url.searchParams.set("repo", repo);
   url.searchParams.set("question", question);
   url.searchParams.set("self_check", selfCheck ? "true" : "false");
-  url.searchParams.set("effort", effort);
+  if (mode === "query") {
+    url.searchParams.set("effort", effort);
+  }
+  if (anchorPr !== null && anchorPr !== undefined && mode === "impact") {
+    url.searchParams.set("anchor_pr", String(anchorPr));
+  }
 
   const es = new EventSource(url.toString());
 
@@ -94,6 +122,18 @@ export function startQuery(
       handlers.onError("connection error");
     }
     es.close();
+  });
+
+  es.addEventListener("subgraph", (ev) => {
+    try {
+      const parsed = JSON.parse((ev as MessageEvent<string>).data) as {
+        anchor_pr: number;
+        included_prs: number[];
+      };
+      handlers.onSubgraph?.(parsed);
+    } catch {
+      // ignore
+    }
   });
 
   return es;

@@ -1,0 +1,118 @@
+"""Streaming /api/ingest endpoint — Screen 3 "Live Ingestion".
+
+Opens a new ingestion job and streams per-PR progress events over SSE so the
+frontend can render Screen 3's live log + counters. The SSE events map 1-to-1
+to the event dicts emitted by `app.ingest.ingest_repo`'s `on_event` callback.
+
+Event shapes (all `data:` JSON):
+  start         { repo, pr_limit, min_discussion, concurrency, classifier_threshold }
+  listing       { pr_limit }
+  listed        { count }
+  filtered      { before, after, min_discussion }
+  pr_classified { idx, total, pr_number, accepted, is_decision, confidence, title, decision_type, cost_so_far, accepted_so_far, rejected_so_far }
+  pr_extracted  { pr_number, title, category, citations, alternatives }
+  pr_error      { error }
+  persisting    {}
+  stitching     { decisions }
+  stitcher_error{ message }
+  done          { repo, prs_seen, classifier_accepted, classifier_rejected, decisions_written, edges_written, cost_usd, input_tokens, output_tokens }
+  error         { message }
+
+Used by the live-ingest CLI / UI only. The bulk hero-repo ingests are still
+driven by `scripts/ingest.py`, which doesn't need the streaming layer.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import contextlib
+import json
+from collections.abc import AsyncIterator
+from pathlib import Path
+from typing import Any
+
+from fastapi import APIRouter, HTTPException, Query
+from sse_starlette.sse import EventSourceResponse
+
+from app.config import get_settings, resolve_secret
+from app.ingest import ingest_repo
+
+router = APIRouter(prefix="/api", tags=["ingest"])
+
+MAX_PR_LIMIT = 200  # cap user-initiated runs so one click can't spend $50
+
+
+def _resolve_db_path() -> Path:
+    settings = get_settings()
+    path = Path(settings.ledger_db_path)
+    if not path.is_absolute():
+        repo_root = Path(__file__).resolve().parents[3]
+        path = repo_root / settings.ledger_db_path
+    return path
+
+
+def _resolve_cache_dir() -> Path:
+    repo_root = Path(__file__).resolve().parents[3]
+    return repo_root / ".cache" / "pr-archaeology"
+
+
+@router.get("/ingest")
+async def stream_ingest(
+    repo: str = Query(..., description="owner/name — any public GitHub repo"),
+    limit: int = Query(50, ge=1, le=MAX_PR_LIMIT),
+    min_discussion: int = Query(3, ge=0),
+    concurrency: int = Query(3, ge=1, le=8),
+) -> EventSourceResponse:
+    if "/" not in repo:
+        raise HTTPException(status_code=400, detail="repo must be owner/name")
+
+    anthropic_key = resolve_secret("ANTHROPIC_API_KEY")
+    github_token = resolve_secret("GITHUB_TOKEN")
+    if not anthropic_key or not github_token:
+        raise HTTPException(
+            status_code=503,
+            detail="ANTHROPIC_API_KEY and GITHUB_TOKEN must be configured on the server.",
+        )
+
+    db_path = _resolve_db_path()
+    cache_dir = _resolve_cache_dir()
+
+    async def _events() -> AsyncIterator[dict[str, str]]:
+        queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
+
+        async def on_event(event: dict[str, Any]) -> None:
+            await queue.put(event)
+
+        async def run() -> None:
+            try:
+                await ingest_repo(
+                    repo,
+                    db_path=db_path,
+                    pr_limit=limit,
+                    concurrency=concurrency,
+                    min_discussion=min_discussion,
+                    anthropic_api_key=anthropic_key,
+                    github_token=github_token,
+                    cache_dir=cache_dir,
+                    notes=f"live ingest via /api/ingest (limit={limit}, min_discussion={min_discussion})",
+                    on_event=on_event,
+                )
+            except Exception as exc:
+                await queue.put({"type": "error", "message": repr(exc)})
+            finally:
+                await queue.put(None)  # sentinel
+
+        task = asyncio.create_task(run())
+        try:
+            while True:
+                event = await queue.get()
+                if event is None:
+                    break
+                yield {"event": event["type"], "data": json.dumps(event)}
+        finally:
+            if not task.done():
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError, Exception):
+                    await task
+
+    return EventSourceResponse(_events())

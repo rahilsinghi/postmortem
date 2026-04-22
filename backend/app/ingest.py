@@ -13,6 +13,7 @@ agent session so the work is resumable and observable.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -65,6 +66,9 @@ async def _process_one_pr(
         )
 
 
+EventCallback = Callable[[dict[str, Any]], Awaitable[None]]
+
+
 async def ingest_repo(
     repo: str,
     *,
@@ -77,15 +81,32 @@ async def ingest_repo(
     github_token: str,
     cache_dir: Path | None = None,
     notes: str = "",
+    on_event: EventCallback | None = None,
 ) -> IngestionSummary:
     summary = IngestionSummary(repo=repo, notes=notes)
     tracker = CostTracker()
 
+    async def emit(event: dict[str, Any]) -> None:
+        if on_event is not None:
+            await on_event(event)
+
     anthropic_client = AsyncAnthropic(api_key=anthropic_api_key)
     resolved_cache_dir = cache_dir or Path(".cache/pr-archaeology")
 
+    await emit(
+        {
+            "type": "start",
+            "repo": repo,
+            "pr_limit": pr_limit,
+            "min_discussion": min_discussion,
+            "concurrency": concurrency,
+            "classifier_threshold": classifier_threshold,
+        }
+    )
+
     async with GitHubClient(token=github_token, cache_dir=resolved_cache_dir) as github:
         print(f"[ingest] listing {pr_limit} recent merged PRs for {repo}...")
+        await emit({"type": "listing", "pr_limit": pr_limit})
         pr_index = await list_recent_merged_prs(github, repo, limit=pr_limit)
         if min_discussion > 0:
             before = len(pr_index)
@@ -98,8 +119,17 @@ async def ingest_repo(
                 f"[ingest] pre-filter min_discussion={min_discussion}: "
                 f"{before} -> {len(pr_index)} PRs (skipping low-discussion maintenance PRs)"
             )
+            await emit(
+                {
+                    "type": "filtered",
+                    "before": before,
+                    "after": len(pr_index),
+                    "min_discussion": min_discussion,
+                }
+            )
         summary.prs_seen = len(pr_index)
         print(f"[ingest] got {len(pr_index)} PRs; rl remaining={github.last_rate_limit}")
+        await emit({"type": "listed", "count": len(pr_index)})
 
         semaphore = asyncio.Semaphore(concurrency)
         tasks = [
@@ -116,11 +146,13 @@ async def ingest_repo(
             except Exception as exc:
                 print(f"[ingest] PR fetch/classify error: {exc!r}")
                 summary.extraction_errors += 1
+                await emit({"type": "pr_error", "error": repr(exc)})
                 continue
 
             results.append(result)
             cls = result.classification
-            if cls.is_decision and cls.confidence >= classifier_threshold:
+            accepted = cls.is_decision and cls.confidence >= classifier_threshold
+            if accepted:
                 summary.classifier_accepted += 1
             else:
                 summary.classifier_rejected += 1
@@ -133,6 +165,38 @@ async def ingest_repo(
                     "one_line_title": cls.one_line_title,
                 }
             )
+            await emit(
+                {
+                    "type": "pr_classified",
+                    "idx": idx,
+                    "total": len(tasks),
+                    "pr_number": result.pr_number,
+                    "accepted": accepted,
+                    "is_decision": cls.is_decision,
+                    "confidence": cls.confidence,
+                    "decision_type": cls.decision_type,
+                    "title": cls.one_line_title,
+                    "cost_so_far": tracker.totals().cost_usd,
+                    "accepted_so_far": summary.classifier_accepted,
+                    "rejected_so_far": summary.classifier_rejected,
+                }
+            )
+            if accepted and result.record is not None:
+                await emit(
+                    {
+                        "type": "pr_extracted",
+                        "pr_number": result.pr_number,
+                        "title": result.record.title,
+                        "category": result.record.category.value,
+                        "citations": (
+                            len(result.record.context_citations)
+                            + len(result.record.decision_citations)
+                            + len(result.record.forces)
+                            + len(result.record.consequences)
+                        ),
+                        "alternatives": len(result.record.alternatives),
+                    }
+                )
             if idx % 5 == 0 or idx == len(tasks):
                 totals = tracker.totals()
                 print(
@@ -141,6 +205,7 @@ async def ingest_repo(
                     f"cost_so_far=${totals.cost_usd:.3f}"
                 )
 
+    await emit({"type": "persisting"})
     with LedgerStore(db_path) as store:
         run_stats = store.start_ingestion_run(repo)
         run_stats.prs_seen = summary.prs_seen
@@ -167,6 +232,7 @@ async def ingest_repo(
             )
 
         if len(new_decision_summaries) >= 2:
+            await emit({"type": "stitching", "decisions": len(new_decision_summaries)})
             print(f"[ingest] stitching edges across {len(new_decision_summaries)} decisions...")
             try:
                 edges = await run_stitcher(
@@ -174,6 +240,7 @@ async def ingest_repo(
                 )
             except (ValueError, Exception) as exc:
                 print(f"[ingest] stitcher error (non-fatal): {exc!r}")
+                await emit({"type": "stitcher_error", "message": repr(exc)})
                 edges = []
             for edge in edges:
                 from_pr = edge.get("from_pr_number")
@@ -206,4 +273,19 @@ async def ingest_repo(
     summary.input_tokens = totals.input_tokens
     summary.output_tokens = totals.output_tokens
     summary.per_agent_breakdown = tracker.pretty()
+
+    await emit(
+        {
+            "type": "done",
+            "repo": repo,
+            "prs_seen": summary.prs_seen,
+            "classifier_accepted": summary.classifier_accepted,
+            "classifier_rejected": summary.classifier_rejected,
+            "decisions_written": summary.decisions_written,
+            "edges_written": summary.edges_written,
+            "cost_usd": summary.cost_usd,
+            "input_tokens": summary.input_tokens,
+            "output_tokens": summary.output_tokens,
+        }
+    )
     return summary

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { API_BASE, type LedgerResponse } from "../../../../lib/api";
+import { SUGGESTED_QUERIES_BY_REPO } from "../../../../lib/teasers";
 import { LedgerPage } from "./LedgerPage";
 
 async function fetchLedger(repo: string): Promise<LedgerResponse | null> {
@@ -12,14 +13,6 @@ async function fetchLedger(repo: string): Promise<LedgerResponse | null> {
     return null;
   }
 }
-
-const SUGGESTED_QUERIES_BY_REPO: Record<string, string[]> = {
-  "pmndrs/zustand": [
-    "Why does persist middleware use a hydrationVersion counter?",
-    "What changed architecturally in Zustand v5?",
-    "Why did Zustand drop the default export?",
-  ],
-};
 
 export default async function Page({
   params,

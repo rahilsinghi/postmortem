@@ -16,9 +16,10 @@ type Props = {
   repo: string;
   decisions: Decision[];
   suggestedQueries: string[];
+  selectedDecision?: Decision | null;
 };
 
-export function AskPanel({ repo, decisions, suggestedQueries }: Props) {
+export function AskPanel({ repo, decisions, suggestedQueries, selectedDecision }: Props) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [phase, setPhase] = useState<QueryPhase | "idle">("idle");
@@ -27,6 +28,7 @@ export function AskPanel({ repo, decisions, suggestedQueries }: Props) {
   const [selfCheck, setSelfCheck] = useState<SelfCheckResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selfCheckEnabled, setSelfCheckEnabled] = useState(false);
+  const [mode, setMode] = useState<"query" | "impact">("query");
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export function AskPanel({ repo, decisions, suggestedQueries }: Props) {
   }, []);
 
   const run = useCallback(
-    (q: string) => {
+    (q: string, runMode: "query" | "impact" = mode) => {
       if (!q.trim()) return;
       esRef.current?.close();
       setAnswer("");
@@ -56,11 +58,17 @@ export function AskPanel({ repo, decisions, suggestedQueries }: Props) {
           onUsage: setUsage,
           onError: setError,
         },
-        { selfCheck: selfCheckEnabled },
+        {
+          selfCheck: selfCheckEnabled,
+          mode: runMode,
+          anchorPr: runMode === "impact" && selectedDecision ? selectedDecision.pr_number : null,
+        },
       );
     },
-    [repo, selfCheckEnabled],
+    [repo, selfCheckEnabled, mode, selectedDecision],
   );
+
+  const canRunImpact = selectedDecision !== null && selectedDecision !== undefined;
 
   const onSubmit = (ev: FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
@@ -93,23 +101,61 @@ export function AskPanel({ repo, decisions, suggestedQueries }: Props) {
           className="w-full resize-none rounded-md border border-zinc-800 bg-black px-3 py-2 font-sans text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none"
         />
         <div className="mt-2 flex items-center justify-between gap-3">
-          <label className="flex items-center gap-2 font-mono text-[11px] text-zinc-500">
-            <input
-              type="checkbox"
-              checked={selfCheckEnabled}
-              onChange={(e) => setSelfCheckEnabled(e.target.checked)}
-              className="h-3 w-3 rounded border-zinc-700 bg-black accent-zinc-300"
-            />
-            self-check citations (+$1-2)
-          </label>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 font-mono text-[11px] text-zinc-500">
+              <input
+                type="checkbox"
+                checked={selfCheckEnabled}
+                onChange={(e) => setSelfCheckEnabled(e.target.checked)}
+                className="h-3 w-3 rounded border-zinc-700 bg-black accent-zinc-300"
+              />
+              self-check
+            </label>
+            <div className="flex overflow-hidden rounded-md border border-zinc-800 font-mono text-[11px]">
+              <button
+                type="button"
+                onClick={() => setMode("query")}
+                className={`px-2 py-1 transition ${
+                  mode === "query"
+                    ? "bg-zinc-800 text-zinc-100"
+                    : "text-zinc-500 hover:text-zinc-200"
+                }`}
+              >
+                query
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("impact")}
+                disabled={!canRunImpact}
+                className={`px-2 py-1 transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                  mode === "impact"
+                    ? "bg-zinc-800 text-zinc-100"
+                    : "text-zinc-500 hover:text-zinc-200"
+                }`}
+                title={
+                  canRunImpact
+                    ? `Impact ripple anchored at PR #${selectedDecision?.pr_number}`
+                    : "Click a decision in the graph first to anchor an impact query"
+                }
+              >
+                impact ripple
+              </button>
+            </div>
+          </div>
           <button
             type="submit"
-            disabled={busy || question.trim().length < 3}
+            disabled={busy || question.trim().length < 3 || (mode === "impact" && !canRunImpact)}
             className="rounded-md border border-zinc-700 bg-zinc-100 px-3 py-1 font-mono text-xs text-black transition disabled:cursor-not-allowed disabled:opacity-40 hover:bg-zinc-300"
           >
-            {busy ? "Thinking…" : "Ask"}
+            {busy ? "Thinking…" : mode === "impact" ? "Ripple" : "Ask"}
           </button>
         </div>
+        {mode === "impact" && selectedDecision ? (
+          <p className="mt-2 font-mono text-[10px] text-zinc-500">
+            anchored at PR #{selectedDecision.pr_number} · {selectedDecision.title.slice(0, 70)}
+            {selectedDecision.title.length > 70 ? "…" : ""}
+          </p>
+        ) : null}
         <div className="mt-3 flex flex-wrap gap-2">
           {suggestedQueries.map((q) => (
             <button
@@ -177,18 +223,25 @@ export function AskPanel({ repo, decisions, suggestedQueries }: Props) {
 }
 
 function PhaseBadge({ phase, stats }: { phase: QueryPhase | "idle"; stats: StatsEvent | null }) {
+  const doneLabel = (() => {
+    if (!stats) return "Done.";
+    if (stats.subgraph_decisions !== undefined) {
+      return `Traced ${stats.subgraph_decisions} decisions / ${stats.subgraph_edges ?? 0} edges downstream of PR #${stats.anchor_pr}.`;
+    }
+    return `Reasoned across ${stats.decisions ?? 0} decisions · ${stats.citations ?? 0} citations · ${stats.edges ?? 0} edges.`;
+  })();
   const label =
     phase === "retrieving"
       ? "Loading ledger…"
-      : phase === "reasoning"
-        ? "Opus 4.7 is reasoning with citations…"
-        : phase === "self_checking"
-          ? "Verifying every citation against the ledger…"
-          : phase === "done"
-            ? stats
-              ? `Reasoned across ${stats.decisions} decisions · ${stats.citations} citations · ${stats.edges} edges.`
-              : "Done."
-            : "";
+      : phase === "subgraph"
+        ? "Tracing impact subgraph…"
+        : phase === "reasoning"
+          ? "Opus 4.7 is reasoning with citations…"
+          : phase === "self_checking"
+            ? "Verifying every citation against the ledger…"
+            : phase === "done"
+              ? doneLabel
+              : "";
   return (
     <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">{label}</div>
   );
