@@ -16,7 +16,7 @@ import asyncio
 from typing import Any
 
 from anthropic import AsyncAnthropic, RateLimitError
-from anthropic.types import TextBlock
+from anthropic.types import TextBlock, TextBlockParam
 from pydantic import ValidationError
 
 from app.agents.cost import CostTracker
@@ -64,6 +64,16 @@ async def _invoke(
     tracker: CostTracker,
     agent_label: str,
 ) -> tuple[str, int, int]:
+    # Cache the (static) system prompt. 5-min TTL on ephemeral cache; any
+    # extraction or classification within that window pays 10% of input price
+    # for the cached system portion instead of 100%.
+    system_blocks: list[TextBlockParam] = [
+        {
+            "type": "text",
+            "text": agent.system,
+            "cache_control": {"type": "ephemeral"},
+        }
+    ]
     attempt = 0
     max_attempts = 4
     while True:
@@ -72,7 +82,7 @@ async def _invoke(
             response = await client.messages.create(
                 model=agent.model,
                 max_tokens=max_tokens,
-                system=agent.system,
+                system=system_blocks,
                 messages=[{"role": "user", "content": user_content}],
             )
         except RateLimitError:
@@ -86,13 +96,16 @@ async def _invoke(
             if isinstance(block, TextBlock):
                 text_parts.append(block.text)
         full_text = "".join(text_parts)
+        usage = response.usage
         tracker.record(
             agent_label,
             agent.model,
-            response.usage.input_tokens,
-            response.usage.output_tokens,
+            usage.input_tokens,
+            usage.output_tokens,
+            cache_creation_tokens=getattr(usage, "cache_creation_input_tokens", 0) or 0,
+            cache_read_tokens=getattr(usage, "cache_read_input_tokens", 0) or 0,
         )
-        return full_text, response.usage.input_tokens, response.usage.output_tokens
+        return full_text, usage.input_tokens, usage.output_tokens
 
 
 async def run_classifier(
