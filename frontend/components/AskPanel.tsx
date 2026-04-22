@@ -21,6 +21,7 @@ type Props = {
   suggestedQueries: string[];
   selectedDecision?: Decision | null;
   onSubgraph?: (anchorPr: number, prs: number[]) => void;
+  onFollow?: (args: { prNumber: number; author: string }) => void;
 };
 
 export function AskPanel({
@@ -29,6 +30,7 @@ export function AskPanel({
   suggestedQueries,
   selectedDecision,
   onSubgraph,
+  onFollow,
 }: Props) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
@@ -207,6 +209,7 @@ export function AskPanel({
               decisions={decisions}
               selfCheck={selfCheck}
               streaming={busy}
+              onFollow={onFollow}
             />
           </div>
         ) : phase === "idle" ? (

@@ -30,11 +30,13 @@ export function ReasoningTrace({
   decisions,
   selfCheck,
   streaming = false,
+  onFollow,
 }: {
   text: string;
   decisions: Decision[];
   selfCheck: SelfCheckResult | null;
   streaming?: boolean;
+  onFollow?: (args: { prNumber: number; author: string }) => void;
 }) {
   const reduced = useReducedMotion();
   if (!text) return null;
@@ -75,6 +77,7 @@ export function ReasoningTrace({
         decisions={decisions}
         verdict={verdictByToken}
         trailingCursor={showCursor}
+        onFollow={onFollow}
       />
     );
   }
@@ -86,6 +89,7 @@ export function ReasoningTrace({
           segments={splitWithCitations(preamble).segments}
           decisions={decisions}
           verdict={verdictByToken}
+          onFollow={onFollow}
         />
       ) : null}
       {sections.map((sec, idx) => {
@@ -111,6 +115,7 @@ export function ReasoningTrace({
                 decisions={decisions}
                 verdict={verdictByToken}
                 trailingCursor={showCursor && isLast}
+                onFollow={onFollow}
               />
             </div>
           </motion.section>
@@ -146,11 +151,13 @@ function RenderSegments({
   decisions,
   verdict,
   trailingCursor = false,
+  onFollow,
 }: {
   segments: ReturnType<typeof splitWithCitations>["segments"];
   decisions: Decision[];
   verdict: Map<string, { verified: boolean; reason: string }>;
   trailingCursor?: boolean;
+  onFollow?: (args: { prNumber: number; author: string }) => void;
 }) {
   return (
     <div className="whitespace-pre-wrap text-[13px] leading-relaxed text-zinc-200">
@@ -170,6 +177,7 @@ function RenderSegments({
             decisions={decisions}
             verified={v?.verified ?? null}
             unverifiedReason={v?.reason ?? null}
+            onFollow={onFollow}
           />
         );
       })}
