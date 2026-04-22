@@ -19,6 +19,7 @@ import json
 import logging
 from collections.abc import AsyncIterator
 from pathlib import Path
+from typing import Any
 
 from anthropic import AsyncAnthropic
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -71,8 +72,10 @@ async def query_endpoint(
     client = AsyncAnthropic(api_key=api_key)
     options = QueryOptions(effort=effort, self_check=self_check)
 
-    last_usage: dict[str, object] = {}
-    last_self_check: dict[str, object] = {}
+    # JSON-parsed SSE payloads — typed loose because the stream can emit
+    # ints, floats, strings, or nested dicts. We narrow at the persist site.
+    last_usage: dict[str, Any] = {}
+    last_self_check: dict[str, Any] = {}
 
     async def _events() -> AsyncIterator[dict[str, str]]:
         # EventSourceResponse wants (event, data) dicts. Parse our already-framed
