@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { type MouseEvent, useState } from "react";
 
 import type { Decision } from "../lib/api";
 import { type CitationMatch, resolveCitation } from "../lib/citations";
@@ -42,8 +42,10 @@ export function CitationChip({
   const resolved = resolveCitation(match, decisions);
   const url = resolved?.citation.url ?? buildFallbackUrl(match, decisions);
 
-  const onClick = () => {
-    if (match.prNumber && match.author && onFollow) {
+  const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (!onFollow) return; // no interactive feature wired; let the anchor navigate
+    e.preventDefault();
+    if (match.prNumber && match.author) {
       onFollow({ prNumber: match.prNumber, author: match.author });
     } else {
       setShake(true);
@@ -67,7 +69,9 @@ export function CitationChip({
     <motion.span
       className="relative inline-block"
       initial={reduced ? false : { opacity: 0, scale: 0.92 }}
-      animate={shake && !reduced ? { x: [-2, 2, 0] } : { opacity: 1, scale: 1 }}
+      animate={
+        shake && !reduced ? { x: [-2, 2, 0], opacity: 1, scale: 1 } : { opacity: 1, scale: 1 }
+      }
       transition={
         shake && !reduced
           ? { duration: 0.16 }
