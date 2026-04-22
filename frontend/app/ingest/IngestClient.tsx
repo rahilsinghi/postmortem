@@ -213,53 +213,59 @@ export function IngestClient({ initialRepo, initialLimit, initialMinDiscussion }
 
       {phase !== "idle" ? (
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
-          <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500">
-            <span>{phase.replace("_", " ")}</span>
+          <div className="flex items-start justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.2em]">
+            <PhaseRail phase={phase} />
             {done ? (
               <Link
                 href={`/ledger/${done.repo}`}
-                className="text-zinc-100 underline decoration-zinc-700 underline-offset-4 hover:text-white"
+                className="shrink-0 rounded-md border border-[#d4a24c]/60 bg-[#d4a24c]/10 px-3 py-1 text-[#d4a24c] transition hover:border-[#d4a24c]"
               >
                 Open ledger →
               </Link>
             ) : null}
           </div>
           <ProgressBar pct={progressPct} />
-          <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 font-mono text-[11px] text-zinc-400 sm:grid-cols-4">
-            <Stat label="PRs seen" value={`${counters.processed}/${counters.total || "?"}`} />
-            <Stat label="Accepted" value={String(counters.accepted)} />
-            <Stat label="Decisions" value={String(counters.decisions)} />
-            <Stat label="Alternatives" value={String(counters.alternatives)} />
-            <Stat label="Rejected" value={String(counters.rejected)} />
-            <Stat label="Errors" value={String(errors.length)} />
-            <Stat
-              label="Cost so far"
-              value={
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <KpiTile
+              label="cost"
+              primary={
                 <CountUp
                   value={counters.costUsd}
                   decimals={3}
                   prefix="$"
                   duration={0.4}
-                  className="tabular-nums"
+                  className="tabular-nums text-[#d4a24c]"
                 />
               }
-            />
-            <Stat
-              label="Cost/PR"
-              value={
+              secondary={
                 counters.processed > 0
-                  ? `$${(counters.costUsd / counters.processed).toFixed(4)}`
-                  : "—"
+                  ? `$${(counters.costUsd / counters.processed).toFixed(4)} per PR`
+                  : "warming up"
               }
             />
-          </dl>
-          {done ? (
-            <div className="mt-4 rounded-md border border-emerald-800/50 bg-emerald-950/20 p-3 font-mono text-[11px] text-emerald-200">
-              Done. {done.decisions_written} decisions, {done.edges_written} edges, $
-              {done.cost_usd.toFixed(4)} · {done.input_tokens.toLocaleString()} input tokens ·{" "}
-              {done.output_tokens.toLocaleString()} output tokens.
-            </div>
-          ) : null}
+            <KpiTile
+              label="decisions"
+              primary={
+                <CountUp value={counters.decisions} duration={0.4} className="tabular-nums" />
+              }
+              secondary={`${counters.alternatives} alts`}
+            />
+            <KpiTile
+              label="PRs seen"
+              primary={`${counters.processed}/${counters.total || "?"}`}
+              secondary={`${counters.accepted} accepted · ${counters.rejected} rejected`}
+            />
+            <KpiTile
+              label={done ? "input · output" : "errors"}
+              primary={
+                done
+                  ? `${(done.input_tokens / 1000).toFixed(1)}K / ${(done.output_tokens / 1000).toFixed(1)}K`
+                  : String(errors.length)
+              }
+              secondary={done ? "tokens total" : errors.length === 0 ? "clean" : "see below"}
+              tone={errors.length > 0 && !done ? "rose" : undefined}
+            />
+          </div>
         </div>
       ) : null}
 
@@ -298,11 +304,66 @@ export function IngestClient({ initialRepo, initialLimit, initialMinDiscussion }
   );
 }
 
-function Stat({ label, value }: { label: string; value: React.ReactNode }) {
+function KpiTile({
+  label,
+  primary,
+  secondary,
+  tone,
+}: {
+  label: string;
+  primary: React.ReactNode;
+  secondary: React.ReactNode;
+  tone?: "rose";
+}) {
+  const primaryClass =
+    tone === "rose"
+      ? "text-rose-300 text-3xl tabular-nums leading-none"
+      : "text-zinc-50 text-3xl tabular-nums leading-none";
   return (
-    <div>
-      <dt className="text-[9px] uppercase tracking-wider text-zinc-600">{label}</dt>
-      <dd className="mt-0.5 text-sm text-zinc-100">{value}</dd>
+    <div className="rounded-lg border border-zinc-800 bg-black/30 p-3">
+      <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500">{label}</div>
+      <div className={`mt-1.5 font-mono ${primaryClass}`}>{primary}</div>
+      <div className="mt-1.5 font-mono text-[10px] uppercase tracking-wider text-zinc-500">
+        {secondary}
+      </div>
+    </div>
+  );
+}
+
+const PHASE_ORDER: PhaseLabel[] = ["listing", "processing", "persisting", "stitching", "done"];
+const PHASE_PRETTY: Record<string, string> = {
+  listing: "listing",
+  processing: "classify · extract",
+  persisting: "persisting",
+  stitching: "stitching edges",
+  done: "done",
+};
+
+function PhaseRail({ phase }: { phase: PhaseLabel }) {
+  const activeIdx = PHASE_ORDER.indexOf(phase);
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      {PHASE_ORDER.map((p, idx) => {
+        const isActive = idx === activeIdx;
+        const isDone = activeIdx > idx;
+        const cls = isActive
+          ? "border-[#d4a24c] bg-[#d4a24c]/15 text-[#d4a24c]"
+          : isDone
+            ? "border-zinc-700 bg-zinc-900 text-zinc-300"
+            : "border-zinc-800 bg-transparent text-zinc-600";
+        return (
+          <span
+            key={p}
+            className={`flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider transition ${cls}`}
+          >
+            {isDone ? <span>✓</span> : null}
+            {isActive ? (
+              <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#d4a24c]" />
+            ) : null}
+            <span>{PHASE_PRETTY[p] ?? p}</span>
+          </span>
+        );
+      })}
     </div>
   );
 }
