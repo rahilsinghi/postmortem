@@ -89,9 +89,7 @@ def compose_decision_record(
     if extraction.decision:
         summary_sources.append(extraction.decision[0].claim)
     if not summary_sources and classification.key_rationale_snippets:
-        summary_sources.extend(
-            s.quote for s in classification.key_rationale_snippets[:2]
-        )
+        summary_sources.extend(s.quote for s in classification.key_rationale_snippets[:2])
     summary = " ".join(summary_sources).strip() or title
 
     return DecisionRecord(

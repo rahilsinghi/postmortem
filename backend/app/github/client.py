@@ -132,7 +132,9 @@ class GitHubClient:
 
             if response.status_code in (403, 429):
                 if attempt >= self.max_retries:
-                    raise GitHubRateLimited(f"{response.status_code} after {attempt} tries: {response.text[:300]}")
+                    raise GitHubRateLimited(
+                        f"{response.status_code} after {attempt} tries: {response.text[:300]}"
+                    )
                 retry_after = response.headers.get("retry-after")
                 if retry_after and retry_after.isdigit():
                     await asyncio.sleep(int(retry_after))
@@ -156,5 +158,5 @@ class GitHubClient:
             return data
 
     async def _backoff(self, attempt: int) -> None:
-        delay = min(60.0, (2.0 ** attempt) + random.uniform(0, 1))
+        delay = min(60.0, (2.0**attempt) + random.uniform(0, 1))
         await asyncio.sleep(delay)

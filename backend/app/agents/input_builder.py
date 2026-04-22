@@ -36,7 +36,11 @@ def build_classifier_input(pr: dict[str, Any]) -> str:
         for c in (pr.get("inline_review_comments") or [])[:8]
     ]
     review_bodies = [
-        {"author": r.get("author"), "state": r.get("state"), "body": _truncate(r.get("body") or "", 300)}
+        {
+            "author": r.get("author"),
+            "state": r.get("state"),
+            "body": _truncate(r.get("body") or "", 300),
+        }
         for r in (pr.get("reviews") or [])
         if r.get("body")
     ][:5]

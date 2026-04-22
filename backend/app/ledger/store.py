@@ -97,9 +97,7 @@ class LedgerStore:
 
         return record.id
 
-    def _insert_citations(
-        self, decision_id: UUID, kind: str, citations: list[Citation]
-    ) -> None:
+    def _insert_citations(self, decision_id: UUID, kind: str, citations: list[Citation]) -> None:
         for citation in citations:
             self.conn.execute(
                 """

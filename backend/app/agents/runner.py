@@ -31,7 +31,7 @@ from app.ledger.models import ClassificationResult, DecisionEdge, RationaleExtra
 
 CLASSIFIER_MAX_TOKENS = 1024
 EXTRACTOR_MAX_TOKENS = 8192
-STITCHER_MAX_TOKENS = 2048
+STITCHER_MAX_TOKENS = 8192
 
 USER_PREAMBLE_CLASSIFIER = (
     "Here is the PR archaeology JSON. Read it carefully and return the JSON "
@@ -49,9 +49,11 @@ USER_PREAMBLE_EXTRACTOR = (
 USER_PREAMBLE_STITCHER = (
     "Here are batches of decisions. For each new decision, determine whether it "
     "has a 'supersedes', 'depends_on', or 'related_to' relationship with any "
-    "existing decision. Return ONLY the JSON object described in your system "
-    "prompt, with an `edges` array (items: from_pr_number, to_pr_number, kind, "
-    "reason).\n\n"
+    'existing decision. Return ONLY a JSON object {"edges": [...]} — each edge '
+    "MUST use these exact field names: from_pr_number (int), to_pr_number (int), "
+    "kind (one of: supersedes | depends_on | related_to), reason (short string). "
+    "Do NOT use 'from_id'/'to_id'/'rationale' — use the names above. Return only "
+    "the highest-signal edges; omit speculative ones.\n\n"
 )
 
 
@@ -117,8 +119,12 @@ async def run_classifier(
     agent = load_agent("decision-classifier")
     user = USER_PREAMBLE_CLASSIFIER + build_classifier_input(pr)
     raw, _, _ = await _invoke(
-        client, agent, user, CLASSIFIER_MAX_TOKENS,
-        tracker=tracker, agent_label="decision-classifier",
+        client,
+        agent,
+        user,
+        CLASSIFIER_MAX_TOKENS,
+        tracker=tracker,
+        agent_label="decision-classifier",
     )
     obj = extract_json(raw)
     try:
@@ -138,8 +144,12 @@ async def run_extractor(
     agent = load_agent("rationale-extractor")
     user = USER_PREAMBLE_EXTRACTOR + build_extractor_input(pr)
     raw, _, _ = await _invoke(
-        client, agent, user, EXTRACTOR_MAX_TOKENS,
-        tracker=tracker, agent_label="rationale-extractor",
+        client,
+        agent,
+        user,
+        EXTRACTOR_MAX_TOKENS,
+        tracker=tracker,
+        agent_label="rationale-extractor",
     )
     obj = extract_json(raw)
     try:
@@ -160,8 +170,12 @@ async def run_stitcher(
     agent = load_agent("graph-stitcher")
     user = USER_PREAMBLE_STITCHER + build_stitcher_input(new_decisions, existing_summary)
     raw, _, _ = await _invoke(
-        client, agent, user, STITCHER_MAX_TOKENS,
-        tracker=tracker, agent_label="graph-stitcher",
+        client,
+        agent,
+        user,
+        STITCHER_MAX_TOKENS,
+        tracker=tracker,
+        agent_label="graph-stitcher",
     )
     obj = extract_json(raw)
     edges = obj.get("edges", []) if isinstance(obj, dict) else []
