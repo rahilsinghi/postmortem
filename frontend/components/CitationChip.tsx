@@ -28,16 +28,28 @@ export function CitationChip({
   decisions,
   verified,
   unverifiedReason,
+  onFollow,
 }: {
   match: CitationMatch;
   decisions: Decision[];
   verified?: boolean | null;
   unverifiedReason?: string | null;
+  onFollow?: (args: { prNumber: number; author: string }) => void;
 }) {
   const reduced = useReducedMotion();
   const [open, setOpen] = useState(false);
+  const [shake, setShake] = useState(false);
   const resolved = resolveCitation(match, decisions);
   const url = resolved?.citation.url ?? buildFallbackUrl(match, decisions);
+
+  const onClick = () => {
+    if (match.prNumber && match.author && onFollow) {
+      onFollow({ prNumber: match.prNumber, author: match.author });
+    } else {
+      setShake(true);
+      setTimeout(() => setShake(false), 200);
+    }
+  };
 
   const base =
     "relative inline-block rounded-md border px-1.5 py-0 font-mono text-[10.5px] leading-[1.3rem] align-baseline transition-colors";
@@ -55,8 +67,14 @@ export function CitationChip({
     <motion.span
       className="relative inline-block"
       initial={reduced ? false : { opacity: 0, scale: 0.92 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={reduced ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
+      animate={shake && !reduced ? { x: [-2, 2, 0] } : { opacity: 1, scale: 1 }}
+      transition={
+        shake && !reduced
+          ? { duration: 0.16 }
+          : reduced
+            ? { duration: 0 }
+            : { duration: 0.18, ease: "easeOut" }
+      }
     >
       {/* Verdict badge — a 10px glyph that slides in from the left when self-check completes. */}
       <AnimatePresence>
@@ -91,6 +109,7 @@ export function CitationChip({
         target="_blank"
         rel="noopener noreferrer"
         className={`${base} ${tone}`}
+        onClick={onClick}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
