@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     frontend_origin: str = Field(default="http://localhost:3000")
     anthropic_api_key: str | None = Field(default=None)
     github_token: str | None = Field(default=None)
+    ledger_db_path: str = Field(default=".cache/ledger.duckdb")
 
 
 @lru_cache
