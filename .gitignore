@@ -31,6 +31,12 @@ ENV/
 env.bak/
 venv.bak/
 
+# The Python gitignore above lists `lib/` and `lib64/` as build-artifact dirs,
+# but our frontend has a real `frontend/lib/` TypeScript module tree. Un-ignore
+# it so CI (and new clones) see the files.
+!frontend/lib/
+!frontend/lib/**
+
 # Testing / coverage
 htmlcov/
 .tox/
