@@ -6,9 +6,10 @@ The script does two things:
      (`managed-agents-2026-04-01`). If access is denied, prints an actionable
      enrollment message and exits non-zero.
 
-  2. Runs a minimal Managed Agents session: creates an agent + environment,
-     invokes a toy task that executes `echo hello from the sandbox` via the
-     agent_toolset, and prints the result.
+  2. Runs a minimal Managed Agents session via the Anthropic SDK: creates an
+     agent + environment + session, opens an SSE stream, sends a user message
+     asking the agent to `echo hello from the sandbox`, and verifies the
+     expected string appears in the agent's response before `session.status_idle`.
 
 Usage (from repo root):
     uv run --project backend python scripts/smoke-managed-agents.py
@@ -16,7 +17,6 @@ Usage (from repo root):
 
 from __future__ import annotations
 
-import json
 import os
 import sys
 import time
@@ -32,17 +32,8 @@ load_dotenv(REPO_ROOT / ".env")
 API_BASE = "https://api.anthropic.com"
 BETA_HEADER = "managed-agents-2026-04-01"
 MODEL = "claude-opus-4-7"
-POLL_TIMEOUT_S = 120
-POLL_INTERVAL_S = 2
-
-
-def headers(api_key: str) -> dict[str, str]:
-    return {
-        "x-api-key": api_key,
-        "anthropic-version": "2023-06-01",
-        "anthropic-beta": BETA_HEADER,
-        "content-type": "application/json",
-    }
+STREAM_TIMEOUT_S = 240
+EXPECTED_PHRASE = "hello from the sandbox"
 
 
 def preflight(api_key: str) -> bool:
@@ -51,7 +42,11 @@ def preflight(api_key: str) -> bool:
     try:
         resp = httpx.get(
             f"{API_BASE}/v1/agents",
-            headers=headers(api_key),
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "anthropic-beta": BETA_HEADER,
+            },
             timeout=15.0,
         )
     except httpx.HTTPError as exc:
@@ -83,80 +78,99 @@ def preflight(api_key: str) -> bool:
 
 
 def run_toy_session(api_key: str) -> int:
-    """Create a minimal agent + env, run `echo hello from the sandbox`, print the result."""
-    h = headers(api_key)
+    """Create agent + env + session via the SDK, ask for an echo, verify output."""
+    try:
+        from anthropic import Anthropic
+    except ImportError:
+        print("ERROR: anthropic SDK not installed. Run `cd backend && uv sync`.", file=sys.stderr)
+        return 3
+
+    client = Anthropic(api_key=api_key)
 
     print("[session] creating agent...")
-    agent_resp = httpx.post(
-        f"{API_BASE}/v1/agents",
-        headers=h,
-        json={
-            "name": "postmortem-smoke-agent",
-            "model": MODEL,
-            "system": "You are a smoke-test agent. Execute the requested shell command and report its output.",
-            "tools": [{"type": "bash_2026_04_01"}],
-        },
-        timeout=30.0,
+    agent = client.beta.agents.create(
+        name="postmortem-smoke-agent",
+        model=MODEL,
+        system=(
+            "You are a smoke-test agent. Execute the requested shell command "
+            "using the bash tool and report the exact stdout verbatim."
+        ),
+        tools=[{"type": "agent_toolset_20260401"}],
     )
-    if agent_resp.status_code >= 400:
-        print(f"[session] agent create failed: {agent_resp.status_code} {agent_resp.text}", file=sys.stderr)
-        return 1
-    agent_id = agent_resp.json()["id"]
-    print(f"[session] agent_id={agent_id}")
+    print(f"[session] agent_id={agent.id}")
 
     print("[session] creating environment...")
-    env_resp = httpx.post(
-        f"{API_BASE}/v1/environments",
-        headers=h,
-        json={"agent_id": agent_id, "type": "sandbox"},
-        timeout=30.0,
+    environment = client.beta.environments.create(
+        name="postmortem-smoke-env",
+        config={"type": "cloud", "networking": {"type": "unrestricted"}},
     )
-    if env_resp.status_code >= 400:
-        print(f"[session] env create failed: {env_resp.status_code} {env_resp.text}", file=sys.stderr)
-        return 1
-    environment_id = env_resp.json()["id"]
-    print(f"[session] environment_id={environment_id}")
+    print(f"[session] environment_id={environment.id}")
 
-    print("[session] starting session...")
-    session_resp = httpx.post(
-        f"{API_BASE}/v1/sessions",
-        headers=h,
-        json={
-            "agent_id": agent_id,
-            "environment_id": environment_id,
-            "input": "Run the shell command: echo hello from the sandbox. Report the exact stdout.",
-        },
-        timeout=30.0,
+    print("[session] creating session...")
+    session = client.beta.sessions.create(
+        agent=agent.id,
+        environment_id=environment.id,
+        title="postmortem smoke session",
     )
-    if session_resp.status_code >= 400:
-        print(f"[session] session create failed: {session_resp.status_code} {session_resp.text}", file=sys.stderr)
+    print(f"[session] session_id={session.id}")
+
+    collected_text: list[str] = []
+    saw_idle = False
+    deadline = time.time() + STREAM_TIMEOUT_S
+
+    print("[session] opening stream + sending user message...")
+    with client.beta.sessions.events.stream(session.id) as stream:
+        client.beta.sessions.events.send(
+            session.id,
+            events=[
+                {
+                    "type": "user.message",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                f"Run this shell command: echo {EXPECTED_PHRASE}. "
+                                "Then reply with the exact stdout, nothing else."
+                            ),
+                        }
+                    ],
+                }
+            ],
+        )
+
+        for event in stream:
+            if time.time() > deadline:
+                print("[session] stream timeout", file=sys.stderr)
+                break
+            etype = getattr(event, "type", None)
+            if etype == "agent.message":
+                for block in getattr(event, "content", []) or []:
+                    text = getattr(block, "text", None)
+                    if text:
+                        collected_text.append(text)
+            elif etype == "agent.tool_use":
+                name = getattr(event, "name", "?")
+                print(f"[session] tool_use: {name}")
+            elif etype == "session.status_idle":
+                saw_idle = True
+                break
+            elif etype == "session.error":
+                print(f"[session] session.error: {event}", file=sys.stderr)
+                break
+
+    full_text = "".join(collected_text)
+    print("[session] agent text:", full_text[:800] if full_text else "(empty)")
+
+    if not saw_idle:
+        print("[session] ⚠️  stream ended without session.status_idle", file=sys.stderr)
         return 1
-    session_id = session_resp.json()["id"]
-    print(f"[session] session_id={session_id}")
-
-    print("[session] polling for completion...")
-    deadline = time.time() + POLL_TIMEOUT_S
-    while time.time() < deadline:
-        poll = httpx.get(f"{API_BASE}/v1/sessions/{session_id}", headers=h, timeout=15.0)
-        if poll.status_code >= 400:
-            print(f"[session] poll error: {poll.status_code} {poll.text}", file=sys.stderr)
-            return 1
-        data = poll.json()
-        status = data.get("status")
-        if status in ("succeeded", "failed", "cancelled"):
-            print(f"[session] terminal status={status}")
-            print(json.dumps(data, indent=2)[:2000])
-            if status == "succeeded":
-                output = json.dumps(data).lower()
-                if "hello from the sandbox" in output:
-                    print("[session] ✅ hello from the sandbox")
-                    return 0
-                print("[session] ⚠️  session succeeded but expected string not found in output.", file=sys.stderr)
-                return 1
-            return 1
-        time.sleep(POLL_INTERVAL_S)
-
-    print(f"[session] timed out after {POLL_TIMEOUT_S}s.", file=sys.stderr)
+    if EXPECTED_PHRASE.lower() in full_text.lower():
+        print(f"[session] ✅ {EXPECTED_PHRASE}")
+        return 0
+    print(
+        f"[session] ⚠️  idle reached but '{EXPECTED_PHRASE}' not found in agent text.",
+        file=sys.stderr,
+    )
     return 1
 
 
