@@ -21,17 +21,30 @@ type DecisionNodeData = {
   title: string;
   category: string;
   selected: boolean;
+  inSubgraph: boolean;
+  isAnchor: boolean;
 };
 
 function DecisionNode({ data }: NodeProps<FlowNode<DecisionNodeData>>) {
   const style = categoryStyle(data.category);
+  const ring = data.isAnchor
+    ? "ring-2 ring-amber-300 shadow-[0_0_24px_rgba(253,224,71,0.35)] scale-[1.08]"
+    : data.selected
+      ? "ring-2 ring-zinc-300 scale-105 shadow-lg shadow-black/50"
+      : data.inSubgraph
+        ? "ring-1 ring-amber-400/60 shadow-[0_0_12px_rgba(253,224,71,0.25)]"
+        : "shadow-md shadow-black/40";
+  const dimmed = !data.isAnchor && !data.inSubgraph && data.selected === false;
+  // Dim non-subgraph nodes when there IS an active subgraph so the traced
+  // neighborhood visually pops. `inSubgraph=true` on at least one node means
+  // a subgraph is active.
+  const inactiveDim = data.inSubgraph ? "" : "opacity-40";
+  const hasActiveSubgraph = data.isAnchor; // sentinel: only shown when caller sets anchor
   return (
     <div
-      className={`flex min-w-[180px] max-w-[220px] flex-col rounded-lg border px-3 py-2 text-left font-mono text-[11px] leading-tight transition ${
-        data.selected
-          ? "scale-105 shadow-lg shadow-black/50 ring-2 ring-zinc-300"
-          : "shadow-md shadow-black/40"
-      } ${style.bg} ${style.border} ${style.text}`}
+      className={`flex min-w-[180px] max-w-[220px] flex-col rounded-lg border px-3 py-2 text-left font-mono text-[11px] leading-tight transition ${ring} ${style.bg} ${style.border} ${style.text} ${
+        hasActiveSubgraph === false && dimmed && data.inSubgraph === false ? "" : ""
+      } ${hasActiveSubgraph && !data.inSubgraph && !data.isAnchor ? inactiveDim : ""}`}
     >
       <Handle type="target" position={Position.Top} className="!bg-zinc-600 !border-0" />
       <span className="text-zinc-500">#{data.pr}</span>
@@ -54,17 +67,17 @@ export function LedgerGraph({
   edges,
   selectedId,
   onSelect,
+  subgraphAnchorPr,
+  subgraphPrs,
 }: {
   decisions: Decision[];
   edges: Edge[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  subgraphAnchorPr?: number | null;
+  subgraphPrs?: number[] | null;
 }) {
   const { nodes, flowEdges } = useMemo(() => {
-    // Compact chronological grid: sort by decided_at, wrap into COLS columns.
-    // Category is encoded as node color (not position) — lets the graph fit in
-    // the left panel at a readable zoom. Odd rows snake right-to-left so edges
-    // between chronologically-adjacent decisions stay short.
     const COLS = Math.max(4, Math.ceil(Math.sqrt(decisions.length)));
     const X_STEP = 250;
     const Y_STEP = 130;
@@ -79,32 +92,48 @@ export function LedgerGraph({
       positionById.set(d.id, { x: col * X_STEP, y: row * Y_STEP });
     });
 
-    const nodes: FlowNode<DecisionNodeData>[] = decisions.map((d) => ({
-      id: d.id,
-      type: "decision",
-      position: positionById.get(d.id) ?? { x: 0, y: 0 },
-      data: {
-        pr: d.pr_number,
-        title: d.title,
-        category: d.category,
-        selected: d.id === selectedId,
-      },
-    }));
+    const subgraphSet = new Set(subgraphPrs ?? []);
 
-    const flowEdges: FlowEdge[] = edges.map((e, idx) => ({
-      id: `${e.from_id}-${e.to_id}-${idx}`,
-      source: e.from_id,
-      target: e.to_id,
-      label: e.kind.replace("_", " "),
-      labelStyle: { fill: "#a1a1aa", fontSize: 9, fontFamily: "var(--font-geist-mono)" },
-      labelBgStyle: { fill: "#18181b", fillOpacity: 0.8 },
-      labelBgPadding: [4, 2],
-      style: EDGE_STYLES[e.kind] ?? EDGE_STYLES.related_to,
-      animated: e.kind === "supersedes",
-    }));
+    const nodes: FlowNode<DecisionNodeData>[] = decisions.map((d) => {
+      const inSubgraph = subgraphSet.has(d.pr_number);
+      const isAnchor = subgraphAnchorPr != null && subgraphAnchorPr === d.pr_number;
+      return {
+        id: d.id,
+        type: "decision",
+        position: positionById.get(d.id) ?? { x: 0, y: 0 },
+        data: {
+          pr: d.pr_number,
+          title: d.title,
+          category: d.category,
+          selected: d.id === selectedId,
+          inSubgraph,
+          isAnchor,
+        },
+      };
+    });
+
+    const flowEdges: FlowEdge[] = edges.map((e, idx) => {
+      const inSub = subgraphSet.size > 0 && subgraphSet.has(e.from_pr) && subgraphSet.has(e.to_pr);
+      const baseStyle = EDGE_STYLES[e.kind] ?? EDGE_STYLES.related_to;
+      return {
+        id: `${e.from_id}-${e.to_id}-${idx}`,
+        source: e.from_id,
+        target: e.to_id,
+        label: e.kind.replace("_", " "),
+        labelStyle: { fill: "#a1a1aa", fontSize: 9, fontFamily: "var(--font-geist-mono)" },
+        labelBgStyle: { fill: "#18181b", fillOpacity: 0.8 },
+        labelBgPadding: [4, 2],
+        style: {
+          ...baseStyle,
+          strokeWidth: inSub ? 2.2 : 1,
+          opacity: subgraphSet.size > 0 ? (inSub ? 1 : 0.2) : 1,
+        },
+        animated: inSub || e.kind === "supersedes",
+      };
+    });
 
     return { nodes, flowEdges };
-  }, [decisions, edges, selectedId]);
+  }, [decisions, edges, selectedId, subgraphAnchorPr, subgraphPrs]);
 
   return (
     <div className="h-full w-full bg-black">

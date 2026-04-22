@@ -16,6 +16,7 @@ export function LedgerPage({
   suggestedQueries: string[];
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [subgraph, setSubgraph] = useState<{ anchorPr: number; prs: number[] } | null>(null);
   const selected = ledger.decisions.find((d) => d.id === selectedId) ?? null;
 
   return (
@@ -43,7 +44,18 @@ export function LedgerPage({
             edges={ledger.edges}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            subgraphAnchorPr={subgraph?.anchorPr ?? null}
+            subgraphPrs={subgraph?.prs ?? null}
           />
+          {subgraph ? (
+            <button
+              type="button"
+              onClick={() => setSubgraph(null)}
+              className="absolute top-3 left-3 rounded-md border border-amber-700/60 bg-amber-950/70 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-amber-200 transition hover:border-amber-500"
+            >
+              impact subgraph: {subgraph.prs.length} nodes · clear
+            </button>
+          ) : null}
         </section>
         <section className="w-1/5 border-r border-zinc-800 bg-zinc-950">
           <DecisionSidePanel decision={selected} />
@@ -54,6 +66,7 @@ export function LedgerPage({
             decisions={ledger.decisions}
             suggestedQueries={suggestedQueries}
             selectedDecision={selected}
+            onSubgraph={(anchorPr, prs) => setSubgraph({ anchorPr, prs })}
           />
         </section>
       </div>

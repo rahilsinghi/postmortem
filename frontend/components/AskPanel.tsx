@@ -17,9 +17,16 @@ type Props = {
   decisions: Decision[];
   suggestedQueries: string[];
   selectedDecision?: Decision | null;
+  onSubgraph?: (anchorPr: number, prs: number[]) => void;
 };
 
-export function AskPanel({ repo, decisions, suggestedQueries, selectedDecision }: Props) {
+export function AskPanel({
+  repo,
+  decisions,
+  suggestedQueries,
+  selectedDecision,
+  onSubgraph,
+}: Props) {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [phase, setPhase] = useState<QueryPhase | "idle">("idle");
@@ -57,6 +64,7 @@ export function AskPanel({ repo, decisions, suggestedQueries, selectedDecision }
           onSelfCheck: setSelfCheck,
           onUsage: setUsage,
           onError: setError,
+          onSubgraph: (sub) => onSubgraph?.(sub.anchor_pr, sub.included_prs),
         },
         {
           selfCheck: selfCheckEnabled,
@@ -65,7 +73,7 @@ export function AskPanel({ repo, decisions, suggestedQueries, selectedDecision }
         },
       );
     },
-    [repo, selfCheckEnabled, mode, selectedDecision],
+    [repo, selfCheckEnabled, mode, selectedDecision, onSubgraph],
   );
 
   const canRunImpact = selectedDecision !== null && selectedDecision !== undefined;
@@ -183,7 +191,12 @@ export function AskPanel({ repo, decisions, suggestedQueries, selectedDecision }
         ) : null}
         {answer ? (
           <div className="mt-4">
-            <ReasoningTrace text={answer} decisions={decisions} selfCheck={selfCheck} />
+            <ReasoningTrace
+              text={answer}
+              decisions={decisions}
+              selfCheck={selfCheck}
+              streaming={busy}
+            />
           </div>
         ) : phase === "idle" ? (
           <p className="mt-6 text-sm text-zinc-500">

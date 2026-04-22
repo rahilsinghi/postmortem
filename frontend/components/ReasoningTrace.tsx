@@ -5,18 +5,47 @@ import { splitWithCitations } from "../lib/citations";
 import type { SelfCheckResult } from "../lib/query";
 import { CitationChip } from "./CitationChip";
 
+/**
+ * Word-boundary trim: while the stream is live, clip the rendered text at the
+ * last whitespace so incomplete words don't flicker in character-by-character.
+ * When the stream completes (`streaming=false`), render the full text.
+ *
+ * This is the "subtle character-by-character reveal" from SPEC §14.4 — we buffer
+ * fragments and release them at word boundaries. No timers, no raf loop — the
+ * display is a pure function of the buffer length, so React just re-renders on
+ * each delta and the user perceives words appearing as atomic units.
+ */
+function trimToWordBoundary(text: string): string {
+  if (!text) return text;
+  // Allow broader terminators than just space so citation tokens and
+  // punctuation flush immediately.
+  const terminators = [" ", "\n", "\t", ".", ",", ";", ":", "]", ")", "—", "-", "!"];
+  let cutoff = -1;
+  for (const t of terminators) {
+    const idx = text.lastIndexOf(t);
+    if (idx > cutoff) cutoff = idx;
+  }
+  if (cutoff < 0) return ""; // no boundary yet; hold everything
+  return text.slice(0, cutoff + 1);
+}
+
 export function ReasoningTrace({
   text,
   decisions,
   selfCheck,
+  streaming = false,
 }: {
   text: string;
   decisions: Decision[];
   selfCheck: SelfCheckResult | null;
+  streaming?: boolean;
 }) {
   if (!text) return null;
 
-  const { segments } = splitWithCitations(text);
+  const rendered = streaming ? trimToWordBoundary(text) : text;
+  const showCursor = streaming && rendered.length > 0;
+
+  const { segments } = splitWithCitations(rendered);
 
   const verdictByToken = new Map<string, { verified: boolean; reason: string }>();
   if (selfCheck?.citations) {
@@ -27,11 +56,11 @@ export function ReasoningTrace({
 
   // Split the response into our structured sections. Keep it simple: sections are
   // introduced by `## `. Everything before the first `##` is a streaming preamble.
-  const rawSections = text.split(/\n##\s+/g);
-  const preamble = text.startsWith("## ") ? "" : (rawSections.shift() ?? "");
+  const rawSections = rendered.split(/\n##\s+/g);
+  const preamble = rendered.startsWith("## ") ? "" : (rawSections.shift() ?? "");
   const sections = (
-    text.startsWith("## ")
-      ? text
+    rendered.startsWith("## ")
+      ? rendered
           .slice(3)
           .split(/\n##\s+/g)
           .map((block, idx) =>
@@ -50,7 +79,14 @@ export function ReasoningTrace({
 
   // If nothing matched section headings yet (answer still streaming), render flat.
   if (sections.length === 0) {
-    return <RenderSegments segments={segments} decisions={decisions} verdict={verdictByToken} />;
+    return (
+      <RenderSegments
+        segments={segments}
+        decisions={decisions}
+        verdict={verdictByToken}
+        trailingCursor={showCursor}
+      />
+    );
   }
 
   return (
@@ -62,20 +98,24 @@ export function ReasoningTrace({
           verdict={verdictByToken}
         />
       ) : null}
-      {sections.map((sec) => (
-        <section key={`sec-${sec.heading}`}>
-          <h3 className="mb-2 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-            {sec.heading}
-          </h3>
-          <div className="space-y-2 text-[13.5px] leading-relaxed text-zinc-200">
-            <RenderSegments
-              segments={splitWithCitations(sec.body).segments}
-              decisions={decisions}
-              verdict={verdictByToken}
-            />
-          </div>
-        </section>
-      ))}
+      {sections.map((sec, idx) => {
+        const isLast = idx === sections.length - 1;
+        return (
+          <section key={`sec-${sec.heading}`}>
+            <h3 className="mb-2 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+              {sec.heading}
+            </h3>
+            <div className="space-y-2 text-[13.5px] leading-relaxed text-zinc-200">
+              <RenderSegments
+                segments={splitWithCitations(sec.body).segments}
+                decisions={decisions}
+                verdict={verdictByToken}
+                trailingCursor={showCursor && isLast}
+              />
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }
@@ -84,17 +124,16 @@ function RenderSegments({
   segments,
   decisions,
   verdict,
+  trailingCursor = false,
 }: {
   segments: ReturnType<typeof splitWithCitations>["segments"];
   decisions: Decision[];
   verdict: Map<string, { verified: boolean; reason: string }>;
+  trailingCursor?: boolean;
 }) {
   return (
     <div className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-zinc-200">
       {segments.map((seg, idx) => {
-        // Segments are produced by a deterministic regex split of a streaming
-        // string. Index IS position; it cannot reorder. biome's noArrayIndexKey
-        // doesn't know that, so we opt out locally.
         if (seg.kind === "text") {
           // biome-ignore lint/suspicious/noArrayIndexKey: position-based key is correct here
           return <span key={`t-${idx}`}>{seg.content}</span>;
@@ -113,6 +152,12 @@ function RenderSegments({
           />
         );
       })}
+      {trailingCursor ? (
+        <span
+          aria-hidden
+          className="ml-0.5 inline-block h-[1em] w-[2px] -translate-y-[2px] animate-pulse bg-zinc-400 align-middle"
+        />
+      ) : null}
     </div>
   );
 }
