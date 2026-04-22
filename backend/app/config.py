@@ -21,6 +21,14 @@ class Settings(BaseSettings):
     github_token: str | None = Field(default=None)
     ledger_db_path: str = Field(default=".cache/ledger.duckdb")
 
+    # If set, /api/ingest requires a matching X-Ingest-Token header or ?token= query
+    # param. Unset = endpoint is open (acceptable for local dev, not for public demo).
+    ingest_auth_token: str | None = Field(default=None)
+
+    # Optional comma-separated allowlist for /api/ingest repos. Empty = any public
+    # GitHub repo is accepted.
+    ingest_allowed_repos: str = Field(default="")
+
 
 @lru_cache
 def get_settings() -> Settings:

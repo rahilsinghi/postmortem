@@ -1,5 +1,10 @@
 import { API_BASE } from "./api";
 
+// Shared ingest token. EventSource can't set custom headers, so when the server
+// enforces auth we must pass it as a query param. Exposed via NEXT_PUBLIC so it
+// rides the browser bundle — this is a "go-away-bot" token, not a secret.
+const INGEST_TOKEN = process.env.NEXT_PUBLIC_INGEST_TOKEN ?? "";
+
 export type IngestStartEvent = {
   type: "start";
   repo: string;
@@ -83,6 +88,7 @@ export function startIngest(
     url.searchParams.set("min_discussion", String(options.minDiscussion));
   if (options.concurrency !== undefined)
     url.searchParams.set("concurrency", String(options.concurrency));
+  if (INGEST_TOKEN) url.searchParams.set("token", INGEST_TOKEN);
 
   const es = new EventSource(url.toString());
 

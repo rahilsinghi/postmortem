@@ -31,7 +31,7 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Header, HTTPException, Query
 from sse_starlette.sse import EventSourceResponse
 
 from app.config import get_settings, resolve_secret
@@ -41,6 +41,34 @@ from app.ingest import ingest_repo
 router = APIRouter(prefix="/api", tags=["ingest"])
 
 MAX_PR_LIMIT = 200  # cap user-initiated runs so one click can't spend $50
+
+
+def _check_ingest_auth(header_token: str | None, query_token: str | None) -> None:
+    """Validate the shared ingest token, if one is configured on the server.
+
+    Accepts token via `X-Ingest-Token` header (preferred) OR `?token=` query param
+    (needed because native browser `EventSource` can't set custom headers).
+    If `INGEST_AUTH_TOKEN` is unset the endpoint is open — fine for local dev,
+    MUST be set for any public deploy.
+    """
+    expected = get_settings().ingest_auth_token
+    if not expected:
+        return  # open endpoint (local dev mode)
+    supplied = header_token or query_token
+    if supplied != expected:
+        raise HTTPException(status_code=403, detail="ingest token missing or invalid")
+
+
+def _check_repo_allowlist(repo: str) -> None:
+    raw = get_settings().ingest_allowed_repos.strip()
+    if not raw:
+        return
+    allow = {r.strip() for r in raw.split(",") if r.strip()}
+    if repo not in allow:
+        raise HTTPException(
+            status_code=403,
+            detail=f"repo '{repo}' is not on the server's allowlist",
+        )
 
 
 def _resolve_db_path() -> Path:
@@ -63,9 +91,14 @@ async def stream_ingest(
     limit: int = Query(50, ge=1, le=MAX_PR_LIMIT),
     min_discussion: int = Query(3, ge=0),
     concurrency: int = Query(3, ge=1, le=8),
+    token: str | None = Query(None, description="auth token (if server requires one)"),
+    x_ingest_token: str | None = Header(default=None, alias="X-Ingest-Token"),
 ) -> EventSourceResponse:
+    _check_ingest_auth(x_ingest_token, token)
+
     if "/" not in repo:
         raise HTTPException(status_code=400, detail="repo must be owner/name")
+    _check_repo_allowlist(repo)
 
     anthropic_key = resolve_secret("ANTHROPIC_API_KEY")
     github_token = resolve_secret("GITHUB_TOKEN")
