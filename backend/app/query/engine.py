@@ -141,9 +141,8 @@ async def stream_query(
             answer_usage = {
                 "input_tokens": usage.input_tokens,
                 "output_tokens": usage.output_tokens,
-                "cache_creation_input_tokens": getattr(
-                    usage, "cache_creation_input_tokens", 0
-                ) or 0,
+                "cache_creation_input_tokens": getattr(usage, "cache_creation_input_tokens", 0)
+                or 0,
                 "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", 0) or 0,
             }
     except Exception as exc:
@@ -207,11 +206,8 @@ async def stream_query(
                 SELF_CHECK_MODEL,
                 sc_resp.usage.input_tokens,
                 sc_resp.usage.output_tokens,
-                cache_creation_tokens=getattr(
-                    sc_resp.usage, "cache_creation_input_tokens", 0
-                ) or 0,
-                cache_read_tokens=getattr(sc_resp.usage, "cache_read_input_tokens", 0)
-                or 0,
+                cache_creation_tokens=getattr(sc_resp.usage, "cache_creation_input_tokens", 0) or 0,
+                cache_read_tokens=getattr(sc_resp.usage, "cache_read_input_tokens", 0) or 0,
             )
 
     totals = tracker.totals()

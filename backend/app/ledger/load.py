@@ -39,8 +39,7 @@ class LedgerSnapshot:
 def list_repos(db_path: str | Path) -> list[dict[str, Any]]:
     conn = connect(str(db_path))
     try:
-        rows = conn.execute(
-            """
+        rows = conn.execute("""
             SELECT repo,
                    COUNT(*) AS decisions,
                    COUNT(DISTINCT category) AS categories,
@@ -49,8 +48,7 @@ def list_repos(db_path: str | Path) -> list[dict[str, Any]]:
             FROM decisions
             GROUP BY repo
             ORDER BY decisions DESC
-            """
-        ).fetchall()
+            """).fetchall()
         return [
             {
                 "repo": row[0],
