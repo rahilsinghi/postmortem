@@ -15,12 +15,13 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 
 from anthropic import AsyncAnthropic
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sse_starlette.sse import EventSourceResponse
 
 from app.config import get_settings, resolve_secret
 from app.ledger.load import load_ledger
 from app.query.engine import QueryOptions, stream_query
+from app.ratelimit import rate_limit
 from app.validators import validate_repo
 
 router = APIRouter(prefix="/api", tags=["query"])
@@ -35,7 +36,7 @@ def _resolve_db_path() -> Path:
     return path
 
 
-@router.get("/query")
+@router.get("/query", dependencies=[Depends(rate_limit("query", per_minute=10))])
 async def query_endpoint(
     repo: str = Query(..., description="owner/name"),
     question: str = Query(..., min_length=3, max_length=2000),

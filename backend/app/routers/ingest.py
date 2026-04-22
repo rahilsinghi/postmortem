@@ -31,12 +31,13 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sse_starlette.sse import EventSourceResponse
 
 from app.config import get_settings, resolve_secret
 from app.errors import safe_error_message
 from app.ingest import ingest_repo
+from app.ratelimit import rate_limit
 from app.validators import validate_repo
 
 router = APIRouter(prefix="/api", tags=["ingest"])
@@ -86,7 +87,7 @@ def _resolve_cache_dir() -> Path:
     return repo_root / ".cache" / "pr-archaeology"
 
 
-@router.get("/ingest")
+@router.get("/ingest", dependencies=[Depends(rate_limit("ingest", per_minute=3))])
 async def stream_ingest(
     repo: str = Query(..., description="owner/name — any public GitHub repo"),
     limit: int = Query(50, ge=1, le=MAX_PR_LIMIT),

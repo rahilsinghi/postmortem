@@ -20,7 +20,7 @@ from pathlib import Path
 
 from anthropic import AsyncAnthropic
 from anthropic.types import TextBlockParam
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sse_starlette.sse import EventSourceResponse
 
 from app.agents.cost import CostTracker
@@ -35,6 +35,7 @@ from app.query.impact import (
     find_anchor,
 )
 from app.query.prompts import SELF_CHECK_SYSTEM_PROMPT
+from app.ratelimit import rate_limit
 from app.validators import validate_repo
 
 router = APIRouter(prefix="/api", tags=["impact"])
@@ -57,7 +58,7 @@ def _resolve_db_path() -> Path:
     return path
 
 
-@router.get("/impact")
+@router.get("/impact", dependencies=[Depends(rate_limit("impact", per_minute=10))])
 async def impact_endpoint(
     repo: str = Query(...),
     question: str = Query(..., min_length=3, max_length=2000),
