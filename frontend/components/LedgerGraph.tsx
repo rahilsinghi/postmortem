@@ -12,7 +12,7 @@ import {
   ReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 
 import type { Decision, Edge } from "../lib/api";
@@ -98,10 +98,10 @@ function layoutWithDagre(
   const g = new dagre.graphlib.Graph({ compound: false });
   g.setGraph({
     rankdir: "LR",
-    nodesep: 28,
-    ranksep: 84,
-    marginx: 32,
-    marginy: 32,
+    nodesep: 18,
+    ranksep: 56,
+    marginx: 20,
+    marginy: 20,
     ranker: "longest-path",
   });
   g.setDefaultEdgeLabel(() => ({}));
@@ -166,49 +166,88 @@ function TimeAxisRail({ earliest, latest }: { earliest: string | null; latest: s
 }
 
 function CategoryLegend({ categories }: { categories: string[] }) {
+  const [open, setOpen] = useState(false);
   const sorted = Array.from(new Set(categories)).sort();
   return (
-    <div className="pointer-events-auto absolute right-3 top-3 max-w-[220px] rounded-lg border border-zinc-800 bg-zinc-950/80 p-2 font-mono text-[10px] leading-tight text-zinc-400 backdrop-blur-sm">
-      <div className="mb-1 uppercase tracking-[0.18em] text-zinc-500">categories</div>
-      <ul className="flex flex-wrap gap-1">
-        {sorted.map((c) => {
-          const s = categoryStyle(c);
-          return (
-            <li
-              key={c}
-              className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 ${s.bg} ${s.text} ${s.border}`}
+    <div className="pointer-events-auto absolute right-3 top-3 font-mono text-[10px] leading-tight">
+      <AnimatePresence initial={false} mode="wait">
+        {open ? (
+          <motion.div
+            key="expanded"
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.94 }}
+            transition={{ duration: 0.14, ease: "easeOut" }}
+            className="max-w-[220px] rounded-lg border border-zinc-800 bg-zinc-950/85 p-2 text-zinc-400 backdrop-blur-sm"
+          >
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="mb-1 flex w-full items-center justify-between uppercase tracking-[0.18em] text-zinc-500 transition hover:text-zinc-200"
+              title="Collapse legend"
             >
-              {c.replaceAll("_", " ")}
-            </li>
-          );
-        })}
-      </ul>
-      <div className="mt-2 border-t border-zinc-800 pt-2 space-y-0.5 text-zinc-500">
-        <div className="flex items-center gap-2">
-          <span className="inline-block h-0.5 w-5 bg-[#f87171]" />
-          supersedes
-        </div>
-        <div className="flex items-center gap-2">
-          <span
-            className="inline-block h-0.5 w-5 bg-[#60a5fa]"
-            style={{
-              backgroundImage:
-                "repeating-linear-gradient(90deg, #60a5fa 0 3px, transparent 3px 6px)",
-            }}
-          />
-          depends on
-        </div>
-        <div className="flex items-center gap-2">
-          <span
-            className="inline-block h-0.5 w-5"
-            style={{
-              backgroundImage:
-                "repeating-linear-gradient(90deg, #a1a1aa 0 2px, transparent 2px 4px)",
-            }}
-          />
-          related
-        </div>
-      </div>
+              <span>categories</span>
+              <span aria-hidden className="ml-2 text-zinc-600">
+                ×
+              </span>
+            </button>
+            <ul className="flex flex-wrap gap-1">
+              {sorted.map((c) => {
+                const s = categoryStyle(c);
+                return (
+                  <li
+                    key={c}
+                    className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 ${s.bg} ${s.text} ${s.border}`}
+                  >
+                    {c.replaceAll("_", " ")}
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="mt-2 space-y-0.5 border-t border-zinc-800 pt-2 text-zinc-500">
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-0.5 w-5 bg-[#f87171]" />
+                supersedes
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block h-0.5 w-5 bg-[#60a5fa]"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(90deg, #60a5fa 0 3px, transparent 3px 6px)",
+                  }}
+                />
+                depends on
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block h-0.5 w-5"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(90deg, #a1a1aa 0 2px, transparent 2px 4px)",
+                  }}
+                />
+                related
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.button
+            key="collapsed"
+            type="button"
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.94 }}
+            transition={{ duration: 0.14, ease: "easeOut" }}
+            onClick={() => setOpen(true)}
+            title="Show category legend"
+            className="inline-flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950/85 px-2 py-1 uppercase tracking-[0.18em] text-zinc-400 backdrop-blur-sm transition hover:border-[#d4a24c]/50 hover:text-zinc-100"
+          >
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#d4a24c]" />
+            <span>categories ({sorted.length})</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -363,9 +402,9 @@ export function LedgerGraph({
         nodeTypes={NODE_TYPES}
         onNodeClick={(_, node) => onSelect(node.id)}
         fitView
-        fitViewOptions={{ padding: 0.18 }}
-        minZoom={0.12}
-        maxZoom={2}
+        fitViewOptions={{ padding: 0.06, minZoom: 0.55, maxZoom: 0.95 }}
+        minZoom={0.2}
+        maxZoom={2.5}
         proOptions={{ hideAttribution: true }}
       >
         <Background color="#18181b" gap={28} />

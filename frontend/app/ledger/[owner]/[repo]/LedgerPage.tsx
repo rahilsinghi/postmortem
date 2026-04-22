@@ -13,13 +13,21 @@ import { useReducedMotion } from "../../../../lib/motion";
 
 // react-resizable-panels v4 treats bare numeric values as PIXELS — we have to
 // pass strings with a unit suffix to get percentages.
-const SIDE_PANEL_OPEN = "22%";
-const ASK_PANEL_DEFAULT = "34%";
-const ASK_PANEL_COLLAPSED = "4%";
-const GRAPH_DEFAULT = "66%";
-const SIDE_PANEL_MIN = "15%";
-const GRAPH_MIN = "25%";
-const ASK_PANEL_MIN = "4%";
+//
+// Layout: outer group is [ graph | right-rail ]. The right-rail itself is an
+// inner group of [ side | ask ], so dragging the side↔ask separator never
+// disturbs the graph's width. On first load the graph owns 72% and the whole
+// right rail is the ask panel; clicking a decision opens the side panel inside
+// the rail without stealing pixels from the graph.
+const GRAPH_DEFAULT = "72%";
+const GRAPH_MIN = "40%";
+const RIGHT_DEFAULT = "28%";
+const RIGHT_MIN = "20%";
+// Sizes inside the inner (right-rail) group — these are percentages of the rail,
+// not of the viewport.
+const SIDE_OPEN_IN_RAIL = "55%";
+const ASK_DEFAULT_IN_RAIL = "100%";
+const ASK_COLLAPSED_IN_RAIL = "14%";
 
 export function LedgerPage({
   ledger,
@@ -43,7 +51,7 @@ export function LedgerPage({
     if (!panel) return;
     if (selected) {
       panel.expand();
-      panel.resize(SIDE_PANEL_OPEN);
+      panel.resize(SIDE_OPEN_IN_RAIL);
     } else {
       panel.collapse();
     }
@@ -53,7 +61,7 @@ export function LedgerPage({
   useEffect(() => {
     const panel = askPanelRef.current;
     if (!panel) return;
-    panel.resize(askCollapsed ? ASK_PANEL_COLLAPSED : ASK_PANEL_DEFAULT);
+    panel.resize(askCollapsed ? ASK_COLLAPSED_IN_RAIL : ASK_DEFAULT_IN_RAIL);
   }, [askCollapsed]);
 
   // Keyboard shortcuts: ⌘\ toggles the ask panel; Esc clears selection.
@@ -102,7 +110,9 @@ export function LedgerPage({
 
       <div className="min-h-0 flex-1">
         <Group orientation="horizontal" className="h-full">
-          {/* GRAPH — primary surface, gets the bulk of the width by default. */}
+          {/* GRAPH — primary surface. Gets the bulk of the viewport and is NOT
+              affected when the user drags the side↔ask separator (that handle
+              lives in the inner group). */}
           <Panel id="graph" defaultSize={GRAPH_DEFAULT} minSize={GRAPH_MIN}>
             <section className="relative h-full border-r border-zinc-800">
               <LedgerGraph
@@ -127,80 +137,86 @@ export function LedgerPage({
 
           <ResizeSeparator />
 
-          {/* SIDE PANEL — collapsed by default; opens when a node is selected. */}
-          <Panel
-            id="side"
-            panelRef={sidePanelRef}
-            defaultSize="0%"
-            minSize={SIDE_PANEL_MIN}
-            collapsedSize="0%"
-            collapsible
-            className="bg-zinc-950"
-          >
-            <AnimatePresence>
-              {selected ? (
-                <motion.section
-                  key={selected.id}
-                  initial={reduced ? false : { opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={reduced ? { opacity: 0 } : { opacity: 0, x: 20 }}
-                  transition={reduced ? { duration: 0 } : { duration: 0.22, ease: "easeOut" }}
-                  className="flex h-full flex-col border-r border-zinc-800"
-                >
-                  <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-3 py-2 backdrop-blur">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                      decision detail
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedId(null)}
-                      title="Close (Esc)"
-                      className="rounded-sm px-2 py-0.5 font-mono text-[11px] text-zinc-500 transition hover:bg-zinc-900 hover:text-zinc-100"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <DecisionSidePanel decision={selected} />
-                  </div>
-                </motion.section>
-              ) : null}
-            </AnimatePresence>
-          </Panel>
-
-          <ResizeSeparator />
-
-          {/* ASK PANEL — always rendered; collapses to an edge tab via ⌘\. */}
-          <Panel
-            id="ask"
-            panelRef={askPanelRef}
-            defaultSize={ASK_PANEL_DEFAULT}
-            minSize={ASK_PANEL_MIN}
-          >
-            {askCollapsed ? (
-              <button
-                type="button"
-                onClick={() => setAskCollapsed(false)}
-                className="group flex h-full w-full flex-col items-center justify-center gap-3 border-l border-zinc-800 bg-zinc-950/60 transition hover:bg-zinc-900"
-                title="Expand ask panel (⌘\)"
+          {/* RIGHT RAIL — hosts the inner [ side | ask ] group. Resizing
+              within this panel stays local to the rail. */}
+          <Panel id="right" defaultSize={RIGHT_DEFAULT} minSize={RIGHT_MIN}>
+            <Group orientation="horizontal" className="h-full">
+              {/* SIDE PANEL — collapsed by default; opens when a node is selected. */}
+              <Panel
+                id="side"
+                panelRef={sidePanelRef}
+                defaultSize="0%"
+                minSize="30%"
+                collapsedSize="0%"
+                collapsible
+                className="bg-zinc-950"
               >
-                <span
-                  className="font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500 group-hover:text-zinc-200"
-                  style={{ writingMode: "vertical-rl" }}
-                >
-                  ask postmortem
-                </span>
-                <span className="font-mono text-lg text-[#d4a24c]">⌘\</span>
-              </button>
-            ) : (
-              <AskPanel
-                repo={ledger.repo}
-                decisions={ledger.decisions}
-                suggestedQueries={suggestedQueries}
-                selectedDecision={selected}
-                onSubgraph={(anchorPr, prs) => setSubgraph({ anchorPr, prs })}
-              />
-            )}
+                <AnimatePresence>
+                  {selected ? (
+                    <motion.section
+                      key={selected.id}
+                      initial={reduced ? false : { opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={reduced ? { opacity: 0 } : { opacity: 0, x: 20 }}
+                      transition={reduced ? { duration: 0 } : { duration: 0.22, ease: "easeOut" }}
+                      className="flex h-full flex-col border-r border-zinc-800"
+                    >
+                      <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-3 py-2 backdrop-blur">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                          decision detail
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedId(null)}
+                          title="Close (Esc)"
+                          className="rounded-sm px-2 py-0.5 font-mono text-[11px] text-zinc-500 transition hover:bg-zinc-900 hover:text-zinc-100"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div className="flex-1 overflow-hidden">
+                        <DecisionSidePanel decision={selected} />
+                      </div>
+                    </motion.section>
+                  ) : null}
+                </AnimatePresence>
+              </Panel>
+
+              {selected ? <ResizeSeparator /> : null}
+
+              {/* ASK PANEL — always rendered; collapses to an edge tab via ⌘\. */}
+              <Panel
+                id="ask"
+                panelRef={askPanelRef}
+                defaultSize={ASK_DEFAULT_IN_RAIL}
+                minSize={ASK_COLLAPSED_IN_RAIL}
+              >
+                {askCollapsed ? (
+                  <button
+                    type="button"
+                    onClick={() => setAskCollapsed(false)}
+                    className="group flex h-full w-full flex-col items-center justify-center gap-3 border-l border-zinc-800 bg-zinc-950/60 transition hover:bg-zinc-900"
+                    title="Expand ask panel (⌘\)"
+                  >
+                    <span
+                      className="font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500 group-hover:text-zinc-200"
+                      style={{ writingMode: "vertical-rl" }}
+                    >
+                      ask postmortem
+                    </span>
+                    <span className="font-mono text-lg text-[#d4a24c]">⌘\</span>
+                  </button>
+                ) : (
+                  <AskPanel
+                    repo={ledger.repo}
+                    decisions={ledger.decisions}
+                    suggestedQueries={suggestedQueries}
+                    selectedDecision={selected}
+                    onSubgraph={(anchorPr, prs) => setSubgraph({ anchorPr, prs })}
+                  />
+                )}
+              </Panel>
+            </Group>
           </Panel>
         </Group>
       </div>
