@@ -109,9 +109,35 @@ export function EntryGallery({ repos, apiBase }: { repos: RepoSummary[]; apiBase
                           &ldquo;{teaser}&rdquo;
                         </p>
                       ) : null}
-                      <span className="mt-auto pt-6 inline-flex items-center gap-1 font-mono text-xs text-zinc-400 group-hover:text-zinc-50">
-                        Open ledger →
-                      </span>
+                      <div className="mt-auto flex items-center justify-between pt-6">
+                        <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-zinc-500">
+                          <span className="tabular-nums text-[#d4a24c]">
+                            $
+                            <CountUp
+                              value={repo.ingestion_cost_usd ?? 0}
+                              decimals={2}
+                              duration={1.1}
+                            />
+                          </span>
+                          <span>ingested</span>
+                          {repo.query_count > 0 ? (
+                            <>
+                              <span className="text-zinc-700">·</span>
+                              <span className="tabular-nums">
+                                {repo.query_count} q · $
+                                <CountUp
+                                  value={repo.query_cost_usd ?? 0}
+                                  decimals={2}
+                                  duration={1.1}
+                                />
+                              </span>
+                            </>
+                          ) : null}
+                        </span>
+                        <span className="inline-flex items-center gap-1 font-mono text-xs text-zinc-400 group-hover:text-zinc-50">
+                          Open →
+                        </span>
+                      </div>
                     </Link>
                   </motion.div>
                 </motion.li>

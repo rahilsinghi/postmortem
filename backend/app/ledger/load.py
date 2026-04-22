@@ -37,17 +37,51 @@ class LedgerSnapshot:
 
 
 def list_repos(db_path: str | Path) -> list[dict[str, Any]]:
+    """Return one row per repo with decision + cost aggregates.
+
+    Ingestion cost is joined from `ingestion_runs`; query cost + count come
+    from `query_runs` (populated by /api/query and /api/impact). Numbers are
+    summed across ALL runs for the repo, so re-ingestion adds — it doesn't
+    overwrite — and the gallery reflects lifetime spend.
+    """
     conn = connect(str(db_path))
     try:
         rows = conn.execute("""
-            SELECT repo,
-                   COUNT(*) AS decisions,
-                   COUNT(DISTINCT category) AS categories,
-                   MIN(decided_at) AS earliest,
-                   MAX(decided_at) AS latest
-            FROM decisions
-            GROUP BY repo
-            ORDER BY decisions DESC
+            WITH repo_decisions AS (
+                SELECT repo,
+                       COUNT(*) AS decisions,
+                       COUNT(DISTINCT category) AS categories,
+                       MIN(decided_at) AS earliest,
+                       MAX(decided_at) AS latest
+                FROM decisions
+                GROUP BY repo
+            ),
+            repo_ingest AS (
+                SELECT repo, COALESCE(SUM(cost_usd), 0.0) AS ingestion_cost_usd
+                FROM ingestion_runs
+                GROUP BY repo
+            ),
+            repo_query AS (
+                SELECT repo,
+                       COUNT(*) AS query_count,
+                       COALESCE(SUM(cost_usd), 0.0) AS query_cost_usd,
+                       COALESCE(SUM(cache_read_tokens), 0) AS cache_read_tokens
+                FROM query_runs
+                GROUP BY repo
+            )
+            SELECT d.repo,
+                   d.decisions,
+                   d.categories,
+                   d.earliest,
+                   d.latest,
+                   COALESCE(i.ingestion_cost_usd, 0.0) AS ingestion_cost_usd,
+                   COALESCE(q.query_count, 0) AS query_count,
+                   COALESCE(q.query_cost_usd, 0.0) AS query_cost_usd,
+                   COALESCE(q.cache_read_tokens, 0) AS cache_read_tokens
+            FROM repo_decisions d
+            LEFT JOIN repo_ingest i USING (repo)
+            LEFT JOIN repo_query  q USING (repo)
+            ORDER BY d.decisions DESC
             """).fetchall()
         return [
             {
@@ -56,6 +90,10 @@ def list_repos(db_path: str | Path) -> list[dict[str, Any]]:
                 "categories": row[2],
                 "earliest": row[3].isoformat() if row[3] else None,
                 "latest": row[4].isoformat() if row[4] else None,
+                "ingestion_cost_usd": round(float(row[5] or 0.0), 4),
+                "query_count": int(row[6] or 0),
+                "query_cost_usd": round(float(row[7] or 0.0), 4),
+                "cache_read_tokens": int(row[8] or 0),
             }
             for row in rows
         ]

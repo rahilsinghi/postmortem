@@ -205,3 +205,52 @@ class LedgerStore:
                 str(stats.id),
             ],
         )
+
+    def record_query_run(
+        self,
+        *,
+        repo: str,
+        mode: str,
+        question: str,
+        effort: str,
+        self_check: bool,
+        input_tokens: int,
+        output_tokens: int,
+        cache_read_tokens: int,
+        cost_usd: float,
+        verified_count: int,
+        unverified_count: int,
+        anchor_pr: int | None = None,
+    ) -> UUID:
+        """Persist a single /api/query or /api/impact run to the cost ledger.
+
+        Called after the streaming response has emitted its final `usage` event
+        so repo-level totals can be reconstructed without replaying the stream.
+        """
+        run_id = uuid4()
+        self.conn.execute(
+            """
+            INSERT INTO query_runs (
+                id, repo, mode, question, created_at, effort, self_check,
+                input_tokens, output_tokens, cache_read_tokens, cost_usd,
+                verified_count, unverified_count, anchor_pr
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                str(run_id),
+                repo,
+                mode,
+                question,
+                datetime.utcnow(),
+                effort,
+                self_check,
+                input_tokens,
+                output_tokens,
+                cache_read_tokens,
+                cost_usd,
+                verified_count,
+                unverified_count,
+                anchor_pr,
+            ],
+        )
+        return run_id

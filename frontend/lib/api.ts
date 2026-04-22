@@ -6,6 +6,20 @@ export type RepoSummary = {
   categories: number;
   earliest: string | null;
   latest: string | null;
+  ingestion_cost_usd: number;
+  query_count: number;
+  query_cost_usd: number;
+  cache_read_tokens: number;
+};
+
+export type LedgerCost = {
+  ingestion_cost_usd: number;
+  query_cost_usd: number;
+  total_cost_usd: number;
+  query_count: number;
+  cache_read_tokens: number;
+  verified_citations: number;
+  unverified_citations: number;
 };
 
 export type Citation = {
@@ -71,6 +85,7 @@ export type LedgerResponse = {
   edge_count: number;
   decisions: Decision[];
   edges: Edge[];
+  cost: LedgerCost;
 };
 
 export async function fetchRepos(): Promise<RepoSummary[]> {

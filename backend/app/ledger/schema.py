@@ -76,6 +76,28 @@ CREATE TABLE IF NOT EXISTS ingestion_runs (
     cost_usd DOUBLE NOT NULL DEFAULT 0.0,
     notes TEXT
 );
+
+-- Cost-engine ledger: every /api/query and /api/impact run writes one row so
+-- we can aggregate query spend per repo and surface "how much did this
+-- knowledge cost?" on the gallery + ledger chrome.
+CREATE TABLE IF NOT EXISTS query_runs (
+    id UUID PRIMARY KEY,
+    repo TEXT NOT NULL,
+    mode TEXT NOT NULL DEFAULT 'query',   -- 'query' | 'impact'
+    question TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    effort TEXT NOT NULL DEFAULT 'high',  -- 'high' | 'xhigh'
+    self_check BOOLEAN NOT NULL DEFAULT true,
+    input_tokens INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    cache_read_tokens INTEGER NOT NULL DEFAULT 0,
+    cost_usd DOUBLE NOT NULL DEFAULT 0.0,
+    verified_count INTEGER NOT NULL DEFAULT 0,
+    unverified_count INTEGER NOT NULL DEFAULT 0,
+    anchor_pr INTEGER  -- set only for 'impact' runs
+);
+CREATE INDEX IF NOT EXISTS idx_query_runs_repo ON query_runs(repo);
+CREATE INDEX IF NOT EXISTS idx_query_runs_created ON query_runs(created_at DESC);
 """
 
 

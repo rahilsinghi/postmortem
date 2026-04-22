@@ -97,6 +97,16 @@ export function LedgerPage({
             {ledger.alternative_count} alts · {ledger.edge_count} edges
           </span>
           <span className="h-4 w-px bg-zinc-800" />
+          <span
+            className="font-mono text-[11px] uppercase tracking-wider text-zinc-500"
+            title={`ingestion $${ledger.cost.ingestion_cost_usd.toFixed(2)} · ${ledger.cost.query_count} queries $${ledger.cost.query_cost_usd.toFixed(2)}`}
+          >
+            <span className="tabular-nums text-[#d4a24c]">
+              ${ledger.cost.total_cost_usd.toFixed(2)}
+            </span>{" "}
+            ledger cost
+          </span>
+          <span className="h-4 w-px bg-zinc-800" />
           <button
             type="button"
             onClick={() => setAskCollapsed((v) => !v)}

@@ -15,6 +15,7 @@ visually highlight them on the graph.
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import AsyncIterator
 from pathlib import Path
 
@@ -28,6 +29,7 @@ from app.agents.json_utils import extract_json
 from app.config import get_settings, resolve_secret
 from app.errors import safe_error_message
 from app.ledger.load import load_ledger
+from app.ledger.store import LedgerStore
 from app.query.impact import (
     IMPACT_SYSTEM_PROMPT,
     build_impact_subgraph,
@@ -39,6 +41,7 @@ from app.ratelimit import rate_limit
 from app.validators import validate_repo
 
 router = APIRouter(prefix="/api", tags=["impact"])
+_log = logging.getLogger("postmortem")
 
 MODEL = "claude-opus-4-7"
 MAX_TOKENS = 4096
@@ -96,6 +99,7 @@ async def impact_endpoint(
         )
     client = AsyncAnthropic(api_key=api_key)
     tracker = CostTracker()
+    verdict_counts: dict[str, int] = {"verified": 0, "unverified": 0}
 
     async def _events() -> AsyncIterator[dict[str, str]]:
         yield {"event": "phase", "data": "subgraph"}
@@ -216,6 +220,8 @@ async def impact_endpoint(
                         "error": str(exc),
                     }
                 yield {"event": "self_check", "data": json.dumps(sc_obj)}
+                verdict_counts["verified"] = int(sc_obj.get("verified_count", 0) or 0)
+                verdict_counts["unverified"] = int(sc_obj.get("unverified_count", 0) or 0)
                 tracker.record(
                     "impact_self_check",
                     MODEL,
@@ -239,5 +245,26 @@ async def impact_endpoint(
             ),
         }
         yield {"event": "phase", "data": "done"}
+
+        # Persist the run to the cost ledger. Swallow failures — cost-ledger
+        # corruption must never surface to the client.
+        try:
+            with LedgerStore(db_path) as store:
+                store.record_query_run(
+                    repo=repo,
+                    mode="impact",
+                    question=question,
+                    effort="high",
+                    self_check=self_check,
+                    input_tokens=totals.input_tokens,
+                    output_tokens=totals.output_tokens,
+                    cache_read_tokens=totals.cache_read_tokens,
+                    cost_usd=round(totals.cost_usd, 4),
+                    verified_count=verdict_counts["verified"],
+                    unverified_count=verdict_counts["unverified"],
+                    anchor_pr=subgraph.anchor_pr,
+                )
+        except Exception:
+            _log.exception("failed to persist impact query_run for %s", repo)
 
     return EventSourceResponse(_events())
