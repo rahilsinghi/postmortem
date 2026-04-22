@@ -63,14 +63,6 @@ async def query_endpoint(
     client = AsyncAnthropic(api_key=api_key)
     options = QueryOptions(effort=effort, self_check=self_check)
 
-    async def _raw_events() -> AsyncIterator[bytes]:
-        async for chunk in stream_query(client, snapshot, question, options=options):
-            # `stream_query` already formats each chunk as `event: X\ndata: Y\n\n`.
-            # EventSourceResponse wants a dict, but passing raw bytes through the
-            # generator keeps the SSE framing intact — we use `ping=None` to avoid
-            # the library injecting its own keepalives.
-            yield chunk.encode("utf-8")
-
     async def _events() -> AsyncIterator[dict[str, str]]:
         # EventSourceResponse wants (event, data) dicts. Parse our already-framed
         # chunks back into that shape so the library's formatting is consistent.

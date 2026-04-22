@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS decisions (
     pr_url TEXT NOT NULL,
     UNIQUE (repo, pr_number)
 );
+-- Repo-filter pushdown so `SELECT ... WHERE repo = ?` doesn't table-scan as
+-- the ledger grows past ~200 decisions per repo.
+CREATE INDEX IF NOT EXISTS idx_decisions_repo ON decisions(repo);
 
 CREATE TABLE IF NOT EXISTS citations (
     id UUID PRIMARY KEY,
