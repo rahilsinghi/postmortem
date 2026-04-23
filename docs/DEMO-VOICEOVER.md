@@ -279,6 +279,14 @@ supports SSML.
 6. Color grade: push blacks, preserve the amber at 6% warm.
 7. Export H.264, 1080p, AAC 256kbps audio.
 
+## Optional MCP closing segment
+
+The web demo can be extended with a 70-second terminal segment showing
+Postmortem running inside Claude Code as an MCP server. Full script in
+`docs/DEMO-MCP.md`. Recommended edit: cut the web-demo's final 10s
+tagline, stitch directly into Beat M1 of the MCP demo, let the MCP
+Beat M5 carry the tagline instead. Unified runtime: ~3:15.
+
 ## If a beat runs long
 
 The spec has 14 seconds of buffer under the 3:00 ceiling. If you need
