@@ -6,9 +6,12 @@ import { type FormEvent, useCallback, useEffect, useRef, useState } from "react"
 
 import { categoryStyle } from "../../components/CategoryBadge";
 import { CountUp } from "../../components/CountUp";
+import { useDemo } from "../../lib/demo/DemoProvider";
+import { type FixtureEvent, fakeStartIngest } from "../../lib/demo/fixtureClient";
 import {
   type IngestDoneEvent,
   type IngestEvent,
+  type IngestHandlers,
   type IngestPrClassifiedEvent,
   type IngestPrExtractedEvent,
   startIngest,
@@ -117,6 +120,8 @@ export function IngestClient({ initialRepo, initialLimit, initialMinDiscussion }
     }
   }, []);
 
+  const { isDemo } = useDemo();
+
   const startRun = useCallback(
     (repoArg: string, limitArg: number, minArg: number) => {
       esRef.current?.close();
@@ -126,13 +131,28 @@ export function IngestClient({ initialRepo, initialLimit, initialMinDiscussion }
       setDone(null);
       setClassifications([]);
       setExtractions([]);
-      esRef.current = startIngest(
-        repoArg,
-        { onEvent: handleEvent, onClose: () => {} },
-        { limit: limitArg, minDiscussion: minArg, concurrency: 3 },
-      );
+      const handlers: IngestHandlers = { onEvent: handleEvent, onClose: () => {} };
+      if (isDemo) {
+        fetch("/demo/nextjs-ingest-events.json", { cache: "force-cache" })
+          .then((r) => r.json())
+          .then((body: { events: FixtureEvent[] }) => {
+            esRef.current = fakeStartIngest(body.events, handlers, {
+              speed: 1,
+            }) as unknown as EventSource;
+          })
+          .catch((err) => {
+            setErrors((prev) => [...prev, `demo fixture load failed: ${String(err)}`]);
+            setPhase("error");
+          });
+      } else {
+        esRef.current = startIngest(repoArg, handlers, {
+          limit: limitArg,
+          minDiscussion: minArg,
+          concurrency: 3,
+        });
+      }
     },
-    [handleEvent],
+    [handleEvent, isDemo],
   );
 
   useEffect(() => {
@@ -162,6 +182,7 @@ export function IngestClient({ initialRepo, initialLimit, initialMinDiscussion }
         </label>
         <input
           id="repo"
+          name="repo"
           value={repo}
           onChange={(e) => setRepo(e.target.value)}
           placeholder="pmndrs/use-pano"
@@ -175,6 +196,7 @@ export function IngestClient({ initialRepo, initialLimit, initialMinDiscussion }
             </span>
             <input
               type="number"
+              name="limit"
               min={1}
               max={200}
               value={limit}
@@ -189,6 +211,7 @@ export function IngestClient({ initialRepo, initialLimit, initialMinDiscussion }
             </span>
             <input
               type="number"
+              name="minDiscussion"
               min={0}
               value={minDiscussion}
               onChange={(e) => setMinDiscussion(Math.max(0, Number(e.target.value) || 0))}
