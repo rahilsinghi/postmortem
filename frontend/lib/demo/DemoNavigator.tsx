@@ -20,7 +20,7 @@ export function DemoNavigator() {
   const firedRef = useRef<Set<string>>(new Set());
 
   const navigateCues = TIMELINE.filter(
-    (c): c is TimelineCue & { payload: { path: string } } =>
+    (c): c is TimelineCue & { payload: { path: string; continueToTerminal?: boolean } } =>
       c.kind === "navigate" && typeof (c.payload as { path?: string })?.path === "string",
   );
 
@@ -33,6 +33,11 @@ export function DemoNavigator() {
         const params = new URLSearchParams(searchParams.toString());
         params.set("demo", "1");
         params.set("play", "1");
+        // If this is the terminal handoff, also carry auto=1 so the terminal
+        // knows to let the DemoProvider clean up on its own completion.
+        if (cue.payload.continueToTerminal) {
+          params.set("auto", "1");
+        }
         router.push(`${cue.payload.path}?${params.toString()}`);
       }
       // Reset if the clock rewinds past all navigate cues

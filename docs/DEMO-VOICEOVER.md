@@ -1,327 +1,342 @@
-# Demo voiceover script — ElevenLabs TTS + video editor handoff
+# Demo voiceover script — 3-minute combined reel
 
-> Maps every second of the 166-second demo-layer autoplay to voiceover
-> lines, music cues, and zoom recommendations. Each row is one cue from
-> `frontend/lib/demo/timeline.ts`.
+> Maps every second of the ~3:00 combined demo (web autoplay + terminal
+> finale) to voiceover lines, music cues, and zoom recommendations. The
+> web segment is driven by `frontend/lib/demo/timeline.ts` (20 cues,
+> 120 s). The terminal segment is `frontend/lib/demo/terminal-script.ts`
+> (~72 s). One click plays both continuously.
 
-**Voice recommendation (ElevenLabs):** editorial, measured, confident — not
-breathy. Rachel or Dave from the default voice library work. Stability ~60,
-Clarity ~75. Style exaggeration low.
+**Voice recommendation (ElevenLabs):** editorial, measured, confident.
+Rachel or Dave from the default voice library. Stability ~60, Clarity ~75,
+Style exaggeration low.
 
 **Pronunciation glossary for the TTS engine:**
-- "SSE" → spell out as `S S E`
+- "MCP" → `M C P`
+- "SSE" → `S S E`
 - "PR" → `P R`
 - "SDK" → `S D K`
 - "CVA" → `C V A`
 - "Opus four point seven"
 - "*hono*" → `HO-no` (short 'o' both syllables, not "hoh-no")
-- "*zustand*" → `ZOO-stond` (German origin; 'z' is a sharp z)
+- "*zustand*" → `ZOO-stond` (German; 'z' is a sharp z)
 - "node:*" → "node dot star"
 - "$31.87" → "thirty-one dollars eighty-seven cents"
+- "Uint8Array" → "you-int eight array"
 
-**SSML hints:** ElevenLabs respects punctuation for pauses. Use periods for
-hard stops, commas for soft breaks. Where I've marked `[pause 400ms]`, insert
-two spaces after a period, or use `<break time="400ms" />` if the engine
-supports SSML.
+**SSML hints:** periods for hard stops, commas for soft breaks. Where
+I've marked `[pause 400ms]`, insert two spaces after a period, or use
+`<break time="400ms" />` if your engine supports SSML.
 
 ---
 
-## The track — cue-by-cue
+## Section A — Web demo (0:00 – 2:00, 120 s)
 
-### Cue 1 — Gallery intro (0:00 – 0:05)
+### Cue 1 — Gallery intro (0:00 – 0:04)
 
-- **On screen:** amber `▶ Play the Postmortem demo` card, pulsing
-- **Music:** low ambient drone entering, barely there
-- **Zoom:** wide shot of the whole gallery
+- **On screen:** amber `▶ Play the Postmortem demo` card pulses; secondary
+  MCP card visible below it
+- **Music:** low ambient drone entering
+- **Zoom:** wide shot of the gallery
 - **Voice:**
 
-> Engineers spend a third of their time reverse-engineering why code
-> is the way it is. [pause 400ms] The answers almost never live in
-> the code.
+> Engineers spend a third of their time reverse-engineering why code is
+> the way it is. [pause 300ms] The answers rarely live in the code.
 
-### Cue 2 — Hero click (0:05 – 0:08)
+### Cue 2 — Hero click (0:04 – 0:06)
 
-- **On screen:** caption "» loading hermes-agent + hono fixtures" (ignore this — was a draft caption)
-- **Music:** ambient continues
-- **Zoom:** push in slightly toward the hero card
+- **On screen:** loading state, URL stamps with play flag
+- **Music:** first synth pulse
 - **Voice:**
 
-> They live in P R reviews, issue threads, and the heads of engineers
-> who've moved on.
+> They live in P R reviews and the heads of engineers who've moved on.
 
-### Cue 3 — Nav to /ingest (0:08 – 0:10)
+### Cue 3 — Nav to /ingest (0:06 – 0:08)
 
 - **On screen:** route transition
-- **Music:** first synth pulse
-- **Zoom:** brief cut / pull back
-- **Voice:** [silent — let the music breathe]
-
-### Cue 4 — Ingest form typewriter (0:10 – 0:16)
-
-- **On screen:** typewriter fills repo name, limit, min-discussion
-- **Music:** continues low
-- **Zoom:** in on the form
-- **Voice:**
-
-> Postmortem reads that buried intent layer. [pause 300ms] Paste any
-> public GitHub repo.
-
-### Cue 5 — Submit clicks (0:16 – 0:18)
-
-- **On screen:** amber ring-pulse on submit, then LISTING pill activates
-- **Music:** first real beat drops — a rising pulse
-- **Zoom:** pull back to show the full page
-- **Voice:**
-
-> Opus four point seven reads every merged P R, every review thread,
-> every linked issue.
-
-### Cue 6 — Classify + Extract stream (0:18 – 0:43)
-
-- **On screen:** 68 classifier pills flowing into the left column, 33
-  extractor cards popping in on the right, cost counter climbing
-- **Music:** driving pulse, sync to the card pops if possible — crescendo
-  through the segment
-- **Zoom:** split between the two columns; occasional push on an extractor
-  card as it lands
-- **Voice:** [mostly let the stream speak — one short beat at ~0:30]
-
-> Classifier filters out the noise. Every architectural decision goes
-> to an extractor that records its rationale, its forces, its
-> consequences — [pause 400ms] and every alternative that was
-> rejected, cited back to the exact reviewer.
-
-### Cue 7 — Persisting + Stitching (0:43 – 0:50)
-
-- **On screen:** PERSISTING pill activates, then STITCHING EDGES
-- **Music:** pulse steps down, calmer
-- **Zoom:** pull back; KPI tiles in frame
-- **Voice:**
-
-> Stitched into a graph in under a minute. [pause 200ms] Ten dollars of
-> model spend. No hand-labeling.
-
-### Cue 8 — Done pill (0:50 – 0:52)
-
-- **On screen:** DONE pill lights, OPEN LEDGER link amber-pulses
-- **Music:** brief hold
-- **Zoom:** quick focus on the amber pulse
 - **Voice:** [silent]
 
-### Cue 9 — Nav to ledger (0:52 – 0:54)
+### Cue 4 — Form typewriter (0:08 – 0:13)
+
+- **On screen:** repo, limit, min-discussion fields typed
+- **Zoom:** push in on the form
+- **Voice:**
+
+> Paste any public GitHub repo. Opus four point seven takes it from here.
+
+### Cue 5 — Submit click (0:13 – 0:15)
+
+- **On screen:** submit amber-pulse, LISTING pill activates
+- **Music:** beat drops — rising pulse
+- **Voice:** [silent]
+
+### Cue 6 — Classify + Extract stream (0:15 – 0:33)
+
+- **On screen:** 68 classifier pills flow into the left column, 33
+  extractor cards pop in on the right, cost counter climbs
+- **Music:** driving pulse; sync to the card pops
+- **Zoom:** alternate between the two columns; occasional push on an
+  extractor card as it lands
+- **Voice:**
+
+> Every merged P R through a classifier. Every accepted decision through
+> an extractor. [pause 300ms] Every rationale, every rejected alternative,
+> cited to the exact reviewer comment that supports it.
+
+### Cue 7 — Persisting + Stitching (0:33 – 0:38)
+
+- **On screen:** PERSISTING + STITCHING EDGES pills
+- **Music:** pulse steps down
+- **Voice:**
+
+> Stitched into a graph in under a minute. Eleven dollars of model spend.
+
+### Cue 8 — Done pill (0:38 – 0:40)
+
+- **On screen:** DONE pill lights, OPEN LEDGER pulses
+- **Voice:** [silent]
+
+### Cue 9 — Nav to ledger (0:40 – 0:42)
 
 - **On screen:** transition to `/ledger/honojs/hono`
 - **Music:** cinematic swell begins
-- **Zoom:** pull wide for the reveal
-- **Voice:** [silent — the music does the work]
+- **Zoom:** pull wide
+- **Voice:** [silent — let music carry]
 
-### Cue 10 — Graph entrance (0:54 – 0:58)
+### Cue 10 — Graph entrance (0:42 – 0:45)
 
 - **On screen:** 59 hono decision nodes + 27 edges fade in chronologically
-- **Music:** swell continues, resolves to a held note
-- **Zoom:** wide shot of the whole graph
+- **Music:** swell resolves to a held note
 - **Voice:**
 
-> Four years of hono's architectural history. [pause 200ms] Fifty-nine
-> decisions, two hundred thirty-six citations, twenty-seven edges.
+> Four years of hono's architectural history. Fifty-nine decisions.
 
-### Cue 11 — Time Machine autoplay (0:58 – 1:10)
+### Cue 11 — Time Machine autoplay (0:45 – 0:53)
 
-- **On screen:** scrubber rewinds to 2022, then plays forward at ten-times
-  speed; nodes fade in at their real merge dates; past-state tinted slate,
-  present amber
-- **Music:** cinematic theme blooms into its main motif
-- **Zoom:** push in slightly on the scrubber rail, then out as nodes bloom
+- **On screen:** scrubber rewinds to 2022, plays forward at ten-times
+  speed; past-state tinted slate, present amber
+- **Music:** cinematic theme blooms
+- **Zoom:** push on the scrubber then pull out as nodes bloom
 - **Voice:**
 
-> Three years of decisions, compressed to twelve seconds. Every
-> fade-in is a real merge date. Nothing synthetic.
+> Compressed to eight seconds. Every fade-in is a real merge date.
 
-### Cue 12 — Click node #4291 (1:10 – 1:18)
+### Cue 12 — Click node #4291 (0:53 – 0:58)
 
-- **On screen:** node #4291 pulses, side panel slides in showing the
-  rejected alternatives first, then the full rationale
-- **Music:** drops to quiet undercurrent
-- **Zoom:** close in on the side panel's alternatives block
+- **On screen:** #4291 pulses; side panel slides in, rejected alternatives
+  first, then full rationale
+- **Music:** quiet undercurrent
+- **Zoom:** close on the alternatives block
 - **Voice:**
 
-> Every decision carries its rationale — quoted verbatim from the P R
-> comment that supports it — plus every alternative that was rejected,
-> and why.
+> Every decision carries its rationale plus every alternative that was
+> rejected — and why.
 
-### Cue 13 — Click node #3813 (1:18 – 1:26)
+### Cue 13 — Click node #3813 (0:58 – 1:04)
 
-- **On screen:** node #3813 opens; side panel updates to the Buffer-rejection
-  decision
-- **Music:** continues quiet
-- **Zoom:** brief push on the amber strikethrough
+- **On screen:** #3813 opens; side panel updates
 - **Voice:**
 
-> This is the content no static analyzer can reach — [pause 300ms]
-> the roads not taken.
+> The content no static analyzer can reach: the roads not taken.
 
-### Cue 14 — Typewriter question (1:26 – 1:30)
+### Cue 14 — Typewriter question (1:04 – 1:07)
 
-- **On screen:** question types into the ask panel's textarea
-- **Music:** electronic shimmer enters
-- **Zoom:** in on the textarea
+- **On screen:** question types into ask panel
+- **Music:** electronic shimmer
 - **Voice:**
 
-> Now we ask a question the code itself can't answer.
+> Now ask a question the code itself can't answer.
 
-### Cue 15 — Answer streams + Reasoning X-Ray (1:30 – 2:00)
+### Cue 15 — Answer streams + X-Ray (1:07 – 1:29)
 
-- **On screen:** answer streams word by word; below, the cyan Reasoning
-  X-Ray scan-line progresses; trace lines type in with real timestamps —
-  loading ledger, scanning categories, resolved citation → P R 3813 —
-  and finally verified
-- **Music:** cyan shimmer layer overlaps the undercurrent; subtle digital
-  tick per trace line if possible
-- **Zoom:** close on the X-Ray panel first, then pan up to the answer as
-  citations light up inline
+- **On screen:** answer streams with citations; Reasoning X-Ray below
+  shows cyan scan-line + trace lines (loading ledger, scanning, resolved
+  citation, verified)
+- **Music:** cyan shimmer over the undercurrent; subtle digital tick per
+  trace line
+- **Zoom:** close on the X-Ray panel, pan up to the answer as citations
+  light
 - **Voice:**
 
-> Opus four point seven holds the entire ledger in one context.
-> [pause 300ms] The cyan trace is the reasoning, timing-accurate —
-> not simulated. [pause 300ms] The amber lines are real citations,
-> firing the moment the answer names them. [pause 500ms] Every
-> claim gets a verdict in the second pass — all eleven citations,
-> verified against the ledger.
+> Opus holds the full ledger in one context. The cyan trace is real
+> reasoning timing. The amber lines are real citations firing as the
+> answer names them. [pause 400ms] Every claim verified in a second pass.
 
-### Cue 16 — Hover citation → Provenance Peek (2:00 – 2:05)
+### Cue 16 — Hover citation (1:29 – 1:33)
 
-- **On screen:** Provenance Peek card unfurls — amber drop-cap, italic
-  serif quote, attribution chip, related-claims footer
-- **Music:** brief hush
+- **On screen:** Provenance Peek unfurls — drop-cap quote, attribution
+  chip, related-claims footer
 - **Zoom:** tight on the drop-cap
 - **Voice:**
 
-> Every citation is the actual reviewer's words. [pause 300ms] Verbatim.
+> Every citation is the reviewer's actual words. Verbatim.
 
-### Cue 17 — Click citation → Follow the Thread (2:05 – 2:13)
+### Cue 17 — Click citation — Follow the Thread (1:33 – 1:39)
 
-- **On screen:** graph camera spring-pans to P R 3813; it pulses amber;
-  four kin nodes softly tint
-- **Music:** rising note as the camera pans
-- **Zoom:** pull back as the graph re-centers
+- **On screen:** graph spring-pans to P R 3813; anchor pulses; kin nodes
+  soft-tint
+- **Music:** rising note as camera pans
+- **Zoom:** pull back as graph re-centers
 - **Voice:**
 
-> Citations aren't just text. They're a map. [pause 300ms] One click
-> turns the graph into a view of that decision's kin.
+> Citations aren't text. They're a map.
 
-### Cue 18 — Impact query typed + mode toggle (2:13 – 2:17)
+### Cue 18 — Impact query + mode toggle (1:39 – 1:42)
 
-- **On screen:** mode toggles to "impact ripple"; new question types in
-- **Music:** brief silence, then re-entry
-- **Zoom:** pull in on the mode toggle
+- **On screen:** mode toggles, impact question types in
 - **Voice:** [silent]
 
-### Cue 19 — Impact stream (2:17 – 2:37)
+### Cue 19 — Impact stream (1:42 – 1:56)
 
-- **On screen:** impact-ripple subgraph glows amber; answer streams with
-  "direct impact", "second-order impact", "safe to unwind" sections; the
-  X-Ray trace shows `bfs subgraph · 3 decisions · 2 edges`
-- **Music:** main motif returns, darker
-- **Zoom:** alternate between the subgraph highlight and the impact-mode
-  answer
+- **On screen:** subgraph glows amber; impact answer streams with Direct
+  / Second-order / Safe-to-unwind sections
+- **Music:** main motif darker variant
+- **Zoom:** alternate subgraph + impact answer
 - **Voice:**
 
-> Impact Ripple runs a breadth-first search from the anchor decision.
-> [pause 400ms] Postmortem hands Opus only the slice of the ledger
-> that matters — and traces the cascading consequences.
+> Impact Ripple runs a breadth-first search from the anchor and traces
+> the cascade — in the slice of the ledger that matters.
 
-### Cue 20 — Back to gallery (2:37 – 2:43)
+### Cue 20 — Transition to terminal (1:56 – 2:00)
 
-- **On screen:** nav back to `/`, gallery cards visible; hono's cost
-  tile counts up
-- **Music:** resolution — main theme releases tension
-- **Zoom:** pull out to the full gallery; amber cost stat gets a brief
-  focus
+- **On screen:** brief fade, route transition to `/demo/terminal`
+- **Music:** resolve on the web-demo theme, 500ms breath before the
+  terminal ambient layer enters
 - **Voice:**
 
-> Postmortem is not a codebase chat. [pause 300ms] It's a decision
-> archaeologist that never fabricates.
-
-### Cue 21 — Tagline fade (2:43 – 2:46)
-
-- **On screen:** gallery fades to the bottom-of-page tagline
-- **Music:** resolve — final note, sustain, fade
-- **Zoom:** static on the tagline
-- **Voice:**
-
-> Code lives. [pause 500ms] Intent is a ghost. [pause 500ms]
-> Postmortem summons it.
+> Now, inside your editor.
 
 ---
 
-## Music direction (for your composer / stock-track picker)
+## Section B — Terminal demo (2:00 – 3:12, ~72 s)
 
-- **Palette:** dark ambient + subtle electronic pulses. Not cinematic
-  blockbuster. Think *Nine Inch Nails' Ghosts* crossed with *Trent Reznor's
+Timing is approximate — terminal script runs on its own animation clock;
+actual wall-time is ~70-75 s depending on per-character rendering. Aim
+voiceover to land a second or two before each beat's action. If the
+terminal lags, voiceover naturally overlaps; viewer gets a tighter cut.
+
+### Beat T1 — Banner + first prompt (2:00 – 2:04)
+
+- **On screen:** terminal chrome appears, amber "● Claude Code · Opus
+  4.7 · postmortem MCP connected (5 tools)" banner fades in
+- **Music:** ambient pad, very quiet
+- **Zoom:** wide shot on the terminal
+- **Voice:**
+
+> Postmortem ships as an M C P server. One command to register.
+> Claude Code sees five new tools.
+
+### Beat T2 — List ledgers (2:04 – 2:18)
+
+- **On screen:** user types `claude "list postmortem ledgers"` → tool
+  pill flashes "invoking postmortem_list_repos" → ✓ 420ms → markdown
+  table streams in → Claude summarises
+- **Music:** ambient holds, no drums
+- **Zoom:** close on the markdown table rows as they land
+- **Voice:**
+
+> Claude now knows, across every repo, what architectural history exists.
+> No browser tab required.
+
+### Beat T3 — Ask a question (2:18 – 2:46)
+
+- **On screen:** `claude "why does hono reject node:* modules in core?"`
+  → `invoking postmortem_query…` spinner → 18.4s tool duration rendered
+  → answer streams with amber citation brackets `[PR #3813, @yusukebe,
+  2025-01-09]` glowing as each first renders
+- **Music:** subtle cyan shimmer layer
+- **Zoom:** when each citation bracket appears, quick push → pull (your
+  post-production layer)
+- **Voice:**
+
+> The tool hands the question to Postmortem. Postmortem holds the full
+> 59-decision ledger in one context and answers with citations —
+> verbatim, traced. [pause 400ms] All eleven citations verified against
+> the ledger.
+
+### Beat T4 — Open a decision (2:46 – 2:58)
+
+- **On screen:** `claude "open PR 3813 in hono"` → rationale + rejected
+  alternatives block streams
+- **Music:** continues ambient
+- **Zoom:** focus on the strikethrough "Rejected alternatives" list
+- **Voice:**
+
+> Every rejected alternative cited to the reviewer quote that killed it.
+
+### Beat T5 — Close caption (2:58 – 3:12)
+
+- **On screen:** overlay fades in — "one tool. every architectural
+  decision. cited." → back to gallery
+- **Music:** resolve; final note sustains, fades
+- **Voice:**
+
+> Postmortem is not another app you context-switch into. [pause 300ms]
+> It is infrastructure — a memory layer your existing tools can call.
+> [pause 500ms] Code lives. [pause 500ms] Intent is a ghost.
+> [pause 500ms] Postmortem summons it.
+
+---
+
+## Music direction
+
+- **Palette:** dark ambient + subtle electronic pulses. Not blockbuster
+  cinematic. Think *Nine Inch Nails' Ghosts* meets *Trent Reznor's
   Social Network* opener.
-- **BPM:** ~80 through the middle, rising to ~100 during Time Machine and
-  Impact Ripple, settling back.
-- **Structure:** A-theme (0:00–0:50 ingest), B-theme (0:54–1:10 Time
-  Machine swell + graph entrance — the emotional peak), undercurrent
-  (1:10–2:00), B-theme again (2:00–2:37), resolution (2:37–2:46).
-- **Drops / hits:** at 0:18 (stream begins), 0:54 (nav to ledger),
-  1:30 (answer stream), 2:37 (gallery return).
+- **BPM:** ~80 through the middle; rises to ~100 during Time Machine
+  and Impact Ripple; settles back for the terminal ambient layer.
+- **Structure:** A-theme (web ingest, 0:00-0:38), B-theme (web graph
+  reveal + Time Machine, 0:40-1:04, emotional peak), undercurrent
+  (web query + peek + thread, 1:04-1:56), handoff breath (1:56-2:04),
+  ambient pad (terminal, 2:04-2:58), resolve (closing tagline, 2:58-3:12).
+- **Drops:** at 0:15 (stream begins), 0:42 (nav to ledger), 1:07 (answer
+  streams), 2:04 (terminal boots — low, not grand).
 
 ## Recording workflow
 
-1. Generate each voiceover block in ElevenLabs separately (one audio file
-   per cue) so you can time-align each to its window in the editor.
-2. Record a 180-second screen capture of the demo at 60 fps, 1440×900,
-   cursor hidden.
-3. Import into your editor (Final Cut / Premiere / DaVinci).
-4. Layer voiceover + music per this doc.
-5. Add zoom / push-in effects per the **Zoom** column.
-6. Color grade: push blacks, preserve the amber at 6% warm.
-7. Export H.264, 1080p, AAC 256kbps audio.
-
-## Optional MCP closing segment
-
-The web demo can be extended with a 70-second terminal segment showing
-Postmortem running inside Claude Code as an MCP server. Full script in
-`docs/DEMO-MCP.md`. Recommended edit: cut the web-demo's final 10s
-tagline, stitch directly into Beat M1 of the MCP demo, let the MCP
-Beat M5 carry the tagline instead. Unified runtime: ~3:15.
+1. Generate each voice block in ElevenLabs per this doc — one audio
+   file per cue so each aligns separately in the editor.
+2. Screen-record a 200-second capture (leave buffer) at 60 fps, 1440×900,
+   cursor hidden. Backend can be off — it's cold-boot capable.
+3. Click the primary `▶ Play the Postmortem demo` card. The full 3-min
+   flow runs uninterrupted.
+4. Edit: layer voice + music. Add zoom / push-in effects per each cue's
+   **Zoom** note.
+5. Color grade: crush blacks; preserve amber at 6% warm; cyan a touch
+   cooler than the screen default.
+6. Export H.264, 1080p, AAC 256 kbps.
 
 ## If a beat runs long
 
-The spec has 14 seconds of buffer under the 3:00 ceiling. If you need
-more slack:
-- Cut the voice at cue 7 ("Stitched into a graph…") entirely — the visual
-  carries the stitching beat alone.
-- Shorten cue 15's answer monologue to just "The cyan trace is real reasoning.
-  The amber lines are real citations." — saves about 4 seconds.
-- Cut the tagline pauses from 500ms to 300ms.
+Combined nominal is ~3:12 in testing. To trim down to 3:00 flat:
+- Skip Beat T4's claude-say (“Every rejected alternative…”) — saves ~3 s
+- Shorten Cue 15 monologue to its first two sentences — saves ~4 s
+- Cut the tagline pauses from 500 ms to 300 ms — saves ~1 s
+- Remove the "Now, inside your editor" line at Cue 20 — saves ~2 s
 
 ## Approximate spoken duration per cue
 
-(Measured against a 160 wpm reading pace, the speed a polished editorial
-voice hits naturally.)
+| Section | Cue / Beat | Window | Spoken words | Secs |
+|---|---|---:|---:|---:|
+| A | Cue 1 | 4s | 24 | 9 |
+| A | Cue 2 | 2s | 14 | 5 |
+| A | Cue 4 | 5s | 13 | 5 |
+| A | Cue 6 | 18s | 31 | 12 |
+| A | Cue 7 | 5s | 13 | 5 |
+| A | Cue 10 | 3s | 9 | 3 |
+| A | Cue 11 | 8s | 12 | 4 |
+| A | Cue 12 | 5s | 17 | 6 |
+| A | Cue 13 | 6s | 12 | 4 |
+| A | Cue 14 | 3s | 9 | 3 |
+| A | Cue 15 | 22s | 42 | 16 |
+| A | Cue 16 | 4s | 8 | 3 |
+| A | Cue 17 | 6s | 9 | 3 |
+| A | Cue 19 | 14s | 29 | 11 |
+| A | Cue 20 | 4s | 4 | 1 |
+| B | T1 | 4s | 22 | 8 |
+| B | T2 | 14s | 21 | 8 |
+| B | T3 | 28s | 37 | 14 |
+| B | T4 | 12s | 12 | 4 |
+| B | T5 | 14s | 30 | 11 |
 
-| Cue | Words | Seconds spoken | Window | Slack |
-|---|---:|---:|---:|---:|
-| 1 | 28 | 10.5 | 5.0 | **-5.5** (tight — consider shortening) |
-| 2 | 17 | 6.4 | 3.0 | **-3.4** (will run into cue 3) |
-| 4 | 11 | 4.1 | 6.0 | 1.9 |
-| 5 | 16 | 6.0 | 2.0 | **-4.0** (will run into cue 6) |
-| 6 | 34 | 12.8 | 25.0 | 12.2 |
-| 7 | 13 | 4.9 | 7.0 | 2.1 |
-| 10 | 13 | 4.9 | 4.0 | **-0.9** |
-| 11 | 19 | 7.1 | 12.0 | 4.9 |
-| 12 | 29 | 10.9 | 8.0 | **-2.9** (tight) |
-| 13 | 11 | 4.1 | 8.0 | 3.9 |
-| 14 | 10 | 3.8 | 4.0 | 0.2 |
-| 15 | 59 | 22.1 | 30.0 | 7.9 |
-| 16 | 9 | 3.4 | 5.0 | 1.6 |
-| 17 | 19 | 7.1 | 8.0 | 0.9 |
-| 19 | 32 | 12.0 | 20.0 | 8.0 |
-| 20 | 15 | 5.6 | 6.0 | 0.4 |
-| 21 | 7 | 2.6 | 3.0 | 0.4 |
-
-**Net:** a few cues run tight. The easy fix is to overlap voice across cue
-boundaries — the caption rail and the on-screen action don't care whether
-the VO is still speaking from the previous beat.
+Across cues most voice fits inside each window; cue 15 + T3 are tight
+but intentionally overlap a touch into the next beat.

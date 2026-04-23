@@ -25,6 +25,7 @@ type DemoContextValue = {
   totalSec: number;
   play: () => void;
   abort: () => void;
+  complete: () => void;
 };
 
 const DemoContext = createContext<DemoContextValue | null>(null);
@@ -97,6 +98,17 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     window.setTimeout(() => setState("idle"), 400);
   }, [clockSec, router]);
 
+  /**
+   * Called by the terminal demo when its own script finishes. Unlike abort,
+   * this is the natural completion path — resets clock + state, navigates
+   * cleanly to gallery, no aborted-flash.
+   */
+  const complete = useCallback(() => {
+    clockSec.set(0);
+    setState("idle");
+    router.replace("/");
+  }, [clockSec, router]);
+
   // Esc aborts while armed or playing
   useEffect(() => {
     if (state !== "playing" && state !== "armed") return;
@@ -114,6 +126,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     totalSec,
     play,
     abort,
+    complete,
   };
 
   return (
