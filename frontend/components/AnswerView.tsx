@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { type AnswerStep, parseAnswer } from "../lib/answerParser";
 import type { Decision } from "../lib/api";
@@ -8,6 +9,7 @@ import { parseCitations, splitWithCitations } from "../lib/citations";
 import { useReducedMotion } from "../lib/motion";
 import type { SelfCheckResult } from "../lib/query";
 import { CitationChip } from "./CitationChip";
+import { InterviewButton } from "./InterviewButton";
 
 /**
  * "Anchored claim cards" answer layout.
@@ -55,6 +57,14 @@ export function AnswerView({
     () => citationSummary(parsed.steps, decisions),
     [parsed.steps, decisions],
   );
+  const pathname = usePathname() ?? "";
+  const pathMatch = /\/ledger\/([^/]+)\/([^/?#]+)/.exec(pathname);
+  const owner = pathMatch?.[1] ?? "";
+  const repo = pathMatch?.[2] ?? "";
+  const dominant = useMemo(
+    () => dominantAuthor(parsed.tldr ?? "", parsed.steps),
+    [parsed.tldr, parsed.steps],
+  );
   if (!text) return null;
 
   const tailSections = parsed.tail ? splitTail(parsed.tail) : [];
@@ -88,6 +98,16 @@ export function AnswerView({
             {summary ? (
               <div className="mt-3 border-t border-zinc-900 pt-2 font-mono text-[10px] uppercase tracking-wider text-zinc-500">
                 {summary}
+              </div>
+            ) : null}
+            {dominant && owner && repo ? (
+              <div className="mt-3 border-t border-[#d4a24c]/20 pt-2">
+                <InterviewButton
+                  variant="answer-inline"
+                  owner={owner}
+                  repo={repo}
+                  author={dominant}
+                />
               </div>
             ) : null}
           </div>
@@ -695,4 +715,25 @@ function trimToWordBoundary(text: string): string {
   }
   if (cutoff < 0) return "";
   return text.slice(0, cutoff + 1);
+}
+
+function dominantAuthor(tldr: string, steps: AnswerStep[]): string | null {
+  const counts = new Map<string, number>();
+  let total = 0;
+  const bodies = [tldr, ...steps.map((s) => s.body)];
+  const re = /\[[^\]]*@([A-Za-z0-9][A-Za-z0-9-]*),/g;
+  for (const body of bodies) {
+    let m: RegExpExecArray | null = re.exec(body);
+    while (m !== null) {
+      counts.set(m[1], (counts.get(m[1]) ?? 0) + 1);
+      total++;
+      m = re.exec(body);
+    }
+    re.lastIndex = 0;
+  }
+  if (total < 3) return null;
+  for (const [author, n] of counts) {
+    if (n / total > 0.6) return author;
+  }
+  return null;
 }
