@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import type { Decision } from "../lib/api";
+import { parseCitations } from "../lib/citations";
 import { fadeSlideItem, staggerContainer, useReducedMotion } from "../lib/motion";
 import {
   type QueryPhase,
@@ -14,6 +15,11 @@ import {
 } from "../lib/query";
 import { CountUp } from "./CountUp";
 import { ReasoningTrace } from "./ReasoningTrace";
+import { ReasoningXRay, type TraceStep } from "./ReasoningXRay";
+
+// Query engine's upper bound for a single answer. Mirrors QUERY_MAX_TOKENS
+// on the backend — used as the scan-line denominator.
+const REASONING_MAX_TOKENS = 8192;
 
 type Props = {
   repo: string;
@@ -41,13 +47,25 @@ export function AskPanel({
   const [error, setError] = useState<string | null>(null);
   const [selfCheckEnabled, setSelfCheckEnabled] = useState(false);
   const [mode, setMode] = useState<"query" | "impact">("query");
+  const [xraySteps, setXraySteps] = useState<TraceStep[]>([]);
+  const [outputTokens, setOutputTokens] = useState(0);
   const reduced = useReducedMotion();
   const esRef = useRef<EventSource | null>(null);
+  const streamStartRef = useRef<number>(0);
+  const seenCitationsRef = useRef<Set<string>>(new Set());
+  // Running token estimate during the stream — 1 token ≈ 4 chars is a rough
+  // industry heuristic that's good enough to drive a scan-line. Reset per run.
+  const streamedCharsRef = useRef<number>(0);
 
   useEffect(() => {
     return () => {
       esRef.current?.close();
     };
+  }, []);
+
+  const pushStep = useCallback((kind: TraceStep["kind"], text: string) => {
+    const ts = performance.now() - streamStartRef.current;
+    setXraySteps((prev) => [...prev, { id: `${kind}-${prev.length}`, timestamp: ts, kind, text }]);
   }, []);
 
   const run = useCallback(
@@ -60,17 +78,47 @@ export function AskPanel({
       setUsage(null);
       setSelfCheck(null);
       setError(null);
+      setXraySteps([]);
+      setOutputTokens(0);
+      streamStartRef.current = performance.now();
+      seenCitationsRef.current.clear();
+      streamedCharsRef.current = 0;
       esRef.current = startQuery(
         repo,
         q,
         {
-          onPhase: setPhase,
+          onPhase: (p) => {
+            setPhase(p);
+            pushStep("phase", p.replaceAll("_", " "));
+          },
           onStats: setStats,
-          onDelta: (text) => setAnswer((prev) => prev + text),
+          onDelta: (text) => {
+            setAnswer((prev) => prev + text);
+            // Rough running token estimate so the scan-line moves during the
+            // stream (the real output_tokens count only arrives in `usage`).
+            streamedCharsRef.current += text.length;
+            setOutputTokens(Math.floor(streamedCharsRef.current / 4));
+            // Synthesize a "resolved citation" trace step the first time each
+            // unique citation token appears in the stream. `decisions` gives
+            // us the human-readable title to pair with the PR number.
+            const matches = parseCitations(text);
+            for (const m of matches) {
+              if (seenCitationsRef.current.has(m.token)) continue;
+              seenCitationsRef.current.add(m.token);
+              if (!m.prNumber) continue;
+              const title = decisions.find((d) => d.pr_number === m.prNumber)?.title;
+              const suffix = title ? ` · ${title.slice(0, 48)}` : "";
+              pushStep("citation", `resolved citation → PR #${m.prNumber}${suffix}`);
+            }
+          },
           onSelfCheck: setSelfCheck,
-          onUsage: setUsage,
+          onUsage: (u) => {
+            setUsage(u);
+            setOutputTokens(u.output_tokens);
+          },
           onError: setError,
           onSubgraph: (sub) => onSubgraph?.(sub.anchor_pr, sub.included_prs),
+          onThought: (t) => pushStep("thought", t.label),
         },
         {
           selfCheck: selfCheckEnabled,
@@ -79,7 +127,7 @@ export function AskPanel({
         },
       );
     },
-    [repo, selfCheckEnabled, mode, selectedDecision, onSubgraph],
+    [repo, selfCheckEnabled, mode, selectedDecision, onSubgraph, decisions, pushStep],
   );
 
   const canRunImpact = selectedDecision !== null && selectedDecision !== undefined;
@@ -218,6 +266,13 @@ export function AskPanel({
             pass and cites every claim back to a PR comment.
           </p>
         ) : null}
+
+        <ReasoningXRay
+          steps={xraySteps}
+          outputTokens={outputTokens}
+          maxTokens={REASONING_MAX_TOKENS}
+          done={phase === "done"}
+        />
 
         {selfCheck ? (
           <div className="mt-5 rounded-lg border border-zinc-800 bg-zinc-950 p-3 font-mono text-[11px] text-zinc-400">
