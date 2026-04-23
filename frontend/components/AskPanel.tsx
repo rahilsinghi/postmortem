@@ -7,6 +7,7 @@ import type { Decision } from "../lib/api";
 import { parseCitations } from "../lib/citations";
 import { useDemo } from "../lib/demo/DemoProvider";
 import { type FixtureEvent, fakeStartQuery } from "../lib/demo/fixtureClient";
+import { useCueTrigger } from "../lib/demo/useDemoClock";
 import { fadeSlideItem, staggerContainer, useReducedMotion } from "../lib/motion";
 import {
   type QueryEvents,
@@ -153,6 +154,16 @@ export function AskPanel({
     ev.preventDefault();
     run(question);
   };
+
+  // Demo mode: fire the query ~700ms after the typewriter cue kicks in so
+  // the viewer sees the question typed out before the stream starts.
+  useCueTrigger("type-query", () => {
+    window.setTimeout(() => run("Why does Hono reject node:* modules in core?", "query"), 700);
+  });
+  useCueTrigger("type-impact-query", () => {
+    setMode("impact");
+    window.setTimeout(() => run("What breaks if node:* is allowed in core?", "impact"), 700);
+  });
 
   const busy = phase !== "idle" && phase !== "done";
 

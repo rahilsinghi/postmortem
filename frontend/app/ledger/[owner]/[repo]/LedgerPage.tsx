@@ -11,6 +11,8 @@ import { LedgerGraph } from "../../../../components/LedgerGraph";
 import { TimelineRail } from "../../../../components/TimelineRail";
 import { useThreadFollower } from "../../../../hooks/useThreadFollower";
 import type { LedgerResponse } from "../../../../lib/api";
+import { useTypedCue } from "../../../../lib/demo/TypedInput";
+import { useCueTrigger } from "../../../../lib/demo/useDemoClock";
 import { useReducedMotion } from "../../../../lib/motion";
 
 // react-resizable-panels v4 treats bare numeric values as PIXELS — we have to
@@ -47,6 +49,31 @@ export function LedgerPage({
 
   const sidePanelRef = useRef<PanelImperativeHandle | null>(null);
   const askPanelRef = useRef<PanelImperativeHandle | null>(null);
+
+  // Demo cue triggers — all no-ops when not in demo mode (cue never fires
+  // because the clock never starts).
+  useTypedCue("type-query", "textarea#q", "Why does Hono reject node:* modules in core?");
+  useTypedCue("type-impact-query", "textarea#q", "What breaks if node:* is allowed in core?");
+  useCueTrigger("time-machine-play", () => {
+    const btn = document.querySelector<HTMLButtonElement>('button[title^="play"]');
+    btn?.click();
+  });
+  useCueTrigger("click-node-4291", () => {
+    const node = document.querySelector<HTMLElement>("[data-pr='4291']");
+    node?.click();
+  });
+  useCueTrigger("click-node-3813", () => {
+    const node = document.querySelector<HTMLElement>("[data-pr='3813']");
+    node?.click();
+  });
+  useCueTrigger("hover-first-chip", () => {
+    const chip = document.querySelector<HTMLElement>('.relative.inline-block a[href*="github"]');
+    chip?.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+  });
+  useCueTrigger("click-first-chip", () => {
+    const chip = document.querySelector<HTMLElement>('.relative.inline-block a[href*="github"]');
+    chip?.click();
+  });
 
   // Time Machine: a single cutoff motion value shared by the graph (per-node
   // opacity pipeline) and the scrubber rail. Starts at +Infinity ("present"

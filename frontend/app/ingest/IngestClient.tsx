@@ -6,6 +6,7 @@ import { type FormEvent, useCallback, useEffect, useRef, useState } from "react"
 
 import { categoryStyle } from "../../components/CategoryBadge";
 import { CountUp } from "../../components/CountUp";
+import { DemoHighlight } from "../../lib/demo/DemoHighlight";
 import { useDemo } from "../../lib/demo/DemoProvider";
 import { type FixtureEvent, fakeStartIngest } from "../../lib/demo/fixtureClient";
 import {
@@ -173,6 +174,10 @@ export function IngestClient({ initialRepo, initialLimit, initialMinDiscussion }
 
   return (
     <div className="space-y-6">
+      {/* Demo: amber ring-pulse leads the eye to the submit button and,
+          once the ingest finishes, the Open-Ledger link. No-op when not demoing. */}
+      <DemoHighlight cueId="submit-ingest" selector='button[type="submit"]' />
+      <DemoHighlight cueId="ingest-done" selector="a[href^='/ledger/']" />
       <form onSubmit={onSubmit} className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
         <label
           htmlFor="repo"

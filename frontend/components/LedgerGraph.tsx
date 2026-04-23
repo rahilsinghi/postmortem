@@ -91,6 +91,7 @@ function DecisionNode({ data }: NodeProps<FlowNode<DecisionNodeData>>) {
 
   return (
     <motion.div
+      data-pr={data.pr}
       className={`flex flex-col rounded-lg border px-3 py-2 text-left font-mono text-[11px] leading-tight transition-all duration-300 ${ring} ${style.bg} ${style.border} ${style.text} ${dim}`}
       style={{
         width: NODE_WIDTH,
