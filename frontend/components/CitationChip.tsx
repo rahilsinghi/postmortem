@@ -1,11 +1,12 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { type MouseEvent, useState } from "react";
+import { type MouseEvent, useMemo, useState } from "react";
 
-import type { Decision } from "../lib/api";
+import type { Citation, Decision } from "../lib/api";
 import { type CitationMatch, resolveCitation } from "../lib/citations";
-import { SPRING_TACTILE, useReducedMotion } from "../lib/motion";
+import { useReducedMotion } from "../lib/motion";
+import { ProvenanceCard, type ProvenanceKind } from "./ProvenanceCard";
 
 function buildFallbackUrl(match: CitationMatch, decisions: Decision[]): string {
   const decision = decisions.find((d) => d.pr_number === match.prNumber);
@@ -13,15 +14,38 @@ function buildFallbackUrl(match: CitationMatch, decisions: Decision[]): string {
   return "#";
 }
 
-const SOURCE_ICON: Record<string, string> = {
-  pr_body: "◆",
-  pr_comment: "◇",
-  review_comment: "▸",
-  inline_review_comment: "▪",
-  linked_issue_body: "⦿",
-  linked_issue_comment: "○",
-  commit_message: "●",
-};
+/**
+ * Identify which rationale bucket the resolved citation came from so the
+ * hover card can paint the correct kind accent (amber/amber-300/emerald/zinc).
+ */
+function resolveKind(decision: Decision, citation: Citation): ProvenanceKind {
+  if (decision.citations.decision.includes(citation)) return "decision";
+  if (decision.citations.forces.includes(citation)) return "forces";
+  if (decision.citations.consequences.includes(citation)) return "consequences";
+  return "context";
+}
+
+/**
+ * Count citations across the entire loaded ledger that share the resolved
+ * citation's source_id (i.e., reference the same inline-review-comment,
+ * PR body, or commit). Excludes the citation itself. Pure-local, no fetches.
+ */
+function countRelated(decisions: Decision[], citation: Citation): number {
+  let total = 0;
+  for (const d of decisions) {
+    const bucket = [
+      ...d.citations.context,
+      ...d.citations.decision,
+      ...d.citations.forces,
+      ...d.citations.consequences,
+    ];
+    for (const c of bucket) {
+      if (c === citation) continue;
+      if (c.source_id && c.source_id === citation.source_id) total += 1;
+    }
+  }
+  return total;
+}
 
 export function CitationChip({
   match,
@@ -42,6 +66,26 @@ export function CitationChip({
   const resolved = resolveCitation(match, decisions);
   const url = resolved?.citation.url ?? buildFallbackUrl(match, decisions);
 
+  const chipId = useMemo(
+    () =>
+      [
+        match.prNumber ?? match.commitSha ?? "x",
+        match.author,
+        match.dateIso ?? "x",
+        match.kind,
+      ].join("::"),
+    [match.prNumber, match.commitSha, match.author, match.dateIso, match.kind],
+  );
+
+  const resolvedKind: ProvenanceKind = useMemo(
+    () => (resolved ? resolveKind(resolved.decision, resolved.citation) : "context"),
+    [resolved],
+  );
+  const relatedCount = useMemo(
+    () => (resolved ? countRelated(decisions, resolved.citation) : 0),
+    [resolved, decisions],
+  );
+
   const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
     if (!onFollow) return; // no interactive feature wired; let the anchor navigate
     e.preventDefault();
@@ -61,9 +105,6 @@ export function CitationChip({
       : verified === true
         ? "border-emerald-700/70 bg-emerald-950/40 text-emerald-300"
         : "border-zinc-700/70 bg-zinc-900 text-zinc-300 hover:border-[#d4a24c]/60 hover:text-zinc-100";
-
-  const sourceType = resolved?.citation.source_type ?? "pr_body";
-  const icon = SOURCE_ICON[sourceType] ?? "·";
 
   return (
     <motion.span
@@ -124,25 +165,20 @@ export function CitationChip({
       <AnimatePresence>
         {open && resolved ? (
           <motion.span
-            initial={reduced ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={reduced ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.96 }}
-            transition={reduced ? { duration: 0 } : SPRING_TACTILE}
-            className="absolute left-0 top-full z-20 mt-1 block w-[min(34rem,90vw)] rounded-lg border border-zinc-800 bg-zinc-950/95 p-3 text-left text-xs shadow-xl shadow-black/70 backdrop-blur-sm"
+            key={chipId}
+            initial={reduced ? { opacity: 0 } : { opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduced ? { opacity: 0 } : { opacity: 0, y: -4 }}
+            transition={reduced ? { duration: 0 } : { duration: 0.14, ease: "easeOut" }}
+            className="absolute left-0 top-full z-20 mt-1 block w-[min(34rem,90vw)]"
           >
-            <span className="block font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-              <span className="mr-1 text-[#d4a24c]">{icon}</span>
-              {resolved.citation.source_type.replaceAll("_", " ")}
-              {resolved.citation.author ? ` · @${resolved.citation.author}` : ""}
-              {resolved.citation.timestamp ? ` · ${resolved.citation.timestamp.slice(0, 10)}` : ""}
-            </span>
-            <blockquote className="mt-2 block border-l-2 border-[#d4a24c]/50 pl-3 font-sans text-[12px] italic leading-relaxed text-zinc-200">
-              &ldquo;{resolved.citation.quote}&rdquo;
-            </blockquote>
-            <span className="mt-2 block text-[11px] text-zinc-500">
-              On decision #{resolved.decision.pr_number}{" "}
-              <span className="text-zinc-400">{resolved.decision.title}</span>
-            </span>
+            <ProvenanceCard
+              chipId={chipId}
+              kind={resolvedKind}
+              citation={resolved.citation}
+              verified={verified ?? null}
+              relatedCount={relatedCount}
+            />
             {verified === false && unverifiedReason ? (
               <span className="mt-2 block rounded-md border border-rose-800/60 bg-rose-950/30 p-2 font-mono text-[10px] text-rose-300">
                 self-check: {unverifiedReason}
