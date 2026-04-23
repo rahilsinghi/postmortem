@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 
 import { ApiHealth } from "../components/ApiHealth";
 import { ErrorBoundary } from "../components/ErrorBoundary";
+import { DemoProvider } from "../lib/demo/DemoProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,7 +34,12 @@ export default function RootLayout({
       className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <ErrorBoundary>{children}</ErrorBoundary>
+        {/* Suspense boundary required — DemoProvider calls useSearchParams(). */}
+        <Suspense fallback={null}>
+          <DemoProvider>
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </DemoProvider>
+        </Suspense>
         <ApiHealth />
       </body>
     </html>
