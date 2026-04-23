@@ -8,6 +8,7 @@ import { Group, Panel, type PanelImperativeHandle, Separator } from "react-resiz
 import { AskPanel } from "../../../../components/AskPanel";
 import { DecisionSidePanel } from "../../../../components/DecisionSidePanel";
 import { LedgerGraph } from "../../../../components/LedgerGraph";
+import { useThreadFollower } from "../../../../hooks/useThreadFollower";
 import type { LedgerResponse } from "../../../../lib/api";
 import { useReducedMotion } from "../../../../lib/motion";
 
@@ -41,6 +42,7 @@ export function LedgerPage({
   const [subgraph, setSubgraph] = useState<{ anchorPr: number; prs: number[] } | null>(null);
   const [askCollapsed, setAskCollapsed] = useState(false);
   const selected = ledger.decisions.find((d) => d.id === selectedId) ?? null;
+  const thread = useThreadFollower(ledger.decisions, ledger.edges);
 
   const sidePanelRef = useRef<PanelImperativeHandle | null>(null);
   const askPanelRef = useRef<PanelImperativeHandle | null>(null);
@@ -132,8 +134,19 @@ export function LedgerPage({
                 onSelect={setSelectedId}
                 subgraphAnchorPr={subgraph?.anchorPr ?? null}
                 subgraphPrs={subgraph?.prs ?? null}
+                threadKinIds={thread.state.kinIds}
+                threadAnchorId={thread.state.anchorId}
               />
-              {subgraph ? (
+              {thread.state.anchorPr !== null ? (
+                <button
+                  type="button"
+                  onClick={thread.clear}
+                  className="absolute left-3 top-3 rounded-md border border-[#d4a24c]/60 bg-[#d4a24c]/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-[#d4a24c] transition hover:border-[#d4a24c]"
+                >
+                  following thread: PR #{thread.state.anchorPr} · {thread.state.kinIds.size} kin ·
+                  clear
+                </button>
+              ) : subgraph ? (
                 <button
                   type="button"
                   onClick={() => setSubgraph(null)}
@@ -223,6 +236,7 @@ export function LedgerPage({
                     suggestedQueries={suggestedQueries}
                     selectedDecision={selected}
                     onSubgraph={(anchorPr, prs) => setSubgraph({ anchorPr, prs })}
+                    onFollow={thread.follow}
                   />
                 )}
               </Panel>

@@ -10,6 +10,7 @@ import {
   type NodeProps,
   Position,
   ReactFlow,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { AnimatePresence, motion } from "framer-motion";
@@ -31,6 +32,8 @@ type DecisionNodeData = {
   chronoIndex: number;
   /** BFS depth from anchor when a subgraph is active (0 = anchor, 1 = direct neighbor, ...). */
   rippleDepth: number | null;
+  isThreadAnchor: boolean;
+  isKin: boolean;
 };
 
 const NODE_WIDTH = 210;
@@ -46,13 +49,17 @@ function DecisionNode({ data }: NodeProps<FlowNode<DecisionNodeData>>) {
     ? 0
     : Math.min(data.chronoIndex * CHRONO_STAGGER_S, CHRONO_MAX_DELAY_S);
   const rippleDelay = reduced || data.rippleDepth === null ? 0 : data.rippleDepth * RIPPLE_STEP_S;
-  const ring = data.isAnchor
+  const ring = data.isThreadAnchor
     ? "ring-2 ring-[#d4a24c] shadow-[0_0_24px_var(--accent-glow)] scale-[1.08]"
-    : data.selected
-      ? "ring-2 ring-zinc-300 scale-[1.04] shadow-lg shadow-black/50"
-      : data.inSubgraph
-        ? "ring-1 ring-[#d4a24c]/60 shadow-[0_0_12px_rgba(212,162,76,0.25)]"
-        : "shadow-md shadow-black/40";
+    : data.isKin
+      ? "ring-1 ring-[#d4a24c]/40 shadow-[0_0_10px_rgba(212,162,76,0.2)]"
+      : data.isAnchor
+        ? "ring-2 ring-[#d4a24c] shadow-[0_0_24px_var(--accent-glow)] scale-[1.08]"
+        : data.selected
+          ? "ring-2 ring-zinc-300 scale-[1.04] shadow-lg shadow-black/50"
+          : data.inSubgraph
+            ? "ring-1 ring-[#d4a24c]/60 shadow-[0_0_12px_rgba(212,162,76,0.25)]"
+            : "shadow-md shadow-black/40";
   const dim = data.subgraphActive && !data.inSubgraph && !data.isAnchor ? "opacity-30" : "";
 
   return (
@@ -62,7 +69,7 @@ function DecisionNode({ data }: NodeProps<FlowNode<DecisionNodeData>>) {
       initial={reduced ? false : { opacity: 0, scale: 0.9 }}
       animate={{
         opacity: 1,
-        scale: data.isAnchor ? 1.08 : data.selected ? 1.04 : 1,
+        scale: data.isThreadAnchor || data.isAnchor ? 1.08 : data.selected ? 1.04 : 1,
       }}
       transition={{
         duration: reduced ? 0 : 0.3,
@@ -301,6 +308,27 @@ function bfsDepthsFromAnchor(
   return depths;
 }
 
+function CameraController({
+  nodes,
+  threadAnchorId,
+}: {
+  nodes: FlowNode<DecisionNodeData>[];
+  threadAnchorId: string | null | undefined;
+}) {
+  const rf = useReactFlow();
+  useEffect(() => {
+    if (!threadAnchorId) return;
+    const node = nodes.find((n) => n.id === threadAnchorId);
+    if (!node) return;
+    // Anchor at node center (dagre stores top-left in node.position — add half dims)
+    rf.setCenter(node.position.x + NODE_WIDTH / 2, node.position.y + NODE_HEIGHT / 2, {
+      duration: 500,
+      zoom: 1.1,
+    });
+  }, [threadAnchorId, nodes, rf]);
+  return null;
+}
+
 export function LedgerGraph({
   decisions,
   edges,
@@ -308,6 +336,8 @@ export function LedgerGraph({
   onSelect,
   subgraphAnchorPr,
   subgraphPrs,
+  threadKinIds,
+  threadAnchorId,
 }: {
   decisions: Decision[];
   edges: Edge[];
@@ -315,6 +345,8 @@ export function LedgerGraph({
   onSelect: (id: string) => void;
   subgraphAnchorPr?: number | null;
   subgraphPrs?: number[] | null;
+  threadKinIds?: Set<string> | null;
+  threadAnchorId?: string | null;
 }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -343,6 +375,8 @@ export function LedgerGraph({
     const nodes: FlowNode<DecisionNodeData>[] = decisions.map((d) => {
       const inSubgraph = subgraphSet.has(d.pr_number);
       const isAnchor = subgraphAnchorPr != null && subgraphAnchorPr === d.pr_number;
+      const isThreadAnchor = threadAnchorId === d.id;
+      const isKin = threadKinIds?.has(d.id) ?? false;
       return {
         id: d.id,
         type: "decision",
@@ -357,6 +391,8 @@ export function LedgerGraph({
           subgraphActive,
           chronoIndex: chronoIndexByPr.get(d.pr_number) ?? 0,
           rippleDepth: depths?.get(d.pr_number) ?? null,
+          isThreadAnchor,
+          isKin,
         },
       };
     });
@@ -392,7 +428,7 @@ export function LedgerGraph({
       earliest: times[0] ?? null,
       latest: times[times.length - 1] ?? null,
     };
-  }, [decisions, edges, selectedId, subgraphAnchorPr, subgraphPrs]);
+  }, [decisions, edges, selectedId, subgraphAnchorPr, subgraphPrs, threadKinIds, threadAnchorId]);
 
   return (
     <div className={`relative h-full w-full bg-black ${mounted ? "rf-mounted" : ""}`}>
@@ -409,6 +445,7 @@ export function LedgerGraph({
       >
         <Background color="#18181b" gap={28} />
         <Controls className="!bg-zinc-900 !border-zinc-800" />
+        <CameraController nodes={nodes} threadAnchorId={threadAnchorId ?? null} />
       </ReactFlow>
       <CategoryLegend categories={categories} />
       <TimeAxisRail earliest={earliest} latest={latest} />
