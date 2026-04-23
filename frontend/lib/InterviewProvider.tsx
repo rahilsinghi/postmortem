@@ -130,7 +130,7 @@ export function InterviewProvider({
   const searchParams = useSearchParams();
 
   const urlSubject = searchParams.get("interview");
-  const [state, dispatch] = useReducer(reducer, initial, (s) =>
+  const [state, dispatch] = useReducer(reducer, initial, (s): InterviewState =>
     urlSubject ? { ...s, status: "loading_script", subject: urlSubject } : s,
   );
 
