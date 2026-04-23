@@ -312,7 +312,7 @@ function splitHeadline(raw: string): TailItem {
   let text = raw.replace(/^(Related|Supersedes|Depends on):\s*/i, "").trim();
 
   // Case 1: starts with **…** headline
-  const boldMatch = /^\*\*([^*]+?)\*\*\s*(?:[—–-]\s*)?(.*)$/s.exec(text);
+  const boldMatch = /^\*\*([^*]+?)\*\*\s*(?:[—–-]\s*)?([\s\S]*)$/.exec(text);
   if (boldMatch) {
     const headline = boldMatch[1].trim();
     const body = boldMatch[2].trim();
