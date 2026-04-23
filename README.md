@@ -1,56 +1,126 @@
 # Postmortem
 
-**A decision-archaeology agent for any codebase.**
+**A decision-archaeology agent for any GitHub repo.**
+Point it at a codebase — it reads every PR review, every rejected alternative, every architectural debate, and builds a queryable ledger. Ask it anything; get a cited answer back in seconds.
 
 Built in 5 days during [*Built with Opus 4.7: a Claude Code Hackathon*](https://cerebralvalley.ai/events/~/e/built-with-4-7-hackathon) — April 21–26, 2026.
+
+> *Code lives. Intent is a ghost. Postmortem summons it.*
+
+---
+
+## At a glance
+
+| | |
+|---|---|
+| **Hosted demo** | _[vercel url will go here once deployed]_ — includes a 3-minute cinematic autoplay (zero backend calls) |
+| **MCP server** | `claude mcp add postmortem -- uv run --project /path/to/backend python -m app.mcp_server` |
+| **Stack** | Next.js 16 · FastAPI · DuckDB · Anthropic Opus 4.7 · 1M context · self-check · SSE streaming |
+| **Hero ledgers** | hono · zustand · next.js · shadcn/ui · self-graphify · supabase — **155 decisions, 1,876 citations, $85** |
+| **License** | MIT |
 
 ---
 
 ## The problem
 
-Engineers spend 20–30% of their time trying to understand *why* existing code is the way it is. The answers are almost never in the code. They're buried in PR discussions, code review debates, issue threads, and the heads of people who've long since left. Existing tools search code; none of them reason over the historical provenance.
+Engineers spend 20–30% of their time reverse-engineering *why* existing code is the way it is. The answers almost never live in the code. They're buried in PR discussions, review threads, and the heads of engineers who've moved on.
 
-## What Postmortem does
+Static analysis reads *what code is*. **Postmortem reads the history of thought behind it** — and Claude Opus 4.7 is the first model with the reasoning depth, agentic self-checking, and 1M context to make this tractable.
 
-Point Postmortem at any public GitHub repository. It reads the entire intent layer — every PR, every review comment, every issue — and builds a **decision ledger**: a queryable graph of the repo's architectural decisions, the rationales behind them, and the alternatives that were rejected.
+---
 
-Ask it:
+## What it does
 
-- *"Why does this codebase use X instead of Y?"*
-- *"What breaks if I change this assumption?"*
-- *"What did the maintainers consider and reject when they made this choice?"*
+Point Postmortem at any public GitHub repo. It reads the entire intent layer — every PR, every review comment, every issue thread — and builds a structured **decision ledger**:
 
-Get back a cited reasoning chain, traced through actual engineering debates, with links to the specific comments and commits. Every claim cites an exact quote; Opus's self-check pass tints unverified citations red.
+- A queryable graph of architectural decisions with rationale and rejected alternatives
+- Every claim cites an exact reviewer quote, verified by a second-pass self-check (unverified citations render red)
+- Three query modes: **Query** (ask anything), **Impact Ripple** (what breaks if X changes?), **Open Decision** (full rationale for one PR)
 
-## Hero ledgers shipped in the submission
+Sample questions it answers well:
 
-| Repo | Decisions | Citations | Alternatives | Edges | Ingestion $ |
-|---|--:|--:|--:|--:|--:|
-| `honojs/hono` | 59 | 751 | 190 | 27 | $31.87 |
-| `pmndrs/zustand` | 41 | 385 | 83 | 36 | $19.99 |
-| `shadcn-ui/ui` | 15 | 181 | 27 | 6 | $7.21 |
-| `rahilsinghi/postmortem` (self-graphify) | 6 | 77 | 5 | 7 | $1.89 |
-| **Total** | **121** | **1,394** | **305** | **76** | **$60.96** |
+- *"Why does this codebase use Uint8Array instead of Buffer?"*
+- *"What alternatives did the maintainers reject when they chose this routing scheme?"*
+- *"What breaks if we relax the `node:*`-modules ban in core?"*
 
-Numbers are live — sourced from `ingestion_runs` in `.cache/ledger.duckdb` at
-commit time, not hand-tallied. All four ledgers ingested for a combined
-**$60.96** of API spend (12% of the $500 hackathon budget).
+---
 
-## What makes this possible
+## Feature tour
 
-Claude Opus 4.7 shipped on April 16, 2026. Postmortem uses its new capabilities as load-bearing infrastructure:
+The web UI has four signature interactions. A 3-minute autoplay on the gallery walks through every one.
 
-- **1M-token context** holds a full decision ledger in memory for query-time reasoning (zustand's 41 decisions serialise to ~68K tokens — plenty of headroom)
-- **Agentic self-checking** verifies every inline citation against the ledger before an answer is returned
-- **Prompt caching** on the system prompts cuts extractor cost by ~40% on the second-and-later calls in a batch
-- **Streaming** over SSE surfaces word-boundary reasoning live, with citation chips resolved client-side against the loaded ledger
+| Feature | What it does |
+|---|---|
+| **Time Machine** | Scrub through the ledger's chronology. Nodes fade in at their real PR-merge dates; three years of architectural thought compressed into a 10-second reveal. |
+| **Reasoning X-Ray** | Cyan scan-line + live trace while Opus answers — phase events, citation-token discoveries, self-check verdict. Not fabricated; every line is real signal. |
+| **Provenance Peek** | Hover any citation chip → editorial card unfurls with the verbatim reviewer quote, source-type glyph, author, timestamp, related-thread link. |
+| **Follow the Thread** | Click a citation → the graph spring-pans to the cited decision, kin nodes (same PR / same author / edge-connected) soft-tint. Citations become a map. |
 
-Ingestion runs through a direct orchestrator (Python, async) that calls each sub-agent via the Anthropic SDK; a Managed Agents session wraps a single-PR demo path per the `managed-agents-2026-04-01` beta. Three sub-agents live in `.claude/agents/`: `decision-classifier` (Sonnet 4.6, runs on every PR), `rationale-extractor` (Opus 4.7, runs on classifier-confirmed decisions), `graph-stitcher` (Sonnet 4.6, batch-runs after extraction). Four skills in `.claude/skills/` cover the supporting capabilities.
+Plus:
+
+- **Impact Ripple** — BFS over the decision graph from any anchor, hand only that slice to Opus, traces cascading consequences with cited claims.
+- **Live ingestion** — paste any public repo, watch classifier + extractor stream in real time with per-PR cost.
+- **Cost engine** — every ingestion and query persists to `query_runs` / `ingestion_runs`; gallery cards show lifetime spend per repo.
+
+---
+
+## Hero ledgers shipped
+
+Numbers are sourced from `.cache/ledger.duckdb` at commit time — not hand-tallied.
+
+| Repo | Decisions | Citations | Alternatives | Edges | Ingested | Queried |
+|---|--:|--:|--:|--:|--:|--:|
+| `honojs/hono` | 59 | 751 | 190 | 27 | $31.87 | $14.78 |
+| `pmndrs/zustand` | 41 | 385 | 83 | 36 | $19.99 | $4.02 |
+| `vercel/next.js` | 33 | 468 | 104 | 14 | $22.50 | — |
+| `shadcn-ui/ui` | 15 | 181 | 27 | 6 | $7.21 | $1.85 |
+| `rahilsinghi/postmortem` *(self-graphify)* | 6 | 77 | 5 | 7 | $1.89 | $1.83 |
+| `supabase/supabase` | 1 | 14 | 1 | 0 | $1.57 | — |
+| **Total** | **155** | **1,876** | **410** | **90** | **$85.03** | **$22.48** |
+
+22% of the $500 hackathon budget — all 9 ingestion runs + 8 query/impact runs.
+
+---
+
+## Postmortem as an MCP server
+
+**Postmortem ships as an MCP stdio server.** Claude Code users can register it in one command and get five new tools:
+
+```bash
+claude mcp add postmortem \
+  --command "uv run --project $(pwd)/backend python -m app.mcp_server" \
+  --transport stdio
+```
+
+Then from any Claude Code session:
+
+```
+» claude "list postmortem ledgers"
+» claude "why does hono reject node:* modules in core?"
+» claude "open PR 3813 in hono"
+» claude "impact ripple from hono PR 3813"
+```
+
+| Tool | Needs API key? | What it does |
+|---|:---:|---|
+| `postmortem_list_repos` | no | markdown table of cached ledgers + lifetime spend |
+| `postmortem_list_decisions` | no | summary list per repo, optional category filter |
+| `postmortem_open_decision` | no | full rationale + rejected alternatives for one PR |
+| `postmortem_query` | yes | Opus 4.7 cited answer + self-check verdict |
+| `postmortem_impact` | yes | BFS subgraph + cascading consequences |
+
+Read-only tools are offline-capable — they hit the local DuckDB directly. Live query / impact calls the Anthropic API. Full docs in [`docs/MCP-SERVER.md`](docs/MCP-SERVER.md).
+
+---
 
 ## Running it locally
 
+**Prereqs:** `uv` · `pnpm` · `GITHUB_TOKEN` + `ANTHROPIC_API_KEY` in `.env.local`
+
 ```bash
-# Prereqs: uv, pnpm, GITHUB_TOKEN + ANTHROPIC_API_KEY in .env.local
+# Clone + install
+git clone https://github.com/rahilsinghi/postmortem.git
+cd postmortem
 
 # Backend
 cd backend && uv sync && \
@@ -60,33 +130,103 @@ cd backend && uv sync && \
 cd frontend && pnpm install && pnpm dev
 # → http://localhost:3000
 
-# Ingest a repo (CLI path)
-cd backend && uv run python ../scripts/ingest.py pmndrs/zustand \
-  --limit 600 --min-discussion 3 --db ../.cache/ledger.duckdb
-
-# Or, from the web UI: click "+ ingest your own" on the entry screen and stream
-# per-PR progress live into Screen 3.
+# Ingest a new repo
+uv run --project backend python scripts/ingest.py pmndrs/zustand \
+  --limit 200 --min-discussion 3 --db .cache/ledger.duckdb
 ```
+
+**Demo layer is cold-boot capable.** The 3-minute autoplay (click `▶ Play the Postmortem demo` on the gallery) runs entirely from `frontend/public/demo/*.json` fixtures — no backend process, no API key required. Useful for recording videos.
+
+---
 
 ## Architecture
 
-Full design in [`docs/SPEC.md`](docs/SPEC.md) (975 lines, locked Day 1). ADRs for every Day-1-through-5 decision live in [`docs/architecture/`](docs/architecture/).
+```
+┌───────────────────────────────────────────────────────────────────┐
+│                         Postmortem ingestion                      │
+│                                                                   │
+│   GitHub GraphQL  ─▶  decision-classifier (Sonnet)                │
+│                             │                                     │
+│                             ▼ accepted PRs only                   │
+│                       rationale-extractor (Opus)                  │
+│                             │                                     │
+│                             ▼                                     │
+│                       graph-stitcher (Sonnet) ─▶ DuckDB           │
+│                                                     │             │
+│                                                     ▼             │
+└──────────────────────────────────────────────────  ledger.duckdb  ┘
+                                                     │
+          ┌──────────────────┬──────────────────────┐│
+          ▼                  ▼                      ▼▼
+    FastAPI /api        MCP stdio server      scripts/ingest.py
+      • /query            • postmortem_query    (CLI path)
+      • /impact           • postmortem_impact
+      • /ingest (SSE)     • postmortem_list_*
+      • /repos, /ledger   • postmortem_open_decision
+          │                       │
+          ▼                       ▼
+    Next.js frontend         Claude Code
+     • entry gallery          • tool invocations
+     • ledger graph           • streaming answers
+     • ask panel              • citation brackets
+     • live ingest UI
+     • demo layer
+```
 
-- **Frontend** — Next.js 16 App Router + Tailwind v4 + Framer Motion + React Flow. Three screens: entry gallery, ledger map + ask panel, live ingestion.
-- **Backend** — FastAPI + sse-starlette + Anthropic SDK. Five routes: `/healthz`, `/api/repos`, `/api/repos/{owner}/{name}/ledger`, `/api/query`, `/api/impact`, `/api/ingest`.
-- **Storage** — DuckDB ledger (decisions / citations / alternatives / edges / ingestion_runs) with idempotent upsert on `(repo, pr_number)`.
-- **Ingestion** — GraphQL-first GitHub fetcher with ETag cache and exponential backoff, parallel classify → filter → extract → stitch orchestrator.
+- **Frontend** — Next.js 16 App Router · Tailwind v4 · Framer Motion 12 · React Flow (dagre LR layout) · Biome · Vitest
+- **Backend** — FastAPI · sse-starlette · Anthropic SDK · httpx · pydantic v2 · DuckDB
+- **Ingestion** — GraphQL-first fetcher with ETag cache + exponential backoff · parallel classify → filter → extract → stitch orchestrator
+- **Storage** — DuckDB ledger: `decisions` · `citations` · `alternatives` · `decision_edges` · `ingestion_runs` · `query_runs` · idempotent upsert on `(repo, pr_number)`
+- **Cost engine** — every run (ingest, query, impact) persists a row; gallery + ledger header surface lifetime spend live
 
-## Status
+Three sub-agents live in [`backend/app/agents/`](backend/app/agents/):
 
-Submission targets Sunday, April 26, 2026, 8:00 PM EST.
+| Agent | Model | Role |
+|---|---|---|
+| `decision-classifier` | Sonnet 4.6 | Per PR: "is this an architectural decision?" |
+| `rationale-extractor` | Opus 4.7 | Per accepted decision: pulls rationale + rejected alternatives with per-claim citations |
+| `graph-stitcher` | Sonnet 4.6 | Finds `supersedes` / `depends_on` / `related_to` edges between decisions |
 
-Postmortem ships with its own commit history in the ledger: the classifier accepted 6 of the 9 commits to date as architectural decisions, and the graph-stitcher traced the supersedes chain from Day 2 foundations → Day 3 query engine → Day 4 impact ripple. Follow the commits to see how this repo became its own test case.
+---
+
+## What makes this possible
+
+Claude Opus 4.7 shipped on April 16, 2026. Postmortem uses its new capabilities as load-bearing infrastructure:
+
+- **1M-token context** — full decision ledger in one pass at query time (hono's 59 decisions serialise to ~145K tokens — plenty of headroom)
+- **Agentic self-checking** — every inline citation is verified against the ledger before the answer is returned; unverified claims tinted red
+- **Prompt caching** — system prompts cached via `cache_control: ephemeral`, cuts extractor cost ~40% on the second call in a batch
+- **Streaming** — SSE word-boundary reasoning surfaces live; citation chips resolved client-side against the loaded ledger
+
+Three sub-agents live in `.claude/agents/`, four Skills in `.claude/skills/` cover supporting capabilities (PR archaeology, commit rationale, citation formatting, ledger writing).
+
+---
+
+## Demo + voiceover scripts
+
+- [`docs/DEMO-VOICEOVER.md`](docs/DEMO-VOICEOVER.md) — ElevenLabs-ready voiceover script for the 3-min combined reel. Cue-mapped, pronunciation glossary, music direction.
+- [`docs/DEMO-MCP.md`](docs/DEMO-MCP.md) — terminal-native MCP demo script (live-terminal recording workflow as an alternative to the web emulator).
+- [`docs/DEMO-SCRIPT.md`](docs/DEMO-SCRIPT.md) — legacy 2-min manual demo walkthrough.
+
+---
+
+## Design docs
+
+Every major wave of work has an approved design spec in [`docs/superpowers/specs/`](docs/superpowers/specs/) and an implementation plan in [`docs/superpowers/plans/`](docs/superpowers/plans/):
+
+- `ambitious-demo-bundle` — Time Machine + Reasoning X-Ray + Provenance Peek + Follow the Thread
+- `demo-layer` — 3-minute cinematic autoplay architecture (URL-flag driven, fixture-replay, zero-backend)
+
+Full SPEC of the underlying product: [`docs/SPEC.md`](docs/SPEC.md) (locked Day 1, 975 lines).
+
+---
+
+## Submission status
+
+Submission: Sunday, April 26, 2026, 8:00 PM EST.
+
+Postmortem ships with its own commit history in the ledger — the classifier accepted 6 of its own architectural decisions, and the graph-stitcher traced supersedes chains through the build days. Follow the commits to see how this repo became its own test case.
 
 ## License
 
 MIT.
-
----
-
-*Code lives. Intent is a ghost. Postmortem summons it.*
