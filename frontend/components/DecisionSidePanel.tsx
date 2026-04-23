@@ -1,11 +1,13 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import type { Citation, Decision } from "../lib/api";
 import { useReducedMotion } from "../lib/motion";
 import { CategoryBadge } from "./CategoryBadge";
+import { InterviewButton } from "./InterviewButton";
 
 const KIND_LABEL: Record<string, string> = {
   context: "context",
@@ -111,6 +113,7 @@ export function DecisionSidePanel({ decision }: { decision: Decision | null }) {
       >
         Open on GitHub ↗
       </a>
+      <DeciderInterview deciders={decision.decided_by} />
 
       {/* ALTERNATIVES FIRST — the unique value prop, gets an amber left rail. */}
       {decision.alternatives.length > 0 ? (
@@ -238,5 +241,19 @@ function CitationCard({ kind, citation }: { kind: string; citation: Citation }) 
         ) : null}
       </AnimatePresence>
     </li>
+  );
+}
+
+function DeciderInterview({ deciders }: { deciders: string[] }) {
+  const pathname = usePathname() ?? "";
+  const m = /\/ledger\/([^/]+)\/([^/?#]+)/.exec(pathname);
+  const owner = m?.[1] ?? "";
+  const repo = m?.[2] ?? "";
+  const author = deciders[0];
+  if (!author || !owner || !repo) return null;
+  return (
+    <div className="mt-2 border-t border-zinc-900 pt-2">
+      <InterviewButton variant="node" owner={owner} repo={repo} author={author} />
+    </div>
   );
 }
