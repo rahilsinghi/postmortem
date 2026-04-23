@@ -13,12 +13,21 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import {
+  AnimatePresence,
+  type MotionValue,
+  motion,
+  useMotionValue,
+  useMotionValueEvent,
+  useTransform,
+} from "framer-motion";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Decision, Edge } from "../lib/api";
 import { useReducedMotion } from "../lib/motion";
 import { categoryStyle } from "./CategoryBadge";
+
+const CutoffContext = createContext<MotionValue<number> | null>(null);
 
 type DecisionNodeData = {
   pr: number;
@@ -34,6 +43,8 @@ type DecisionNodeData = {
   rippleDepth: number | null;
   isThreadAnchor: boolean;
   isKin: boolean;
+  /** Decision timestamp (ISO string) — drives Time Machine cutoff fade. */
+  decidedAt: string | null;
 };
 
 const NODE_WIDTH = 210;
@@ -62,13 +73,33 @@ function DecisionNode({ data }: NodeProps<FlowNode<DecisionNodeData>>) {
             : "shadow-md shadow-black/40";
   const dim = data.subgraphActive && !data.inSubgraph && !data.isAnchor ? "opacity-30" : "";
 
+  // Time Machine pipeline — cutoff motion value drives opacity/filter per frame
+  // without React reconciliation. When no cutoff is provided, the fallback
+  // (positive infinity) makes every node fully visible.
+  const cutoff = useContext(CutoffContext);
+  const fallbackCutoff = useMotionValue(Number.POSITIVE_INFINITY);
+  const activeCutoff = cutoff ?? fallbackCutoff;
+  const decidedMs = data.decidedAt ? new Date(data.decidedAt).getTime() : null;
+  const cutoffOpacity = useTransform(activeCutoff, (c) => {
+    if (decidedMs === null) return 1;
+    return c >= decidedMs ? 1 : 0.08;
+  });
+  const cutoffFilter = useTransform(activeCutoff, (c) => {
+    if (decidedMs === null) return "none";
+    return c >= decidedMs ? "none" : "hue-rotate(-20deg) saturate(0.4) brightness(0.7)";
+  });
+
   return (
     <motion.div
       className={`flex flex-col rounded-lg border px-3 py-2 text-left font-mono text-[11px] leading-tight transition-all duration-300 ${ring} ${style.bg} ${style.border} ${style.text} ${dim}`}
-      style={{ width: NODE_WIDTH, minHeight: NODE_HEIGHT }}
-      initial={reduced ? false : { opacity: 0, scale: 0.9 }}
+      style={{
+        width: NODE_WIDTH,
+        minHeight: NODE_HEIGHT,
+        opacity: cutoffOpacity,
+        filter: cutoffFilter,
+      }}
+      initial={reduced ? false : { scale: 0.9 }}
       animate={{
-        opacity: 1,
         scale: data.isThreadAnchor || data.isAnchor ? 1.08 : data.selected ? 1.04 : 1,
       }}
       transition={{
@@ -341,6 +372,7 @@ export function LedgerGraph({
   subgraphPrs,
   threadKinIds,
   threadAnchorId,
+  cutoffMV,
 }: {
   decisions: Decision[];
   edges: Edge[];
@@ -350,6 +382,7 @@ export function LedgerGraph({
   subgraphPrs?: number[] | null;
   threadKinIds?: Set<string> | null;
   threadAnchorId?: string | null;
+  cutoffMV?: MotionValue<number>;
 }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -359,6 +392,35 @@ export function LedgerGraph({
     const raf1 = requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true)));
     return () => cancelAnimationFrame(raf1);
   }, []);
+
+  // Edges can't subscribe to a motion value directly — React Flow renders them
+  // from the `edges` prop. Compute a throttled (per-frame) set of node IDs that
+  // are currently "before the cutoff" so we can rebuild edge styles at a
+  // reasonable cadence. Edges are fewer than nodes so the re-render cost is low.
+  const fallbackCutoff = useMotionValue(Number.POSITIVE_INFINITY);
+  const edgeCutoff = cutoffMV ?? fallbackCutoff;
+  const [hiddenNodeIds, setHiddenNodeIds] = useState<Set<string>>(() => new Set());
+  const rafPending = useRef(false);
+  useMotionValueEvent(edgeCutoff, "change", (value) => {
+    if (rafPending.current) return;
+    rafPending.current = true;
+    requestAnimationFrame(() => {
+      rafPending.current = false;
+      const next = new Set<string>();
+      for (const d of decisions) {
+        if (!d.decided_at) continue;
+        const t = new Date(d.decided_at).getTime();
+        if (value < t) next.add(d.id);
+      }
+      setHiddenNodeIds((prev) => {
+        if (prev.size !== next.size) return next;
+        for (const id of next) {
+          if (!prev.has(id)) return next;
+        }
+        return prev;
+      });
+    });
+  });
 
   const { nodes, flowEdges, categories, earliest, latest } = useMemo(() => {
     const positions = layoutWithDagre(decisions, edges);
@@ -396,6 +458,7 @@ export function LedgerGraph({
           rippleDepth: depths?.get(d.pr_number) ?? null,
           isThreadAnchor,
           isKin,
+          decidedAt: d.decided_at,
         },
       };
     });
@@ -403,6 +466,8 @@ export function LedgerGraph({
     const flowEdges: FlowEdge[] = edges.map((e, idx) => {
       const inSub = subgraphActive && subgraphSet.has(e.from_pr) && subgraphSet.has(e.to_pr);
       const baseStyle = EDGE_STYLES[e.kind] ?? EDGE_STYLES.related_to;
+      const baseOpacity = subgraphActive ? (inSub ? 1 : 0.15) : 0.85;
+      const hiddenByCutoff = hiddenNodeIds.has(e.from_id) || hiddenNodeIds.has(e.to_id);
       return {
         id: `${e.from_id}-${e.to_id}-${idx}`,
         source: e.from_id,
@@ -414,9 +479,9 @@ export function LedgerGraph({
         style: {
           ...baseStyle,
           strokeWidth: inSub ? 2.4 : 1.2,
-          opacity: subgraphActive ? (inSub ? 1 : 0.15) : 0.85,
+          opacity: hiddenByCutoff ? 0.08 : baseOpacity,
         },
-        animated: inSub || e.kind === "supersedes",
+        animated: !hiddenByCutoff && (inSub || e.kind === "supersedes"),
       };
     });
 
@@ -431,25 +496,36 @@ export function LedgerGraph({
       earliest: times[0] ?? null,
       latest: times[times.length - 1] ?? null,
     };
-  }, [decisions, edges, selectedId, subgraphAnchorPr, subgraphPrs, threadKinIds, threadAnchorId]);
+  }, [
+    decisions,
+    edges,
+    selectedId,
+    subgraphAnchorPr,
+    subgraphPrs,
+    threadKinIds,
+    threadAnchorId,
+    hiddenNodeIds,
+  ]);
 
   return (
     <div className={`relative h-full w-full bg-black ${mounted ? "rf-mounted" : ""}`}>
-      <ReactFlow
-        nodes={nodes}
-        edges={flowEdges}
-        nodeTypes={NODE_TYPES}
-        onNodeClick={(_, node) => onSelect(node.id)}
-        fitView
-        fitViewOptions={{ padding: 0.06, minZoom: 0.55, maxZoom: 0.95 }}
-        minZoom={0.2}
-        maxZoom={2.5}
-        proOptions={{ hideAttribution: true }}
-      >
-        <Background color="#18181b" gap={28} />
-        <Controls className="!bg-zinc-900 !border-zinc-800" />
-        <CameraController nodes={nodes} threadAnchorId={threadAnchorId ?? null} />
-      </ReactFlow>
+      <CutoffContext.Provider value={cutoffMV ?? null}>
+        <ReactFlow
+          nodes={nodes}
+          edges={flowEdges}
+          nodeTypes={NODE_TYPES}
+          onNodeClick={(_, node) => onSelect(node.id)}
+          fitView
+          fitViewOptions={{ padding: 0.06, minZoom: 0.55, maxZoom: 0.95 }}
+          minZoom={0.2}
+          maxZoom={2.5}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background color="#18181b" gap={28} />
+          <Controls className="!bg-zinc-900 !border-zinc-800" />
+          <CameraController nodes={nodes} threadAnchorId={threadAnchorId ?? null} />
+        </ReactFlow>
+      </CutoffContext.Provider>
       <CategoryLegend categories={categories} />
       <TimeAxisRail earliest={earliest} latest={latest} />
     </div>
