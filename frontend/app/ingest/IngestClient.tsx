@@ -9,6 +9,8 @@ import { CountUp } from "../../components/CountUp";
 import { DemoHighlight } from "../../lib/demo/DemoHighlight";
 import { useDemo } from "../../lib/demo/DemoProvider";
 import { type FixtureEvent, fakeStartIngest } from "../../lib/demo/fixtureClient";
+import { runTypewriter } from "../../lib/demo/TypedInput";
+import { useCueTrigger } from "../../lib/demo/useDemoClock";
 import {
   type IngestDoneEvent,
   type IngestEvent,
@@ -158,8 +160,47 @@ export function IngestClient({ initialRepo, initialLimit, initialMinDiscussion }
 
   useEffect(() => {
     if (!initialRepo) return;
+    // Auto-run disabled in demo mode — the "submit-ingest" cue drives it
+    // instead so timing aligns with the typewriter beat.
+    if (isDemo) return;
     startRun(initialRepo, initialLimit, initialMinDiscussion);
-  }, [initialRepo, initialLimit, initialMinDiscussion, startRun]);
+  }, [initialRepo, initialLimit, initialMinDiscussion, startRun, isDemo]);
+
+  // Demo: typewriter into the 3 form fields sequentially when the
+  // type-ingest-form cue fires.
+  useCueTrigger("type-ingest-form", () => {
+    const repoEl = document.querySelector<HTMLInputElement>('input[name="repo"]');
+    const limitEl = document.querySelector<HTMLInputElement>('input[name="limit"]');
+    const minEl = document.querySelector<HTMLInputElement>('input[name="minDiscussion"]');
+    if (repoEl) runTypewriter(repoEl, "vercel/next.js", { perCharMs: 80 });
+    // Stagger the numeric fields so they look deliberate.
+    if (limitEl) {
+      setTimeout(() => {
+        // Clear first, then retype
+        const setter = Object.getOwnPropertyDescriptor(
+          Object.getPrototypeOf(limitEl),
+          "value",
+        )?.set;
+        setter?.call(limitEl, "");
+        limitEl.dispatchEvent(new Event("input", { bubbles: true }));
+        runTypewriter(limitEl, "100", { perCharMs: 60 });
+      }, 1600);
+    }
+    if (minEl) {
+      setTimeout(() => {
+        const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(minEl), "value")?.set;
+        setter?.call(minEl, "");
+        minEl.dispatchEvent(new Event("input", { bubbles: true }));
+        runTypewriter(minEl, "3", { perCharMs: 60 });
+      }, 2400);
+    }
+  });
+
+  // Demo: auto-click the submit button when the submit-ingest cue fires.
+  useCueTrigger("submit-ingest", () => {
+    const btn = document.querySelector<HTMLButtonElement>('button[type="submit"]');
+    btn?.click();
+  });
 
   function onSubmit(ev: FormEvent<HTMLFormElement>) {
     ev.preventDefault();
