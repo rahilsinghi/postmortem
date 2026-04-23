@@ -308,6 +308,9 @@ function bfsDepthsFromAnchor(
   return depths;
 }
 
+// CameraController MUST be rendered as a direct child of <ReactFlow> — useReactFlow()
+// only resolves inside the auto-provided ReactFlowProvider context. Moving this up
+// to LedgerPage would require wrapping in an explicit <ReactFlowProvider>.
 function CameraController({
   nodes,
   threadAnchorId,
@@ -316,16 +319,16 @@ function CameraController({
   threadAnchorId: string | null | undefined;
 }) {
   const rf = useReactFlow();
+  const anchorNode = threadAnchorId ? nodes.find((n) => n.id === threadAnchorId) : null;
+  const anchorX = anchorNode?.position.x ?? null;
+  const anchorY = anchorNode?.position.y ?? null;
   useEffect(() => {
-    if (!threadAnchorId) return;
-    const node = nodes.find((n) => n.id === threadAnchorId);
-    if (!node) return;
-    // Anchor at node center (dagre stores top-left in node.position — add half dims)
-    rf.setCenter(node.position.x + NODE_WIDTH / 2, node.position.y + NODE_HEIGHT / 2, {
+    if (anchorX === null || anchorY === null) return;
+    rf.setCenter(anchorX + NODE_WIDTH / 2, anchorY + NODE_HEIGHT / 2, {
       duration: 500,
       zoom: 1.1,
     });
-  }, [threadAnchorId, nodes, rf]);
+  }, [anchorX, anchorY, rf]);
   return null;
 }
 
