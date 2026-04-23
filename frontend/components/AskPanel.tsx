@@ -129,7 +129,7 @@ export function AskPanel({
         // Lazy-load the right fixture for this run mode, then replay.
         const path =
           runMode === "impact" ? "/demo/hono-impact-events.json" : "/demo/hono-query-events.json";
-        fetch(path, { cache: "force-cache" })
+        fetch(path, { cache: "no-store" })
           .then((r) => r.json())
           .then((body: { events: FixtureEvent[] }) => {
             esRef.current = fakeStartQuery(body.events, handlers, {

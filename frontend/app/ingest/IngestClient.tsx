@@ -136,7 +136,7 @@ export function IngestClient({ initialRepo, initialLimit, initialMinDiscussion }
       setExtractions([]);
       const handlers: IngestHandlers = { onEvent: handleEvent, onClose: () => {} };
       if (isDemo) {
-        fetch("/demo/nextjs-ingest-events.json", { cache: "force-cache" })
+        fetch("/demo/nextjs-ingest-events.json", { cache: "no-store" })
           .then((r) => r.json())
           .then((body: { events: FixtureEvent[] }) => {
             esRef.current = fakeStartIngest(body.events, handlers, {

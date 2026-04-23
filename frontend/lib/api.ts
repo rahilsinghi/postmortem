@@ -89,7 +89,9 @@ export type LedgerResponse = {
 };
 
 async function loadFixture<T>(path: string): Promise<T> {
-  const res = await fetch(path, { cache: "force-cache" });
+  // `no-store` prevents a previously-cached 404 HTML page from sticking
+  // around after the fixture file appears (e.g. moved, re-captured).
+  const res = await fetch(path, { cache: "no-store" });
   if (!res.ok) throw new Error(`demo fixture ${path} missing`);
   return (await res.json()) as T;
 }
