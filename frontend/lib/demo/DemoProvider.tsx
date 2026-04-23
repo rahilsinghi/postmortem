@@ -12,6 +12,8 @@ import {
   useState,
 } from "react";
 
+import { DemoCaptionRail } from "../../components/DemoCaptionRail";
+import { DemoNavigator } from "./DemoNavigator";
 import { totalDurationSec } from "./timeline";
 
 export type DemoState = "idle" | "armed" | "playing" | "ended" | "aborted";
@@ -114,5 +116,15 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     abort,
   };
 
-  return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
+  return (
+    <DemoContext.Provider value={value}>
+      {children}
+      {state === "playing" || state === "armed" ? (
+        <>
+          <DemoCaptionRail />
+          <DemoNavigator />
+        </>
+      ) : null}
+    </DemoContext.Provider>
+  );
 }
