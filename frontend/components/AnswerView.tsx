@@ -386,7 +386,7 @@ function TailItem({
  * Inline renderer that handles **bold**, citation chips, and plain text. Used
  * everywhere we're rendering Opus output so `**…**` never leaks to the UI.
  */
-function InlineRich({
+export function InlineRich({
   text,
   decisions,
   verdict,
