@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from app.config import get_settings
 from app.routers import impact as impact_router
 from app.routers import ingest as ingest_router
+from app.routers import interview as interview_router
 from app.routers import query as query_router
 from app.routers import repos as repos_router
 
@@ -50,6 +51,7 @@ def create_app() -> FastAPI:
     app.include_router(query_router.router)
     app.include_router(ingest_router.router)
     app.include_router(impact_router.router)
+    app.include_router(interview_router.router)
 
     @app.get("/healthz", response_model=HealthResponse)
     async def healthz() -> HealthResponse:
