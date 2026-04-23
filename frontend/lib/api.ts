@@ -88,13 +88,31 @@ export type LedgerResponse = {
   cost: LedgerCost;
 };
 
-export async function fetchRepos(): Promise<RepoSummary[]> {
+async function loadFixture<T>(path: string): Promise<T> {
+  const res = await fetch(path, { cache: "force-cache" });
+  if (!res.ok) throw new Error(`demo fixture ${path} missing`);
+  return (await res.json()) as T;
+}
+
+export async function fetchRepos(opts: { demo?: boolean } = {}): Promise<RepoSummary[]> {
+  if (opts.demo) return loadFixture<RepoSummary[]>("/demo/gallery-repos.json");
   const res = await fetch(`${API_BASE}/api/repos`);
   if (!res.ok) throw new Error(`/api/repos ${res.status}`);
   return (await res.json()) as RepoSummary[];
 }
 
-export async function fetchLedger(repo: string): Promise<LedgerResponse> {
+export async function fetchLedger(
+  repo: string,
+  opts: { demo?: boolean } = {},
+): Promise<LedgerResponse> {
+  if (opts.demo) {
+    // Demo ships a single ledger fixture (honojs/hono). Unknown repos in
+    // demo mode fall through to the real backend so the caller can still
+    // surface an error if needed.
+    if (repo === "honojs/hono") {
+      return loadFixture<LedgerResponse>("/demo/hono-ledger.json");
+    }
+  }
   const res = await fetch(`${API_BASE}/api/repos/${repo}/ledger`);
   if (!res.ok) throw new Error(`/api/repos/${repo}/ledger ${res.status}`);
   return (await res.json()) as LedgerResponse;
