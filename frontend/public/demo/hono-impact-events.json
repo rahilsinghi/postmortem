@@ -21,9 +21,7 @@
       "event": "subgraph",
       "data": {
         "anchor_pr": 3813,
-        "included_prs": [
-          3813
-        ]
+        "included_prs": [3813]
       }
     },
     {
