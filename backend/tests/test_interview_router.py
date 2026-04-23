@@ -117,3 +117,71 @@ async def test_script_streams_six_exchanges(
     assert body.count("event: exchange_start") == 6
     assert body.count("event: exchange_end") == 6
     assert "event: script_end" in body
+
+
+async def test_followup_requires_existing_script(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    db = tmp_path / "followup.duckdb"
+    _seed(db)
+    monkeypatch.setattr(get_settings(), "ledger_db_path", str(db))
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as c:
+        r = await c.get(
+            "/api/interview/followup",
+            params={
+                "owner": "honojs",
+                "repo": "hono",
+                "author": "yusukebe",
+                "question": "one more thing",
+            },
+        )
+
+    # No cached script yet → 409 Conflict (must be raised synchronously, not via
+    # the SSE error event, so the client can actually branch on the status code).
+    assert r.status_code == 409
+
+
+async def test_followup_streams_after_cached_script(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    db = tmp_path / "followup_ok.duckdb"
+    _seed(db)
+    monkeypatch.setattr(get_settings(), "ledger_db_path", str(db))
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+
+    # Seed a cached script row so the 409 short-circuit does not fire.
+    from app.query.interview import _persist
+
+    _persist(
+        db,
+        owner="honojs",
+        repo="hono",
+        author="yusukebe",
+        exchanges=[{"question": f"Q{i}", "answer": f"A{i}"} for i in range(6)],
+        voice_sample_ids=[],
+        token_usage={"input_tokens": 0, "output_tokens": 0, "cache_read_input_tokens": 0},
+    )
+
+    async def _fake_stream(*_args, **_kwargs):
+        yield "answer_delta", {"text_delta": "the follow up answer"}
+        yield "answer_end", {"usage": {"input_tokens": 10, "output_tokens": 5}}
+
+    with patch("app.routers.interview.stream_followup", _fake_stream):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://testserver") as c:
+            r = await c.get(
+                "/api/interview/followup",
+                params={
+                    "owner": "honojs",
+                    "repo": "hono",
+                    "author": "yusukebe",
+                    "question": "one more thing",
+                },
+            )
+
+    assert r.status_code == 200
+    assert "event: answer_delta" in r.text
+    assert "event: answer_end" in r.text

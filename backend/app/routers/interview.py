@@ -21,7 +21,7 @@ from sse_starlette.sse import EventSourceResponse
 from app.config import get_settings, resolve_secret
 from app.ledger.author_slice import load_author_slice
 from app.ledger.schema import connect
-from app.query.interview import generate_or_replay_script
+from app.query.interview import _load_cached, generate_or_replay_script, stream_followup
 from app.validators import validate_repo
 
 router = APIRouter(prefix="/api/interview", tags=["interview"])
@@ -146,6 +146,52 @@ async def script(
             author=author,
             slice_=slice_,
             force=force,
+        ):
+            yield {"event": name, "data": json.dumps(payload, default=str)}
+
+    return EventSourceResponse(_events())
+
+
+@router.get("/followup")
+async def followup(
+    owner: str = Query(..., min_length=1, max_length=64),
+    repo: str = Query(..., min_length=1, max_length=128),
+    author: str = Query(..., min_length=1, max_length=64),
+    question: str = Query(..., min_length=3, max_length=500),
+) -> EventSourceResponse:
+    validate_repo(f"{owner}/{repo}")
+    db_path = _resolve_db_path()
+    if not db_path.exists():
+        raise HTTPException(status_code=404, detail="Ledger DB not found")
+
+    slice_ = load_author_slice(db_path, owner=owner, repo=repo, author=author)
+    if not slice_.quotes:
+        raise HTTPException(status_code=422, detail=f"No quotes for @{author}")
+
+    # Short-circuit the 409 case BEFORE building the SSE response. Raising
+    # ValueError inside the generator below would be swallowed by
+    # EventSourceResponse and surface as an `error` event on a 200 stream —
+    # defeating the "/script first" contract (the client can't branch on it).
+    if _load_cached(db_path, owner, repo, author) is None:
+        raise HTTPException(
+            status_code=409,
+            detail="No cached interview script; call /script first",
+        )
+
+    api_key = resolve_secret("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+    client = AsyncAnthropic(api_key=api_key)
+
+    async def _events() -> AsyncIterator[dict[str, str]]:
+        async for name, payload in stream_followup(
+            client=client,
+            db_path=db_path,
+            owner=owner,
+            repo=repo,
+            author=author,
+            slice_=slice_,
+            question=question,
         ):
             yield {"event": name, "data": json.dumps(payload, default=str)}
 

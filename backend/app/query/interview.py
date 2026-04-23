@@ -26,7 +26,10 @@ from anthropic import AsyncAnthropic
 
 from app.ledger.author_slice import AuthorSlice
 from app.ledger.schema import connect
-from app.query.prompts import GHOST_INTERVIEW_SYSTEM_PROMPT
+from app.query.prompts import (
+    GHOST_INTERVIEW_FOLLOWUP_SYSTEM_PROMPT,
+    GHOST_INTERVIEW_SYSTEM_PROMPT,
+)
 
 INTERVIEW_MODEL = "claude-opus-4-7"
 INTERVIEW_MAX_TOKENS = 4096
@@ -250,12 +253,70 @@ async def generate_or_replay_script(
         yield event
 
 
+async def stream_followup(
+    *,
+    client: AsyncAnthropic,
+    db_path: str | Path,
+    owner: str,
+    repo: str,
+    author: str,
+    slice_: AuthorSlice,
+    question: str,
+) -> AsyncIterator[tuple[str, dict[str, Any]]]:
+    """Stream a single follow-up answer grounded in the cached six-exchange script.
+
+    Raises ``ValueError`` if no cached script exists for ``(owner, repo, author)``
+    — callers must short-circuit that case BEFORE attaching this generator to an
+    SSE response. Exceptions inside an ``EventSourceResponse`` generator are
+    swallowed into a 200 stream with an ``error`` event, which defeats the
+    "/script first" contract; the router enforces the 409 synchronously.
+
+    Message history replays the cached exchanges as alternating user/assistant
+    turns so the model sees its own prior voice, with the user's new question
+    appended last. Uses the same ``client.messages.stream(...)`` context-manager
+    pattern as ``generate_or_replay_script`` — no ``await`` on ``.stream()``.
+    """
+    cached = _load_cached(db_path, owner, repo, author)
+    if cached is None:
+        raise ValueError("no cached script for subject — generate first")
+
+    system = GHOST_INTERVIEW_FOLLOWUP_SYSTEM_PROMPT.format(subject=author)
+
+    messages: list[dict[str, Any]] = []
+    for ex in cached["script"]["exchanges"]:
+        messages.append({"role": "user", "content": ex["question"]})
+        messages.append({"role": "assistant", "content": ex["answer"]})
+    messages.append({"role": "user", "content": question})
+
+    async with client.messages.stream(
+        model=INTERVIEW_MODEL,
+        max_tokens=1024,
+        system=system,
+        messages=messages,
+    ) as stream:
+        async for chunk in stream.text_stream:
+            if chunk:
+                yield "answer_delta", {"text_delta": chunk}
+        final = await stream.get_final_message()
+        usage_obj = final.usage
+
+    usage = {
+        "input_tokens": int(getattr(usage_obj, "input_tokens", 0) or 0),
+        "output_tokens": int(getattr(usage_obj, "output_tokens", 0) or 0),
+        "cache_read_input_tokens": int(
+            getattr(usage_obj, "cache_read_input_tokens", 0) or 0
+        ),
+    }
+    yield "answer_end", {"usage": usage}
+
+
 __all__ = [
     "INTERVIEW_MODEL",
     "INTERVIEW_MAX_TOKENS",
     "VOICE_SAMPLE_COUNT",
     "generate_or_replay_script",
     "parse_exchanges",
+    "stream_followup",
     "_load_cached",
     "_persist",
 ]
