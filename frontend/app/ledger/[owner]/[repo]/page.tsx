@@ -2,9 +2,9 @@ import { notFound } from "next/navigation";
 
 import { API_BASE, type LedgerResponse } from "../../../../lib/api";
 import { SUGGESTED_QUERIES_BY_REPO } from "../../../../lib/teasers";
-import { LedgerPage } from "./LedgerPage";
+import { ClientLedgerLoader } from "./ClientLedgerLoader";
 
-async function fetchLedger(repo: string): Promise<LedgerResponse | null> {
+async function fetchLedgerSSR(repo: string): Promise<LedgerResponse | null> {
   try {
     const res = await fetch(`${API_BASE}/api/repos/${repo}/ledger`, { cache: "no-store" });
     if (!res.ok) return null;
@@ -21,7 +21,7 @@ export default async function Page({
 }) {
   const { owner, repo: repoName } = await params;
   const repo = `${owner}/${repoName}`;
-  const ledger = await fetchLedger(repo);
+  const ledger = await fetchLedgerSSR(repo);
   if (!ledger) notFound();
 
   const suggested = SUGGESTED_QUERIES_BY_REPO[repo] ?? [
@@ -30,5 +30,5 @@ export default async function Page({
     "What alternatives were rejected most often?",
   ];
 
-  return <LedgerPage ledger={ledger} suggestedQueries={suggested} />;
+  return <ClientLedgerLoader initial={ledger} repo={repo} suggestedQueries={suggested} />;
 }
