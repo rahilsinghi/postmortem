@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { type MouseEvent, useMemo, useState } from "react";
+import { type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Citation, Decision } from "../lib/api";
 import { type CitationMatch, resolveCitation } from "../lib/citations";
@@ -63,6 +63,18 @@ export function CitationChip({
   const reduced = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [shake, setShake] = useState(false);
+  // Flip the hover card to a right-anchored layout when the chip sits in the
+  // right half of the viewport. Prevents the 544px-wide card from clipping
+  // off the right edge when the chip lives inside the ask panel.
+  const anchorRef = useRef<HTMLSpanElement | null>(null);
+  const [alignRight, setAlignRight] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const el = anchorRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setAlignRight(rect.left > window.innerWidth / 2);
+  }, [open]);
   const resolved = resolveCitation(match, decisions);
   const url = resolved?.citation.url ?? buildFallbackUrl(match, decisions);
 
@@ -108,6 +120,7 @@ export function CitationChip({
 
   return (
     <motion.span
+      ref={anchorRef}
       className="relative inline-block"
       initial={reduced ? false : { opacity: 0, scale: 0.92 }}
       animate={
@@ -170,7 +183,7 @@ export function CitationChip({
             animate={{ opacity: 1, y: 0 }}
             exit={reduced ? { opacity: 0 } : { opacity: 0, y: -4 }}
             transition={reduced ? { duration: 0 } : { duration: 0.14, ease: "easeOut" }}
-            className="absolute left-0 top-full z-20 mt-1 block w-[min(34rem,90vw)]"
+            className={`absolute top-full z-20 mt-1 block w-[min(34rem,90vw)] ${alignRight ? "right-0" : "left-0"}`}
           >
             <ProvenanceCard
               chipId={chipId}

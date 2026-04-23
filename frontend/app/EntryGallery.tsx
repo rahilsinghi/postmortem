@@ -104,11 +104,11 @@ export function EntryGallery({ repos, apiBase }: { repos: RepoSummary[]; apiBase
                         {repo.categories} categories · {repo.earliest?.slice(0, 4) ?? "–"}–
                         {repo.latest?.slice(0, 4) ?? "–"}
                       </p>
-                      {teaser ? (
-                        <p className="mt-6 text-[13px] italic leading-relaxed text-zinc-400 group-hover:text-zinc-200">
-                          &ldquo;{teaser}&rdquo;
-                        </p>
-                      ) : null}
+                      <p className="mt-6 text-[13px] italic leading-relaxed text-zinc-400 group-hover:text-zinc-200">
+                        {teaser
+                          ? `\u201C${teaser}\u201D`
+                          : `Ask why ${repo.repo.split("/")[1] ?? "this codebase"} is the way it is.`}
+                      </p>
                       <div className="mt-auto flex items-center justify-between pt-6">
                         <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-zinc-500">
                           <span className="tabular-nums text-[#d4a24c]">

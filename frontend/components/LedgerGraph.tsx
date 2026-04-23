@@ -47,8 +47,8 @@ type DecisionNodeData = {
   decidedAt: string | null;
 };
 
-const NODE_WIDTH = 210;
-const NODE_HEIGHT = 64;
+const NODE_WIDTH = 240;
+const NODE_HEIGHT = 72;
 const CHRONO_STAGGER_S = 0.018;
 const CHRONO_MAX_DELAY_S = 1.2;
 const RIPPLE_STEP_S = 0.14;
@@ -110,7 +110,9 @@ function DecisionNode({ data }: NodeProps<FlowNode<DecisionNodeData>>) {
     >
       <Handle type="target" position={Position.Left} className="!bg-zinc-600 !border-0" />
       <span className="text-zinc-500">#{data.pr}</span>
-      <span className="mt-0.5 line-clamp-3 text-zinc-100">{data.title}</span>
+      <span className="mt-0.5 line-clamp-4 break-words text-zinc-100" title={data.title}>
+        {data.title}
+      </span>
       <Handle type="source" position={Position.Right} className="!bg-zinc-600 !border-0" />
     </motion.div>
   );
