@@ -175,3 +175,26 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Demo layer — ring-pulse overlay used by DemoHighlight to lead the   */
+/* eye to a click target without rendering a fake cursor.              */
+/* ------------------------------------------------------------------ */
+@keyframes demo-ring-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(212, 162, 76, 0);
+  }
+  40% {
+    box-shadow: 0 0 0 12px rgba(212, 162, 76, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 24px rgba(212, 162, 76, 0);
+  }
+}
+.demo-ring-pulse {
+  animation: demo-ring-pulse 560ms ease-out 1 forwards;
+  border-radius: 10px;
+  pointer-events: none;
+  position: fixed;
+  z-index: 60;
+}
