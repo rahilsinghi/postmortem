@@ -345,9 +345,11 @@ function bfsDepthsFromAnchor(
 function CameraController({
   nodes,
   threadAnchorId,
+  containerRef,
 }: {
   nodes: FlowNode<DecisionNodeData>[];
   threadAnchorId: string | null | undefined;
+  containerRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const rf = useReactFlow();
   const anchorNode = threadAnchorId ? nodes.find((n) => n.id === threadAnchorId) : null;
@@ -360,6 +362,39 @@ function CameraController({
       zoom: 1.1,
     });
   }, [anchorX, anchorY, rf]);
+
+  // Re-fit content whenever the graph container resizes (user dragging the
+  // column separators in LedgerPage's resizable-panels). Without this, React
+  // Flow keeps its previous zoom/pan and the graph slides behind the side or
+  // ask panel as those columns grow. Debounced via rAF so rapid drags don't
+  // thrash fitView.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    let raf = 0;
+    let lastW = el.clientWidth;
+    let lastH = el.clientHeight;
+    const ro = new ResizeObserver((entries) => {
+      const rect = entries[0]?.contentRect;
+      if (!rect) return;
+      const w = rect.width;
+      const h = rect.height;
+      // Ignore negligible noise.
+      if (Math.abs(w - lastW) < 2 && Math.abs(h - lastH) < 2) return;
+      lastW = w;
+      lastH = h;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        rf.fitView({ padding: 0.06, duration: 220, minZoom: 0.55, maxZoom: 0.95 });
+      });
+    });
+    ro.observe(el);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [rf, containerRef]);
+
   return null;
 }
 
@@ -507,8 +542,13 @@ export function LedgerGraph({
     hiddenNodeIds,
   ]);
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
   return (
-    <div className={`relative h-full w-full bg-black ${mounted ? "rf-mounted" : ""}`}>
+    <div
+      ref={containerRef}
+      className={`relative h-full w-full bg-black ${mounted ? "rf-mounted" : ""}`}
+    >
       <CutoffContext.Provider value={cutoffMV ?? null}>
         <ReactFlow
           nodes={nodes}
@@ -523,7 +563,11 @@ export function LedgerGraph({
         >
           <Background color="#18181b" gap={28} />
           <Controls className="!bg-zinc-900 !border-zinc-800" />
-          <CameraController nodes={nodes} threadAnchorId={threadAnchorId ?? null} />
+          <CameraController
+            nodes={nodes}
+            threadAnchorId={threadAnchorId ?? null}
+            containerRef={containerRef}
+          />
         </ReactFlow>
       </CutoffContext.Provider>
       <CategoryLegend categories={categories} />

@@ -104,11 +104,11 @@ export function TimelineRail({ decisions, cutoffMV, width }: Props) {
   const dateOfX = useCallback(
     (x: number): number => {
       if (scale === "uniform") {
-        const rank = Math.round((x / width) * Math.max(0, dated.length - 1));
+        const rank = Math.round((x / Math.max(1, width)) * Math.max(0, dated.length - 1));
         return dated[Math.max(0, Math.min(dated.length - 1, rank))]?.date.getTime() ?? 0;
       }
       const span = maxTs - minTs || 1;
-      return minTs + (x / width) * span;
+      return minTs + (x / Math.max(1, width)) * span;
     },
     [scale, dated, minTs, maxTs, width],
   );
@@ -124,41 +124,76 @@ export function TimelineRail({ decisions, cutoffMV, width }: Props) {
   );
   const clusters = useMemo(() => clusterTicks(ticks, MIN_GAP_PX), [ticks]);
 
-  const scrubberX = useMotionValue(width);
+  // Engaged = user has explicitly interacted with the rail (drag, click,
+  // play, arrow key). Until then: `cutoffMV` stays at +Infinity so the
+  // graph is FULL by default. A "⏭ present" button and Esc key disengage.
+  const [engaged, setEngaged] = useState(false);
+
+  // Scrubber tracks a normalized position (0..1) across the rail. We derive
+  // pixel x from normPos * width so resize never loses position.
+  const normPos = useMotionValue(1);
+  const scrubberX = useTransform(normPos, (n) => n * width);
   const cursorDate = useTransform(scrubberX, (x) => dateOfX(Math.max(0, Math.min(width, x))));
 
+  // Feed cutoffMV from cursorDate ONLY when engaged. Default: cutoff stays
+  // at whatever it was initialized to (+Infinity from LedgerPage) so the
+  // full graph renders.
   useEffect(() => {
+    if (!engaged) {
+      cutoffMV.set(Number.POSITIVE_INFINITY);
+      return;
+    }
+    // Fire once immediately so the first engage lands on the right cutoff.
+    cutoffMV.set(cursorDate.get());
     const unsub = cursorDate.on("change", (d) => cutoffMV.set(d));
     return unsub;
-  }, [cursorDate, cutoffMV]);
+  }, [engaged, cursorDate, cutoffMV]);
 
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1);
   const rafRef = useRef<number | null>(null);
 
+  const engage = useCallback(() => {
+    setEngaged(true);
+  }, []);
+
+  const resetToPresent = useCallback(() => {
+    setPlaying(false);
+    setEngaged(false);
+    animate(
+      normPos,
+      1,
+      reduced ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 32 },
+    );
+    cutoffMV.set(Number.POSITIVE_INFINITY);
+  }, [cutoffMV, normPos, reduced]);
+
   useEffect(() => {
     if (!playing) return;
-    const msPerPx = 10_000 / width;
+    engage();
+    // Rewind to start if already at the end — otherwise continue from here.
+    if (normPos.get() >= 0.999) normPos.set(0);
+    // Cover the full timeline in ~10s at 1×, scale by speed.
+    const nPerMs = 1 / 10_000; // normalized position per ms
     let last = performance.now();
     const tick = (now: number) => {
       const dt = now - last;
       last = now;
-      const currentX = scrubberX.get();
-      const nextX = currentX + (dt / msPerPx) * speed;
-      if (nextX >= width) {
-        scrubberX.set(width);
+      const curr = normPos.get();
+      const next = curr + dt * nPerMs * speed;
+      if (next >= 1) {
+        normPos.set(1);
         setPlaying(false);
         return;
       }
-      scrubberX.set(nextX);
+      normPos.set(next);
       rafRef.current = requestAnimationFrame(tick);
     };
-    if (scrubberX.get() >= width - 1) scrubberX.set(0);
     rafRef.current = requestAnimationFrame(tick);
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [playing, speed, width, scrubberX]);
+  }, [playing, speed, normPos, engage]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -168,37 +203,47 @@ export function TimelineRail({ decisions, cutoffMV, width }: Props) {
         e.preventDefault();
         setPlaying((p) => !p);
       } else if (e.key === "ArrowLeft") {
+        engage();
         const currX = scrubberX.get();
         const prev = [...ticks].reverse().find((t) => t.x < currX - 1);
-        if (prev) scrubberX.set(prev.x);
+        if (prev) normPos.set(prev.x / Math.max(1, width));
       } else if (e.key === "ArrowRight") {
+        engage();
         const currX = scrubberX.get();
         const nxt = ticks.find((t) => t.x > currX + 1);
-        if (nxt) scrubberX.set(nxt.x);
+        if (nxt) normPos.set(nxt.x / Math.max(1, width));
       } else if (e.key === "Home") {
-        scrubberX.set(0);
+        engage();
+        normPos.set(0);
       } else if (e.key === "End") {
-        scrubberX.set(width);
+        resetToPresent();
+      } else if (e.key === "Escape" && engaged) {
+        resetToPresent();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [ticks, scrubberX, width]);
+  }, [ticks, scrubberX, normPos, width, engage, engaged, resetToPresent]);
 
   const labelRef = useRef<HTMLSpanElement | null>(null);
   useEffect(() => {
-    const unsub = cursorDate.on("change", (d) => {
-      if (labelRef.current) {
-        const date = new Date(d);
-        labelRef.current.textContent = date.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        });
+    const update = (d: number) => {
+      if (!labelRef.current) return;
+      if (!engaged) {
+        labelRef.current.textContent = "present";
+        return;
       }
-    });
+      const date = new Date(d);
+      labelRef.current.textContent = date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    };
+    update(cursorDate.get());
+    const unsub = cursorDate.on("change", update);
     return unsub;
-  }, [cursorDate]);
+  }, [cursorDate, engaged]);
 
   if (dated.length < 3) return null;
 
@@ -230,16 +275,41 @@ export function TimelineRail({ decisions, cutoffMV, width }: Props) {
         ))}
       </div>
       <div
-        className="relative flex-1"
+        className="relative flex-1 cursor-ew-resize"
         style={{ height: RAIL_HEIGHT - 8 }}
         onPointerDown={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const localX = e.clientX - rect.left;
+          engage();
+          const rail = e.currentTarget;
+          rail.setPointerCapture(e.pointerId);
+          const update = (clientX: number) => {
+            const rect = rail.getBoundingClientRect();
+            const local = Math.max(0, Math.min(rect.width, clientX - rect.left));
+            normPos.set(local / Math.max(1, rect.width));
+          };
+          // First click snaps via spring; subsequent pointermove calls update
+          // the position directly (no animation, follows the cursor).
+          const rect = rail.getBoundingClientRect();
+          const targetNorm = Math.max(
+            0,
+            Math.min(1, (e.clientX - rect.left) / Math.max(1, rect.width)),
+          );
           animate(
-            scrubberX,
-            localX,
+            normPos,
+            targetNorm,
             reduced ? { duration: 0 } : { type: "spring", stiffness: 520, damping: 40 },
           );
+          const onMove = (ev: PointerEvent) => update(ev.clientX);
+          const onUp = () => {
+            try {
+              rail.releasePointerCapture(e.pointerId);
+            } catch {
+              // capture may have already ended
+            }
+            window.removeEventListener("pointermove", onMove);
+            window.removeEventListener("pointerup", onUp);
+          };
+          window.addEventListener("pointermove", onMove);
+          window.addEventListener("pointerup", onUp);
         }}
       >
         <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-zinc-800" />
@@ -264,17 +334,30 @@ export function TimelineRail({ decisions, cutoffMV, width }: Props) {
           </div>
         ))}
         <motion.div
-          className="absolute top-0 h-full w-1 cursor-col-resize rounded-[1px] bg-[#d4a24c] shadow-[0_0_10px_rgba(212,162,76,0.6)]"
+          aria-hidden
+          className={`pointer-events-none absolute top-0 h-full w-1 rounded-[1px] transition-opacity ${
+            engaged
+              ? "bg-[#d4a24c] shadow-[0_0_10px_rgba(212,162,76,0.6)] opacity-100"
+              : "bg-[#d4a24c]/40 opacity-60"
+          }`}
           style={{ x: scrubberX, translateX: "-50%" }}
-          drag="x"
-          dragConstraints={{ left: 0, right: width }}
-          dragMomentum={false}
         />
       </div>
       <span
         ref={labelRef}
-        className="w-20 text-right font-mono text-[10px] tabular-nums text-zinc-300"
+        className={`w-20 text-right font-mono text-[10px] tabular-nums ${
+          engaged ? "text-zinc-300" : "text-[#d4a24c]/70"
+        }`}
       />
+      <button
+        type="button"
+        onClick={resetToPresent}
+        disabled={!engaged}
+        className="rounded border border-zinc-800 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-zinc-500 transition hover:border-[#d4a24c]/50 hover:text-[#d4a24c] disabled:cursor-not-allowed disabled:opacity-40"
+        title="Jump back to present (Esc or End)"
+      >
+        ⏭ present
+      </button>
       <button
         type="button"
         onClick={() => setScale((s) => (s === "time" ? "uniform" : "time"))}
