@@ -50,6 +50,10 @@ export type SubgraphEvent = {
   included_prs: number[];
 };
 
+export type ThoughtEvent = {
+  label: string;
+};
+
 export type QueryEvents = {
   onPhase: (phase: QueryPhase) => void;
   onStats: (stats: StatsEvent) => void;
@@ -58,6 +62,7 @@ export type QueryEvents = {
   onUsage: (usage: UsageEvent) => void;
   onError: (message: string) => void;
   onSubgraph?: (subgraph: SubgraphEvent) => void;
+  onThought?: (thought: ThoughtEvent) => void;
 };
 
 export function startQuery(
@@ -133,6 +138,15 @@ export function startQuery(
       handlers.onSubgraph?.(parsed);
     } catch {
       // ignore
+    }
+  });
+
+  es.addEventListener("thought", (ev) => {
+    try {
+      const parsed = JSON.parse((ev as MessageEvent<string>).data) as ThoughtEvent;
+      handlers.onThought?.(parsed);
+    } catch {
+      // ignore — forward-compat: unknown shapes are safe to skip
     }
   });
 
