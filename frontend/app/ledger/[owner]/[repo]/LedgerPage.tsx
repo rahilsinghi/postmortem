@@ -7,12 +7,15 @@ import { Group, Panel, type PanelImperativeHandle, Separator } from "react-resiz
 
 import { AskPanel } from "../../../../components/AskPanel";
 import { DecisionSidePanel } from "../../../../components/DecisionSidePanel";
+import { InterviewButton } from "../../../../components/InterviewButton";
+import { InterviewDrawer } from "../../../../components/InterviewDrawer";
 import { LedgerGraph } from "../../../../components/LedgerGraph";
 import { TimelineRail } from "../../../../components/TimelineRail";
 import { useThreadFollower } from "../../../../hooks/useThreadFollower";
 import type { LedgerResponse } from "../../../../lib/api";
 import { useTypedCue } from "../../../../lib/demo/TypedInput";
 import { useCueTrigger } from "../../../../lib/demo/useDemoClock";
+import { InterviewProvider } from "../../../../lib/InterviewProvider";
 import { useReducedMotion } from "../../../../lib/motion";
 
 // react-resizable-panels v4 treats bare numeric values as PIXELS — we have to
@@ -129,7 +132,12 @@ export function LedgerPage({
     return () => window.removeEventListener("keydown", onKey);
   }, [selectedId]);
 
+  const [ownerSlug, repoSlug] = ledger.repo.split("/", 2) as [string, string?];
+  const owner = ownerSlug ?? "";
+  const repo = repoSlug ?? "";
+
   return (
+    <InterviewProvider owner={owner} repo={repo}>
     <div className="flex h-screen flex-col bg-black text-zinc-100">
       <header className="flex items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-5 py-3 backdrop-blur">
         <div className="flex items-baseline gap-3">
@@ -156,6 +164,8 @@ export function LedgerPage({
             </span>{" "}
             ledger cost
           </span>
+          <span className="h-4 w-px bg-zinc-800" />
+          <InterviewButton variant="toolbar" owner={owner} repo={repo} />
           <span className="h-4 w-px bg-zinc-800" />
           <button
             type="button"
@@ -299,7 +309,9 @@ export function LedgerPage({
           </Panel>
         </Group>
       </div>
+      <InterviewDrawer owner={owner} repo={repo} decisions={ledger.decisions} />
     </div>
+    </InterviewProvider>
   );
 }
 
