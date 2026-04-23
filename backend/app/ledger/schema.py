@@ -98,6 +98,20 @@ CREATE TABLE IF NOT EXISTS query_runs (
 );
 CREATE INDEX IF NOT EXISTS idx_query_runs_repo ON query_runs(repo);
 CREATE INDEX IF NOT EXISTS idx_query_runs_created ON query_runs(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS interviews (
+    repo_owner       VARCHAR NOT NULL,
+    repo_name        VARCHAR NOT NULL,
+    subject_author   VARCHAR NOT NULL,
+    generated_at     TIMESTAMP NOT NULL,
+    model            VARCHAR NOT NULL,
+    script_json      JSON    NOT NULL,
+    voice_sample_ids JSON    NOT NULL,
+    token_usage      JSON    NOT NULL,
+    PRIMARY KEY (repo_owner, repo_name, subject_author)
+);
+CREATE INDEX IF NOT EXISTS idx_interviews_repo
+    ON interviews(repo_owner, repo_name);
 """
 
 
