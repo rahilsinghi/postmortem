@@ -30,63 +30,94 @@ Start on the entry screen.
 On screen: three hero cards — zustand (41 decisions), shadcn-ui (15), and
 Postmortem itself (6 decisions excavated from its own commit history).
 
-## Segment 2 — the ledger (25 s)
+## Segment 2 — the ledger comes alive (30 s)
 
 Click `pmndrs/zustand`. The graph reveals — 41 category-coloured decision
-nodes, edges between them.
+nodes arranged on a hierarchical dagre layout, edges in amber (supersedes)
+and dashed blue (depends_on). A 32px glassmorphic rail sits at the bottom
+with a scrubber pinned to "present."
 
-> *"Opus 4.7 read every merged PR, every review thread, every linked issue —
-> classified them, extracted rationales, and stitched this into a graph. The
-> red animated edges are `supersedes`; the dashed blue are `depends_on`."*
+> *"Opus 4.7 read every merged PR, every review thread, every linked issue
+> across three years of history — classified them, extracted rationales,
+> stitched them into a graph. Watch it build itself."*
 
-Click one node — e.g. #3336 (hydrationVersion counter). Side panel pops.
+Hit the ▶ on the timeline rail. The scrubber glides left to 2022, the graph
+clears — then animates forward, nodes fading in at their real merge dates
+with an amber pulse, edges drawing themselves once both endpoints surface.
+Past-state nodes tint cool slate; "present" nodes pop amber.
 
-> *"Every decision carries the full rationale, quoted verbatim from the PR
-> comment that supports it, plus every alternative that was rejected and why."*
+> *"Three years of architectural thought compressed into ten seconds. Every
+> fade-in is a real PR merge date — nothing synthetic."*
 
-Scroll the citations + alternatives list briefly.
+Stop on "present." Click one node (say #3336, hydrationVersion counter). The
+middle column opens: **Rejected Alternatives** at the top with amber
+strikethrough, then the full rationale, citations ranked by kind.
 
-## Segment 3 — the query engine (45 s)
+> *"Every decision carries its full rationale, quoted verbatim, plus every
+> alternative that was rejected and why — the unique content no static
+> analyzer can ever reach."*
 
-Move to the ask panel. Click the suggested query *"What changed architecturally
-in Zustand v5?"*.
+## Segment 3 — ask, watch, verify, navigate (60 s)
+
+Dismiss the side panel. Click the suggested query *"Why does persist
+middleware use a hydrationVersion counter?"*.
 
 > *"Now we ask a question the code itself can't answer. Opus 4.7 holds the
-> entire 41-decision ledger in one 125K-token context and reasons with
-> citations live."*
+> entire 41-decision ledger in one context and reasons with citations live."*
 
-The answer streams in with section headers (Answer / Reasoning / Rejected
-alternatives / Related / Follow-ups). Citation chips render inline.
+The answer streams. Below it, the **Reasoning X-Ray** expands — a cyan
+scan-line at the top tracking output tokens, a vertical trace that writes
+in real time:
 
-Hover one chip — the floating card shows the exact quoted PR comment, author,
-timestamp, and a GitHub link.
+```
+⟶ 0.1s  retrieving
+⟶ 0.1s  loading ledger · 41 decisions · 385 citations · 36 edges
+⟶ 0.1s  scanning 41 decisions across 4 categories · token budget 4K
+⟶ 0.1s  reasoning
+⟶ 4.8s  resolved citation → PR #3336 · hydrationVersion counter
+⟶ 6.2s  resolved citation → PR #1463 · createWithEqualityFn split
+⟶ 12.4s cross-checking every cited claim against ledger text
+⟶ 18.7s resolved · 252K in · 3058 out · $4.0191
+⟶ 18.7s done
+```
 
-Click through to GitHub.
+Cyan lines are live system logic; amber lines are historical data resolved
+as Opus's stream names them.
 
-> *"Every citation is verifiable in one click. That's the product: not a
-> codebase chat, but a decision archaeologist that never fabricates."*
+> *"The cyan trace is Opus's reasoning timing — not simulated. Amber lines
+> fire the moment the answer cites a real PR. Every timestamp is wall-clock
+> real."*
 
-(Optional: toggle `self-check` on and re-run — chips tint green/red based on
-Opus's second-pass citation verification.)
+Hover a citation chip. **Provenance Peek** unfurls — amber drop-cap, italic
+serif quote, source-type glyph + author + date, and a footer link:
+`12 other claims cite this thread →`.
 
-## Segment 4 — impact ripple (30 s)
+> *"Every citation is the reviewer's actual words, quoted verbatim from the
+> PR, verified by self-check against the ledger. Zero hallucinations, ever."*
 
-Click a node (say #3336). Toggle `impact ripple` mode in the ask panel.
+Click that same chip. **Follow the Thread** — the graph pans smoothly (spring
+physics, liquid-weight) to PR #3336, it pulses amber, kin decisions (same PR,
+same author, or edge-connected) softly tint. Status chip top-left:
+`following thread: PR #3336 · 4 kin · clear`.
+
+> *"Citations aren't text — they're a map. Click any one and the graph
+> becomes a view of that decision's neighborhood."*
+
+Press Esc to clear.
+
+## Segment 4 — impact ripple (25 s)
+
+Click a node (say #3336). Toggle `impact ripple` mode.
 Type: *"What breaks if the hydrationVersion counter is removed?"*
 Hit Ripple.
 
-The graph dims, the anchored subgraph lights up amber (anchor pulses brighter).
+The graph dims, the anchored subgraph lights up amber, anchor pulses brighter.
+The Reasoning X-Ray re-opens with a different opener:
+`bfs subgraph · 3 decisions · 2 edges · anchor PR #3336`.
 
-> *"Impact-Ripple mode is the third query type from the spec: BFS over the
-> decision edges from the anchor, hand just the subgraph to Opus, trace
-> cascading consequences."*
-
-Answer streams with sections: Direct impact / Second-order impact / Safe to
-unwind / What's NOT in the subgraph / Follow-ups.
-
-> *"It correctly identifies #3336 as a leaf node — nothing depends on it — and
-> still enumerates the behavioral guarantees the counter was protecting, each
-> cited back to the exact inline review comment."*
+> *"Impact-Ripple: BFS over the decision edges from the anchor, hand just
+> the subgraph to Opus, trace cascading consequences. The X-Ray shows
+> exactly which slice of the ledger the model saw."*
 
 ## Segment 5 — live ingestion (20 s)
 
