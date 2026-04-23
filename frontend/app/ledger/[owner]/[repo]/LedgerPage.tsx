@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Group, Panel, type PanelImperativeHandle, Separator } from "react-resizable-panels";
@@ -8,6 +8,7 @@ import { Group, Panel, type PanelImperativeHandle, Separator } from "react-resiz
 import { AskPanel } from "../../../../components/AskPanel";
 import { DecisionSidePanel } from "../../../../components/DecisionSidePanel";
 import { LedgerGraph } from "../../../../components/LedgerGraph";
+import { TimelineRail } from "../../../../components/TimelineRail";
 import { useThreadFollower } from "../../../../hooks/useThreadFollower";
 import type { LedgerResponse } from "../../../../lib/api";
 import { useReducedMotion } from "../../../../lib/motion";
@@ -46,6 +47,26 @@ export function LedgerPage({
 
   const sidePanelRef = useRef<PanelImperativeHandle | null>(null);
   const askPanelRef = useRef<PanelImperativeHandle | null>(null);
+
+  // Time Machine: a single cutoff motion value shared by the graph (per-node
+  // opacity pipeline) and the scrubber rail. Starts at +Infinity ("present"
+  // — every decision visible); scrubbing left fades anything younger than the
+  // cursor.
+  const cutoffMV = useMotionValue(Number.POSITIVE_INFINITY);
+  const graphPaneRef = useRef<HTMLElement | null>(null);
+  const [railWidth, setRailWidth] = useState(800);
+  useEffect(() => {
+    const el = graphPaneRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect?.width ?? 800;
+      // Rail occupies the full graph pane horizontally; sub-component padding
+      // handles its own breathing room.
+      setRailWidth(Math.max(200, w));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Auto-open the side panel when a decision is clicked; collapse when cleared.
   useEffect(() => {
@@ -126,35 +147,42 @@ export function LedgerPage({
               affected when the user drags the side↔ask separator (that handle
               lives in the inner group). */}
           <Panel id="graph" defaultSize={GRAPH_DEFAULT} minSize={GRAPH_MIN}>
-            <section className="relative h-full border-r border-zinc-800">
-              <LedgerGraph
-                decisions={ledger.decisions}
-                edges={ledger.edges}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-                subgraphAnchorPr={subgraph?.anchorPr ?? null}
-                subgraphPrs={subgraph?.prs ?? null}
-                threadKinIds={thread.state.kinIds}
-                threadAnchorId={thread.state.anchorId}
-              />
-              {thread.state.anchorPr !== null ? (
-                <button
-                  type="button"
-                  onClick={thread.clear}
-                  className="absolute left-3 top-3 rounded-md border border-[#d4a24c]/60 bg-[#d4a24c]/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-[#d4a24c] transition hover:border-[#d4a24c]"
-                >
-                  following thread: PR #{thread.state.anchorPr} · {thread.state.kinIds.size} kin ·
-                  clear
-                </button>
-              ) : subgraph ? (
-                <button
-                  type="button"
-                  onClick={() => setSubgraph(null)}
-                  className="absolute left-3 top-3 rounded-md border border-[#d4a24c]/60 bg-[#d4a24c]/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-[#d4a24c] transition hover:border-[#d4a24c]"
-                >
-                  impact subgraph: {subgraph.prs.length} nodes · clear
-                </button>
-              ) : null}
+            <section
+              ref={graphPaneRef}
+              className="relative flex h-full flex-col border-r border-zinc-800"
+            >
+              <div className="relative flex-1">
+                <LedgerGraph
+                  decisions={ledger.decisions}
+                  edges={ledger.edges}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                  subgraphAnchorPr={subgraph?.anchorPr ?? null}
+                  subgraphPrs={subgraph?.prs ?? null}
+                  threadKinIds={thread.state.kinIds}
+                  threadAnchorId={thread.state.anchorId}
+                  cutoffMV={cutoffMV}
+                />
+                {thread.state.anchorPr !== null ? (
+                  <button
+                    type="button"
+                    onClick={thread.clear}
+                    className="absolute left-3 top-3 rounded-md border border-[#d4a24c]/60 bg-[#d4a24c]/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-[#d4a24c] transition hover:border-[#d4a24c]"
+                  >
+                    following thread: PR #{thread.state.anchorPr} · {thread.state.kinIds.size} kin ·
+                    clear
+                  </button>
+                ) : subgraph ? (
+                  <button
+                    type="button"
+                    onClick={() => setSubgraph(null)}
+                    className="absolute left-3 top-3 rounded-md border border-[#d4a24c]/60 bg-[#d4a24c]/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-[#d4a24c] transition hover:border-[#d4a24c]"
+                  >
+                    impact subgraph: {subgraph.prs.length} nodes · clear
+                  </button>
+                ) : null}
+              </div>
+              <TimelineRail decisions={ledger.decisions} cutoffMV={cutoffMV} width={railWidth} />
             </section>
           </Panel>
 
