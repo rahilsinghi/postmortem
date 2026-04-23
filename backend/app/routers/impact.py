@@ -125,6 +125,30 @@ async def impact_endpoint(
             ),
         }
 
+        # Reasoning X-Ray: deterministic thoughts timed to real phase beats.
+        yield {
+            "event": "thought",
+            "data": json.dumps(
+                {
+                    "label": (
+                        f"bfs subgraph · {len(subgraph.decisions)} decisions · "
+                        f"{len(subgraph.edges)} edges · anchor PR "
+                        f"#{subgraph.anchor_pr}"
+                    ),
+                }
+            ),
+        }
+        yield {
+            "event": "thought",
+            "data": json.dumps(
+                {
+                    "label": (
+                        f"reasoning over {len(subgraph.decisions)}-node subgraph "
+                        f"· token budget {MAX_TOKENS // 1000}K"
+                    ),
+                }
+            ),
+        }
         yield {"event": "phase", "data": "reasoning"}
 
         user_text = build_impact_user_prompt(subgraph, question)
@@ -175,6 +199,10 @@ async def impact_endpoint(
         full_answer = "".join(collected)
 
         if self_check and full_answer.strip():
+            yield {
+                "event": "thought",
+                "data": json.dumps({"label": "cross-checking ripple claims against ledger text"}),
+            }
             yield {"event": "phase", "data": "self_checking"}
             sc_payload = (
                 "Answer to verify:\n---\n"
@@ -233,6 +261,18 @@ async def impact_endpoint(
                 )
 
         totals = tracker.totals()
+        yield {
+            "event": "thought",
+            "data": json.dumps(
+                {
+                    "label": (
+                        f"resolved · {totals.input_tokens // 1000}K in · "
+                        f"{totals.output_tokens} out · "
+                        f"${round(totals.cost_usd, 4)}"
+                    ),
+                }
+            ),
+        }
         yield {
             "event": "usage",
             "data": json.dumps(
