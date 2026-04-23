@@ -1,0 +1,57 @@
+[
+  {
+    "repo": "honojs/hono",
+    "decisions": 59,
+    "categories": 10,
+    "earliest": "2022-01-07T03:44:08",
+    "latest": "2026-04-04T08:37:41",
+    "ingestion_cost_usd": 31.8711,
+    "query_count": 1,
+    "query_cost_usd": 7.3469,
+    "cache_read_tokens": 0
+  },
+  {
+    "repo": "pmndrs/zustand",
+    "decisions": 41,
+    "categories": 4,
+    "earliest": "2022-07-16T19:16:10",
+    "latest": "2025-12-29T08:29:33",
+    "ingestion_cost_usd": 19.9862,
+    "query_count": 1,
+    "query_cost_usd": 4.0191,
+    "cache_read_tokens": 0
+  },
+  {
+    "repo": "vercel/next.js",
+    "decisions": 33,
+    "categories": 7,
+    "earliest": "2026-04-03T08:38:44",
+    "latest": "2026-04-21T18:55:55",
+    "ingestion_cost_usd": 22.5007,
+    "query_count": 0,
+    "query_cost_usd": 0.0,
+    "cache_read_tokens": 0
+  },
+  {
+    "repo": "shadcn-ui/ui",
+    "decisions": 15,
+    "categories": 6,
+    "earliest": "2024-10-30T09:09:09",
+    "latest": "2026-04-07T13:47:54",
+    "ingestion_cost_usd": 7.2057,
+    "query_count": 1,
+    "query_cost_usd": 1.8534,
+    "cache_read_tokens": 0
+  },
+  {
+    "repo": "rahilsinghi/postmortem",
+    "decisions": 6,
+    "categories": 3,
+    "earliest": "2026-04-22T01:19:24",
+    "latest": "2026-04-22T12:59:21",
+    "ingestion_cost_usd": 1.891,
+    "query_count": 3,
+    "query_cost_usd": 1.8266,
+    "cache_read_tokens": 0
+  }
+]

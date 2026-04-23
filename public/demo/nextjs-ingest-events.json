@@ -1,0 +1,1689 @@
+{
+  "events": [
+    {
+      "ts_ms": 15,
+      "event": "start",
+      "data": {
+        "type": "start",
+        "repo": "vercel/next.js",
+        "pr_limit": 100,
+        "min_discussion": 3,
+        "concurrency": 4,
+        "classifier_threshold": 0.55
+      }
+    },
+    {
+      "ts_ms": 80,
+      "event": "listing",
+      "data": {
+        "type": "listing",
+        "pr_limit": 100
+      }
+    },
+    {
+      "ts_ms": 3420,
+      "event": "filtered",
+      "data": {
+        "type": "filtered",
+        "before": 100,
+        "after": 68,
+        "min_discussion": 3
+      }
+    },
+    {
+      "ts_ms": 3500,
+      "event": "listed",
+      "data": {
+        "type": "listed",
+        "count": 68
+      }
+    },
+    {
+      "ts_ms": 4247,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 1,
+        "total": 68,
+        "pr_number": 90045,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.57,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.006369,
+        "accepted_so_far": 0,
+        "rejected_so_far": 1
+      }
+    },
+    {
+      "ts_ms": 4594,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 2,
+        "total": 68,
+        "pr_number": 92387,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.66,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.011361,
+        "accepted_so_far": 0,
+        "rejected_so_far": 2
+      }
+    },
+    {
+      "ts_ms": 4941,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 3,
+        "total": 68,
+        "pr_number": 93055,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "infra",
+        "title": "Restore dev-mode cache-fill timeout for 'use cache'",
+        "cost_so_far": 0.02385,
+        "accepted_so_far": 1,
+        "rejected_so_far": 2
+      }
+    },
+    {
+      "ts_ms": 5288,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 4,
+        "total": 68,
+        "pr_number": 91468,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.76,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.031426,
+        "accepted_so_far": 1,
+        "rejected_so_far": 3
+      }
+    },
+    {
+      "ts_ms": 5635,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 5,
+        "total": 68,
+        "pr_number": 93088,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.78,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.038532,
+        "accepted_so_far": 1,
+        "rejected_so_far": 4
+      }
+    },
+    {
+      "ts_ms": 5982,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 6,
+        "total": 68,
+        "pr_number": 90827,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.76,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.043223,
+        "accepted_so_far": 1,
+        "rejected_so_far": 5
+      }
+    },
+    {
+      "ts_ms": 6329,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 7,
+        "total": 68,
+        "pr_number": 89893,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.97,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.051981,
+        "accepted_so_far": 1,
+        "rejected_so_far": 6
+      }
+    },
+    {
+      "ts_ms": 6676,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 8,
+        "total": 68,
+        "pr_number": 92271,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "performance",
+        "title": "Use lazy synchronous require() factory for app-route userland loading to fix devRequestTiming attribution and Turbopack server HMR",
+        "cost_so_far": 0.064879,
+        "accepted_so_far": 2,
+        "rejected_so_far": 6
+      }
+    },
+    {
+      "ts_ms": 7023,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 9,
+        "total": 68,
+        "pr_number": 92591,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "tooling",
+        "title": "Suppress rage-restart detection on git branch change and lower threshold to 90s",
+        "cost_so_far": 0.073979,
+        "accepted_so_far": 3,
+        "rejected_so_far": 6
+      }
+    },
+    {
+      "ts_ms": 7370,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 10,
+        "total": 68,
+        "pr_number": 92108,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.9,
+        "decision_type": "performance",
+        "title": "turbo-tasks: add hashed cell mode for hash-based change detection without persisting cell data",
+        "cost_so_far": 0.087951,
+        "accepted_so_far": 4,
+        "rejected_so_far": 6
+      }
+    },
+    {
+      "ts_ms": 7717,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 11,
+        "total": 68,
+        "pr_number": 92669,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.84,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.096756,
+        "accepted_so_far": 4,
+        "rejected_so_far": 7
+      }
+    },
+    {
+      "ts_ms": 8064,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 12,
+        "total": 68,
+        "pr_number": 92910,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.82,
+        "decision_type": "tooling",
+        "title": "Auto-generate AGENTS.md / CLAUDE.md in next dev",
+        "cost_so_far": 0.1102,
+        "accepted_so_far": 5,
+        "rejected_so_far": 7
+      }
+    },
+    {
+      "ts_ms": 8411,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 13,
+        "total": 68,
+        "pr_number": 92273,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "infra",
+        "title": "Multicast HMR handler registry for multiple Turbopack server runtimes in one Node.js process",
+        "cost_so_far": 0.118502,
+        "accepted_so_far": 6,
+        "rejected_so_far": 7
+      }
+    },
+    {
+      "ts_ms": 8758,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 14,
+        "total": 68,
+        "pr_number": 89440,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.68,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.127368,
+        "accepted_so_far": 6,
+        "rejected_so_far": 8
+      }
+    },
+    {
+      "ts_ms": 9105,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 15,
+        "total": 68,
+        "pr_number": 92296,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.69,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.135817,
+        "accepted_so_far": 6,
+        "rejected_so_far": 9
+      }
+    },
+    {
+      "ts_ms": 9452,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 16,
+        "total": 68,
+        "pr_number": 92911,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.9,
+        "decision_type": "build",
+        "title": "Switch to cargo-binstall and pre-built sccache binaries for CI/Docker Rust tooling",
+        "cost_so_far": 0.145714,
+        "accepted_so_far": 7,
+        "rejected_so_far": 9
+      }
+    },
+    {
+      "ts_ms": 9800,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 17,
+        "total": 68,
+        "pr_number": 90903,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.73,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.150521,
+        "accepted_so_far": 7,
+        "rejected_so_far": 10
+      }
+    },
+    {
+      "ts_ms": 10079,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 93055,
+        "title": "Restore dev-mode cache-fill timeout for 'use cache'",
+        "category": "infra",
+        "citations": 13,
+        "alternatives": 2
+      }
+    },
+    {
+      "ts_ms": 10147,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 18,
+        "total": 68,
+        "pr_number": 92859,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.82,
+        "decision_type": "api_contract",
+        "title": "Add force-disabled, force-static, force-runtime prefetch configuration modes to app segment config",
+        "cost_so_far": 0.162669,
+        "accepted_so_far": 8,
+        "rejected_so_far": 10
+      }
+    },
+    {
+      "ts_ms": 10494,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 19,
+        "total": 68,
+        "pr_number": 91953,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.66,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.168228,
+        "accepted_so_far": 8,
+        "rejected_so_far": 11
+      }
+    },
+    {
+      "ts_ms": 10841,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 20,
+        "total": 68,
+        "pr_number": 92638,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.82,
+        "decision_type": "ui_architecture",
+        "title": "Redesign blocking-route dev overlay with dedicated 'Instant' path and centralized message helpers",
+        "cost_so_far": 0.182211,
+        "accepted_so_far": 9,
+        "rejected_so_far": 11
+      }
+    },
+    {
+      "ts_ms": 11188,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 21,
+        "total": 68,
+        "pr_number": 89781,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.78,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.188612,
+        "accepted_so_far": 9,
+        "rejected_so_far": 12
+      }
+    },
+    {
+      "ts_ms": 11535,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 22,
+        "total": 68,
+        "pr_number": 92390,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.9,
+        "decision_type": "performance",
+        "title": "turbo-persistence: skip BlockCache for uncompressed (mmap-backed) blocks",
+        "cost_so_far": 0.19987,
+        "accepted_so_far": 10,
+        "rejected_so_far": 12
+      }
+    },
+    {
+      "ts_ms": 11640,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92108,
+        "title": "turbo-tasks: add hashed cell mode for hash-based change detection without persisting cell data",
+        "category": "performance",
+        "citations": 19,
+        "alternatives": 5
+      }
+    },
+    {
+      "ts_ms": 11882,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 23,
+        "total": 68,
+        "pr_number": 90630,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.65,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.208766,
+        "accepted_so_far": 10,
+        "rejected_so_far": 13
+      }
+    },
+    {
+      "ts_ms": 11929,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92271,
+        "title": "Use lazy synchronous require() factory for app-route userland loading to fix devRequestTiming attribution and Turbopack server HMR",
+        "category": "performance",
+        "citations": 15,
+        "alternatives": 4
+      }
+    },
+    {
+      "ts_ms": 12229,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 24,
+        "total": 68,
+        "pr_number": 91830,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.9,
+        "decision_type": "performance",
+        "title": "Two-layer leader/joiner deduplication for concurrent `'use cache'` invocations",
+        "cost_so_far": 0.222514,
+        "accepted_so_far": 11,
+        "rejected_so_far": 13
+      }
+    },
+    {
+      "ts_ms": 12576,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 25,
+        "total": 68,
+        "pr_number": 92039,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.89,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.229394,
+        "accepted_so_far": 11,
+        "rejected_so_far": 14
+      }
+    },
+    {
+      "ts_ms": 12638,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92910,
+        "title": "Auto-generate AGENTS.md / CLAUDE.md in next dev",
+        "category": "tooling",
+        "citations": 16,
+        "alternatives": 3
+      }
+    },
+    {
+      "ts_ms": 12923,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 26,
+        "total": 68,
+        "pr_number": 92634,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.93,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.23364,
+        "accepted_so_far": 11,
+        "rejected_so_far": 15
+      }
+    },
+    {
+      "ts_ms": 13270,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 27,
+        "total": 68,
+        "pr_number": 91553,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "performance",
+        "title": "Defer AMQF filter construction to close() and use sorted Builder API for SST writer",
+        "cost_so_far": 0.245158,
+        "accepted_so_far": 12,
+        "rejected_so_far": 15
+      }
+    },
+    {
+      "ts_ms": 13333,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92273,
+        "title": "Multicast HMR handler registry for multiple Turbopack server runtimes in one Node.js process",
+        "category": "infra",
+        "citations": 15,
+        "alternatives": 4
+      }
+    },
+    {
+      "ts_ms": 13547,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92591,
+        "title": "Suppress rage-restart detection on git branch change and lower threshold to 90s",
+        "category": "tooling",
+        "citations": 19,
+        "alternatives": 3
+      }
+    },
+    {
+      "ts_ms": 13617,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 28,
+        "total": 68,
+        "pr_number": 91859,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.6,
+        "decision_type": "routing",
+        "title": "next-routing: gate middleware invocation by configured matchers and normalize app request URLs",
+        "cost_so_far": 0.258105,
+        "accepted_so_far": 13,
+        "rejected_so_far": 15
+      }
+    },
+    {
+      "ts_ms": 13964,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 29,
+        "total": 68,
+        "pr_number": 92133,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.73,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.263217,
+        "accepted_so_far": 13,
+        "rejected_so_far": 16
+      }
+    },
+    {
+      "ts_ms": 14311,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 30,
+        "total": 68,
+        "pr_number": 92135,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.85,
+        "decision_type": "tooling",
+        "title": "Restart the `next dev` server when the distDir is deleted by watching ancestor directories with Watchpack",
+        "cost_so_far": 0.274978,
+        "accepted_so_far": 14,
+        "rejected_so_far": 16
+      }
+    },
+    {
+      "ts_ms": 14658,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 31,
+        "total": 68,
+        "pr_number": 92361,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "performance",
+        "title": "Pin referenced BlockCache entries via quick_cache Lifecycle hooks to prevent eviction of in-use blocks",
+        "cost_so_far": 0.283443,
+        "accepted_so_far": 15,
+        "rejected_so_far": 16
+      }
+    },
+    {
+      "ts_ms": 15005,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 32,
+        "total": 68,
+        "pr_number": 91026,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.64,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.289739,
+        "accepted_so_far": 15,
+        "rejected_so_far": 17
+      }
+    },
+    {
+      "ts_ms": 15332,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92911,
+        "title": "Switch to cargo-binstall and pre-built sccache binaries for CI/Docker Rust tooling",
+        "category": "build",
+        "citations": 17,
+        "alternatives": 4
+      }
+    },
+    {
+      "ts_ms": 15352,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 33,
+        "total": 68,
+        "pr_number": 92272,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "build",
+        "title": "Add experimental.swcEnvOptions to expose SWC preset-env configuration (including core-js polyfill injection)",
+        "cost_so_far": 0.300637,
+        "accepted_so_far": 16,
+        "rejected_so_far": 17
+      }
+    },
+    {
+      "ts_ms": 15700,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 34,
+        "total": 68,
+        "pr_number": 91858,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.82,
+        "decision_type": "api_contract",
+        "title": "Turbopack: Remove `turbo_tasks::apply_effects` in favor of `Effects::apply`",
+        "cost_so_far": 0.313555,
+        "accepted_so_far": 17,
+        "rejected_so_far": 17
+      }
+    },
+    {
+      "ts_ms": 16047,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 35,
+        "total": 68,
+        "pr_number": 90974,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.81,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.322404,
+        "accepted_so_far": 17,
+        "rejected_so_far": 18
+      }
+    },
+    {
+      "ts_ms": 16060,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 91830,
+        "title": "Two-layer leader/joiner deduplication for concurrent `'use cache'` invocations",
+        "category": "performance",
+        "citations": 17,
+        "alternatives": 4
+      }
+    },
+    {
+      "ts_ms": 16394,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 36,
+        "total": 68,
+        "pr_number": 89902,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.8,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.331211,
+        "accepted_so_far": 17,
+        "rejected_so_far": 19
+      }
+    },
+    {
+      "ts_ms": 16741,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 37,
+        "total": 68,
+        "pr_number": 89370,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "performance",
+        "title": "Replace modified DashMap with per-shard atomic counters + inline flags for persistence tracking",
+        "cost_so_far": 0.342328,
+        "accepted_so_far": 18,
+        "rejected_so_far": 19
+      }
+    },
+    {
+      "ts_ms": 17088,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 38,
+        "total": 68,
+        "pr_number": 90349,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.91,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.346596,
+        "accepted_so_far": 18,
+        "rejected_so_far": 20
+      }
+    },
+    {
+      "ts_ms": 17435,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 39,
+        "total": 68,
+        "pr_number": 91048,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.62,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.355418,
+        "accepted_so_far": 18,
+        "rejected_so_far": 21
+      }
+    },
+    {
+      "ts_ms": 17641,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92859,
+        "title": "Add force-disabled, force-static, force-runtime prefetch configuration modes to app segment config",
+        "category": "api_contract",
+        "citations": 11,
+        "alternatives": 0
+      }
+    },
+    {
+      "ts_ms": 17782,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 40,
+        "total": 68,
+        "pr_number": 92218,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.65,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.364241,
+        "accepted_so_far": 18,
+        "rejected_so_far": 22
+      }
+    },
+    {
+      "ts_ms": 18080,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92638,
+        "title": "Redesign blocking-route dev overlay with dedicated 'Instant' path and centralized message helpers",
+        "category": "ui_architecture",
+        "citations": 16,
+        "alternatives": 9
+      }
+    },
+    {
+      "ts_ms": 18107,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92390,
+        "title": "turbo-persistence: skip BlockCache for uncompressed (mmap-backed) blocks",
+        "category": "performance",
+        "citations": 18,
+        "alternatives": 5
+      }
+    },
+    {
+      "ts_ms": 18129,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 41,
+        "total": 68,
+        "pr_number": 92761,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.82,
+        "decision_type": "api_contract",
+        "title": "Remove prefetch option from instant config (prefetch now controlled via separate prefetch export)",
+        "cost_so_far": 0.374122,
+        "accepted_so_far": 19,
+        "rejected_so_far": 22
+      }
+    },
+    {
+      "ts_ms": 18476,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 42,
+        "total": 68,
+        "pr_number": 91554,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "performance",
+        "title": "turbo-tasks: replace async resolve fns with custom Future types (ResolveRawVcFuture, ResolveVcFuture, ToResolvedVcFuture)",
+        "cost_so_far": 0.383155,
+        "accepted_so_far": 20,
+        "rejected_so_far": 22
+      }
+    },
+    {
+      "ts_ms": 18639,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92361,
+        "title": "Pin referenced BlockCache entries via quick_cache Lifecycle hooks to prevent eviction of in-use blocks",
+        "category": "performance",
+        "citations": 10,
+        "alternatives": 2
+      }
+    },
+    {
+      "ts_ms": 18823,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 43,
+        "total": 68,
+        "pr_number": 90572,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.64,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.392018,
+        "accepted_so_far": 20,
+        "rejected_so_far": 23
+      }
+    },
+    {
+      "ts_ms": 18977,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92135,
+        "title": "Restart the `next dev` server when the distDir is deleted by watching ancestor directories with Watchpack",
+        "category": "tooling",
+        "citations": 13,
+        "alternatives": 3
+      }
+    },
+    {
+      "ts_ms": 19170,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 44,
+        "total": 68,
+        "pr_number": 92852,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.93,
+        "decision_type": "performance",
+        "title": "Replace TransientState<ReadRef<ParseResult>> with persistent LastSuccessfulSource (Rope) cell for failsafe_parse",
+        "cost_so_far": 0.402621,
+        "accepted_so_far": 21,
+        "rejected_so_far": 23
+      }
+    },
+    {
+      "ts_ms": 19517,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 45,
+        "total": 68,
+        "pr_number": 92900,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.85,
+        "decision_type": "tooling",
+        "title": "Add ESLint rule `no-location-assign-relative-destination` to eslint-plugin-next",
+        "cost_so_far": 0.413315,
+        "accepted_so_far": 22,
+        "rejected_so_far": 23
+      }
+    },
+    {
+      "ts_ms": 19682,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 91859,
+        "title": "next-routing: gate middleware invocation by configured matchers and normalize app request URLs",
+        "category": "routing",
+        "citations": 11,
+        "alternatives": 0
+      }
+    },
+    {
+      "ts_ms": 19864,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 46,
+        "total": 68,
+        "pr_number": 90574,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.9,
+        "decision_type": "performance",
+        "title": "Adopt zero-copy qfilter FilterRef deserialization for turbo-persistence AMQF filters",
+        "cost_so_far": 0.421876,
+        "accepted_so_far": 23,
+        "rejected_so_far": 23
+      }
+    },
+    {
+      "ts_ms": 20172,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 91553,
+        "title": "Defer AMQF filter construction to close() and use sorted Builder API for SST writer",
+        "category": "performance",
+        "citations": 17,
+        "alternatives": 3
+      }
+    },
+    {
+      "ts_ms": 20211,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 47,
+        "total": 68,
+        "pr_number": 92755,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.72,
+        "decision_type": "routing",
+        "title": "Strengthen _rsc cache-busting param with stronger digest",
+        "cost_so_far": 0.430509,
+        "accepted_so_far": 24,
+        "rejected_so_far": 23
+      }
+    },
+    {
+      "ts_ms": 20558,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 48,
+        "total": 68,
+        "pr_number": 92851,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.96,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.434561,
+        "accepted_so_far": 24,
+        "rejected_so_far": 24
+      }
+    },
+    {
+      "ts_ms": 20905,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 49,
+        "total": 68,
+        "pr_number": 92616,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.79,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.443054,
+        "accepted_so_far": 24,
+        "rejected_so_far": 25
+      }
+    },
+    {
+      "ts_ms": 21057,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92272,
+        "title": "Add experimental.swcEnvOptions to expose SWC preset-env configuration (including core-js polyfill injection)",
+        "category": "build",
+        "citations": 19,
+        "alternatives": 4
+      }
+    },
+    {
+      "ts_ms": 21252,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 50,
+        "total": 68,
+        "pr_number": 91542,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.75,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.447948,
+        "accepted_so_far": 24,
+        "rejected_so_far": 26
+      }
+    },
+    {
+      "ts_ms": 21401,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 89370,
+        "title": "Replace modified DashMap with per-shard atomic counters + inline flags for persistence tracking",
+        "category": "performance",
+        "citations": 17,
+        "alternatives": 3
+      }
+    },
+    {
+      "ts_ms": 21600,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 51,
+        "total": 68,
+        "pr_number": 92062,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "tooling",
+        "title": "Add MCP `get_compilation_issues` tool that iterates per-endpoint module graphs to surface all route compilation issues without a browser session",
+        "cost_so_far": 0.461082,
+        "accepted_so_far": 25,
+        "rejected_so_far": 26
+      }
+    },
+    {
+      "ts_ms": 21947,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 52,
+        "total": 68,
+        "pr_number": 90516,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.79,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.465768,
+        "accepted_so_far": 25,
+        "rejected_so_far": 27
+      }
+    },
+    {
+      "ts_ms": 22294,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 53,
+        "total": 68,
+        "pr_number": 92796,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.68,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.472032,
+        "accepted_so_far": 25,
+        "rejected_so_far": 28
+      }
+    },
+    {
+      "ts_ms": 22641,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 54,
+        "total": 68,
+        "pr_number": 92931,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "performance",
+        "title": "Turbopack SelfTimeTree: lazy optimization with batch split checks and inclusive range boundaries",
+        "cost_so_far": 0.481136,
+        "accepted_so_far": 26,
+        "rejected_so_far": 28
+      }
+    },
+    {
+      "ts_ms": 22673,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92761,
+        "title": "Remove prefetch option from instant config (prefetch now controlled via separate prefetch export)",
+        "category": "api_contract",
+        "citations": 8,
+        "alternatives": 0
+      }
+    },
+    {
+      "ts_ms": 22983,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 91858,
+        "title": "Turbopack: Remove `turbo_tasks::apply_effects` in favor of `Effects::apply`",
+        "category": "api_contract",
+        "citations": 12,
+        "alternatives": 1
+      }
+    },
+    {
+      "ts_ms": 22988,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 55,
+        "total": 68,
+        "pr_number": 90363,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.94,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.485177,
+        "accepted_so_far": 26,
+        "rejected_so_far": 29
+      }
+    },
+    {
+      "ts_ms": 23335,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 56,
+        "total": 68,
+        "pr_number": 93090,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "performance",
+        "title": "turbo-tasks: drop once_cell and phf; make TraitType::methods a const-indexable slice instead of a phf::Map behind LazyLock",
+        "cost_so_far": 0.495201,
+        "accepted_so_far": 27,
+        "rejected_so_far": 29
+      }
+    },
+    {
+      "ts_ms": 23682,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 57,
+        "total": 68,
+        "pr_number": 91773,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "performance",
+        "title": "Optimize RcStr bincode parsing via borrow-decode and an inventory-backed static string table",
+        "cost_so_far": 0.505174,
+        "accepted_so_far": 28,
+        "rejected_so_far": 29
+      }
+    },
+    {
+      "ts_ms": 24029,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 58,
+        "total": 68,
+        "pr_number": 91587,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.59,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.509433,
+        "accepted_so_far": 28,
+        "rejected_so_far": 30
+      }
+    },
+    {
+      "ts_ms": 24376,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 59,
+        "total": 68,
+        "pr_number": 89584,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.56,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.516768,
+        "accepted_so_far": 28,
+        "rejected_so_far": 31
+      }
+    },
+    {
+      "ts_ms": 24514,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92900,
+        "title": "Add ESLint rule `no-location-assign-relative-destination` to eslint-plugin-next",
+        "category": "tooling",
+        "citations": 7,
+        "alternatives": 1
+      }
+    },
+    {
+      "ts_ms": 24723,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 60,
+        "total": 68,
+        "pr_number": 91614,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "infra",
+        "title": "Turbopack: Gate workerThreads on minimum Node.js version (negative check, allowing Bun/Deno)",
+        "cost_so_far": 0.525445,
+        "accepted_so_far": 29,
+        "rejected_so_far": 31
+      }
+    },
+    {
+      "ts_ms": 24765,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 91554,
+        "title": "turbo-tasks: replace async resolve fns with custom Future types (ResolveRawVcFuture, ResolveVcFuture, ToResolvedVcFuture)",
+        "category": "performance",
+        "citations": 19,
+        "alternatives": 7
+      }
+    },
+    {
+      "ts_ms": 25070,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 61,
+        "total": 68,
+        "pr_number": 92467,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.68,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.532996,
+        "accepted_so_far": 29,
+        "rejected_so_far": 32
+      }
+    },
+    {
+      "ts_ms": 25417,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 62,
+        "total": 68,
+        "pr_number": 90469,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.89,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.538017,
+        "accepted_so_far": 29,
+        "rejected_so_far": 33
+      }
+    },
+    {
+      "ts_ms": 25431,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 90574,
+        "title": "Adopt zero-copy qfilter FilterRef deserialization for turbo-persistence AMQF filters",
+        "category": "performance",
+        "citations": 16,
+        "alternatives": 5
+      }
+    },
+    {
+      "ts_ms": 25475,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92852,
+        "title": "Replace TransientState<ReadRef<ParseResult>> with persistent LastSuccessfulSource (Rope) cell for failsafe_parse",
+        "category": "performance",
+        "citations": 19,
+        "alternatives": 6
+      }
+    },
+    {
+      "ts_ms": 25764,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 63,
+        "total": 68,
+        "pr_number": 91384,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.9,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.545907,
+        "accepted_so_far": 29,
+        "rejected_so_far": 34
+      }
+    },
+    {
+      "ts_ms": 26111,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 64,
+        "total": 68,
+        "pr_number": 92292,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "build",
+        "title": "Deduplicate output assets and report emit-time content conflicts as issues rather than silently overwriting",
+        "cost_so_far": 0.559819,
+        "accepted_so_far": 30,
+        "rejected_so_far": 34
+      }
+    },
+    {
+      "ts_ms": 26458,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 65,
+        "total": 68,
+        "pr_number": 92214,
+        "accepted": false,
+        "is_decision": false,
+        "confidence": 0.9,
+        "decision_type": null,
+        "title": null,
+        "cost_so_far": 0.566095,
+        "accepted_so_far": 30,
+        "rejected_so_far": 35
+      }
+    },
+    {
+      "ts_ms": 26805,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 66,
+        "total": 68,
+        "pr_number": 92896,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "performance",
+        "title": "Adopt mimalloc + RcStr interning + capacity hints to reduce allocation overhead in turbo-trace-server",
+        "cost_so_far": 0.579639,
+        "accepted_so_far": 31,
+        "rejected_so_far": 35
+      }
+    },
+    {
+      "ts_ms": 26935,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92755,
+        "title": "Strengthen _rsc cache-busting param with stronger digest",
+        "category": "routing",
+        "citations": 6,
+        "alternatives": 1
+      }
+    },
+    {
+      "ts_ms": 27152,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 67,
+        "total": 68,
+        "pr_number": 92630,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.88,
+        "decision_type": "performance",
+        "title": "Add dedicated static metadata URL resolver to avoid dynamic route-regex work for static metadata files",
+        "cost_so_far": 0.592844,
+        "accepted_so_far": 32,
+        "rejected_so_far": 35
+      }
+    },
+    {
+      "ts_ms": 27500,
+      "event": "pr_classified",
+      "data": {
+        "type": "pr_classified",
+        "idx": 68,
+        "total": 68,
+        "pr_number": 92894,
+        "accepted": true,
+        "is_decision": true,
+        "confidence": 0.78,
+        "decision_type": "routing",
+        "title": "Include prefetch requests in partial fallback shell upgrade handling",
+        "cost_so_far": 0.601023,
+        "accepted_so_far": 33,
+        "rejected_so_far": 35
+      }
+    },
+    {
+      "ts_ms": 27926,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92931,
+        "title": "Turbopack SelfTimeTree: lazy optimization with batch split checks and inclusive range boundaries",
+        "category": "performance",
+        "citations": 14,
+        "alternatives": 2
+      }
+    },
+    {
+      "ts_ms": 28313,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92062,
+        "title": "Add MCP `get_compilation_issues` tool that iterates per-endpoint module graphs to surface all route compilation issues without a browser session",
+        "category": "tooling",
+        "citations": 14,
+        "alternatives": 4
+      }
+    },
+    {
+      "ts_ms": 29300,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 93090,
+        "title": "turbo-tasks: drop once_cell and phf; make TraitType::methods a const-indexable slice instead of a phf::Map behind LazyLock",
+        "category": "performance",
+        "citations": 14,
+        "alternatives": 3
+      }
+    },
+    {
+      "ts_ms": 29300,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 91773,
+        "title": "Optimize RcStr bincode parsing via borrow-decode and an inventory-backed static string table",
+        "category": "performance",
+        "citations": 12,
+        "alternatives": 4
+      }
+    },
+    {
+      "ts_ms": 29300,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 91614,
+        "title": "Turbopack: Gate workerThreads on minimum Node.js version (negative check, allowing Bun/Deno)",
+        "category": "infra",
+        "citations": 13,
+        "alternatives": 1
+      }
+    },
+    {
+      "ts_ms": 29300,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92292,
+        "title": "Deduplicate output assets and report emit-time content conflicts as issues rather than silently overwriting",
+        "category": "build",
+        "citations": 11,
+        "alternatives": 4
+      }
+    },
+    {
+      "ts_ms": 29300,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92896,
+        "title": "Adopt mimalloc + RcStr interning + capacity hints to reduce allocation overhead in turbo-trace-server",
+        "category": "performance",
+        "citations": 21,
+        "alternatives": 5
+      }
+    },
+    {
+      "ts_ms": 29300,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92630,
+        "title": "Add dedicated static metadata URL resolver to avoid dynamic route-regex work for static metadata files",
+        "category": "performance",
+        "citations": 14,
+        "alternatives": 2
+      }
+    },
+    {
+      "ts_ms": 29300,
+      "event": "pr_extracted",
+      "data": {
+        "type": "pr_extracted",
+        "pr_number": 92894,
+        "title": "Include prefetch requests in partial fallback shell upgrade handling",
+        "category": "routing",
+        "citations": 5,
+        "alternatives": 0
+      }
+    },
+    {
+      "ts_ms": 29500,
+      "event": "persisting",
+      "data": {
+        "type": "persisting"
+      }
+    },
+    {
+      "ts_ms": 32000,
+      "event": "done",
+      "data": {
+        "type": "done",
+        "repo": "vercel/next.js",
+        "prs_seen": 68,
+        "classifier_accepted": 33,
+        "classifier_rejected": 35,
+        "decisions_written": 33,
+        "edges_written": 14,
+        "cost_usd": 10.7836,
+        "input_tokens": 850000,
+        "output_tokens": 160000
+      }
+    }
+  ],
+  "event_count": 107,
+  "synthesized": true,
+  "source_repo": "vercel/next.js",
+  "source_decision_count": 33
+}

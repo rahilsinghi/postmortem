@@ -7,7 +7,7 @@ Usage:
 Writes under public/demo/:
     gallery-repos.json
     hono-ledger.json
-    hermes-ingest-events.json
+    supabase-ingest-events.json
     hono-query-events.json
     hono-impact-events.json
     manifest.json
@@ -89,10 +89,10 @@ def capture_sse(url: str, out_path: Path) -> dict[str, Any]:
 
 def capture_ingest() -> dict[str, Any]:
     url = (
-        f"{BACKEND}/api/ingest?repo=NousResearch/hermes-agent"
-        "&limit=30&min_discussion=2"
+        f"{BACKEND}/api/ingest?repo=supabase/supabase"
+        "&limit=30&min_discussion=3"
     )
-    return capture_sse(url, FIXTURE_DIR / "hermes-ingest-events.json")
+    return capture_sse(url, FIXTURE_DIR / "supabase-ingest-events.json")
 
 
 def capture_query() -> dict[str, Any]:
@@ -135,8 +135,8 @@ def main() -> int:
         ("gallery-repos.json", "GET /api/repos (free)"),
         ("hono-ledger.json", "GET /api/repos/honojs/hono/ledger (free)"),
         (
-            "hermes-ingest-events.json",
-            "SSE /api/ingest hermes-agent limit=30 (~$4-6)",
+            "supabase-ingest-events.json",
+            "SSE /api/ingest supabase/supabase limit=30 min_discussion=3 (~$8-12)",
         ),
         ("hono-query-events.json", "SSE /api/query hono self_check=true (~$4)"),
         ("hono-impact-events.json", "SSE /api/impact hono anchor=3813 (~$3)"),
@@ -153,7 +153,7 @@ def main() -> int:
     _atomic_write(FIXTURE_DIR / "gallery-repos.json", capture_repos())
     print("[2/5] /api/repos/honojs/hono/ledger")
     _atomic_write(FIXTURE_DIR / "hono-ledger.json", capture_ledger("honojs/hono"))
-    print("[3/5] /api/ingest hermes-agent (SSE)")
+    print("[3/5] /api/ingest supabase/supabase (SSE)")
     ingest = capture_ingest()
     manifest["ingest_events"] = ingest["event_count"]
     print("[4/5] /api/query hono (SSE)")

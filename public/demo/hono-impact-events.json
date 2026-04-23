@@ -1,0 +1,388 @@
+{
+  "events": [
+    {
+      "ts_ms": 36,
+      "event": "phase",
+      "data": "subgraph"
+    },
+    {
+      "ts_ms": 36,
+      "event": "stats",
+      "data": {
+        "repo": "honojs/hono",
+        "anchor_pr": 3813,
+        "anchor_title": "Accept Uint8Array (not node:buffer Buffer) in c.body() to support binary responses while staying Web-Standards compliant",
+        "subgraph_decisions": 1,
+        "subgraph_edges": 0
+      }
+    },
+    {
+      "ts_ms": 36,
+      "event": "subgraph",
+      "data": {
+        "anchor_pr": 3813,
+        "included_prs": [
+          3813
+        ]
+      }
+    },
+    {
+      "ts_ms": 36,
+      "event": "thought",
+      "data": {
+        "label": "bfs subgraph \u00b7 1 decisions \u00b7 0 edges \u00b7 anchor PR #3813"
+      }
+    },
+    {
+      "ts_ms": 36,
+      "event": "thought",
+      "data": {
+        "label": "reasoning over 1-node subgraph \u00b7 token budget 4K"
+      }
+    },
+    {
+      "ts_ms": 36,
+      "event": "phase",
+      "data": "reasoning"
+    },
+    {
+      "ts_ms": 1815,
+      "event": "delta",
+      "data": {
+        "text": "## Direct impact\n\nThe subgraph contains **"
+      }
+    },
+    {
+      "ts_ms": 2221,
+      "event": "delta",
+      "data": {
+        "text": "no decisions that depend on PR #3813** \u2014 it's an is"
+      }
+    },
+    {
+      "ts_ms": 2584,
+      "event": "delta",
+      "data": {
+        "text": "olated node with 0 edges. So strictly speaking, no led"
+      }
+    },
+    {
+      "ts_ms": 2985,
+      "event": "delta",
+      "data": {
+        "text": "ger-tracked decision breaks if you re"
+      }
+    },
+    {
+      "ts_ms": 3342,
+      "event": "delta",
+      "data": {
+        "text": "verse the \"no node:* in core\" stance that this PR emb"
+      }
+    },
+    {
+      "ts_ms": 3756,
+      "event": "delta",
+      "data": {
+        "text": "odies.\n\nThat said, reversing the anchor would contradict the *"
+      }
+    },
+    {
+      "ts_ms": 4105,
+      "event": "delta",
+      "data": {
+        "text": "principle* that drove the PR's final shape, even"
+      }
+    },
+    {
+      "ts_ms": 4487,
+      "event": "delta",
+      "data": {
+        "text": " if no downstream decision has been recorded against it yet:"
+      }
+    },
+    {
+      "ts_ms": 4987,
+      "event": "delta",
+      "data": {
+        "text": "\n\n- **PR #3813 itself \u2014 Accept Uint8Array in c"
+      }
+    },
+    {
+      "ts_ms": 5395,
+      "event": "delta",
+      "data": {
+        "text": ".body()**: This PR's entire rationale flips. The author"
+      }
+    },
+    {
+      "ts_ms": 5804,
+      "event": "delta",
+      "data": {
+        "text": " originally proposed importing `Buffer` from `node:buffer`, and the maintainer expl"
+      }
+    },
+    {
+      "ts_ms": 6107,
+      "event": "delta",
+      "data": {
+        "text": "icitly rejected that path: \"we should not use `node:*` modules in the core of `hono`. Actually, `Buffer`"
+      }
+    },
+    {
+      "ts_ms": 6522,
+      "event": "delta",
+      "data": {
+        "text": " is not in Web Standards API.\" [PR #3813, @yusukebe, 2025-01-09]."
+      }
+    },
+    {
+      "ts_ms": 6872,
+      "event": "delta",
+      "data": {
+        "text": " If node:* is allowed, the `Uint8Array` widening"
+      }
+    },
+    {
+      "ts_ms": 7253,
+      "event": "delta",
+      "data": {
+        "text": " was unnecessary \u2014 the simpler `Buffer` import altern"
+      }
+    },
+    {
+      "ts_ms": 7749,
+      "event": "delta",
+      "data": {
+        "text": "ative would have been acceptable [PR #3813, @askorupskyy, 2025-01-09].\n\n- **Deno compatibility**: The"
+      }
+    },
+    {
+      "ts_ms": 8062,
+      "event": "delta",
+      "data": {
+        "text": " author noted \"Deno does not have a Buffer exposed to the global scope\" [PR #3813, @ask"
+      }
+    },
+    {
+      "ts_ms": 8443,
+      "event": "delta",
+      "data": {
+        "text": "orupskyy, 2025-01-09], which is a runtime-level casualty, not a "
+      }
+    },
+    {
+      "ts_ms": 8824,
+      "event": "delta",
+      "data": {
+        "text": "ledger one. Allowing node:* in core would force per-runtime sh"
+      }
+    },
+    {
+      "ts_ms": 9282,
+      "event": "delta",
+      "data": {
+        "text": "ims or break Deno outright.\n\n## Second-order impact\n\nNone"
+      }
+    },
+    {
+      "ts_ms": 9697,
+      "event": "delta",
+      "data": {
+        "text": " traceable in the subgraph \u2014 there are no edges to follow."
+      }
+    },
+    {
+      "ts_ms": 10015,
+      "event": "delta",
+      "data": {
+        "text": "\n\n## Safe to unwind\n\nNothing in the subgraph is"
+      }
+    },
+    {
+      "ts_ms": 10411,
+      "event": "delta",
+      "data": {
+        "text": " linked via `related_to`, so there's nothing to re"
+      }
+    },
+    {
+      "ts_ms": 10821,
+      "event": "delta",
+      "data": {
+        "text": "assure you about here.\n\n## What's N"
+      }
+    },
+    {
+      "ts_ms": 11158,
+      "event": "delta",
+      "data": {
+        "text": "OT in the subgraph\n\nThis is a significant blind spot. A \"no"
+      }
+    },
+    {
+      "ts_ms": 11538,
+      "event": "delta",
+      "data": {
+        "text": " node:* in core\" policy is the kind of cross-cutting constraint that us"
+      }
+    },
+    {
+      "ts_ms": 11919,
+      "event": "delta",
+      "data": {
+        "text": "ually touches many decisions \u2014 streaming helpers, file-ser"
+      }
+    },
+    {
+      "ts_ms": 12300,
+      "event": "delta",
+      "data": {
+        "text": "ving adapters, crypto, the Node adapter boundary, testing ut"
+      }
+    },
+    {
+      "ts_ms": 12680,
+      "event": "delta",
+      "data": {
+        "text": "ilities, and the `hc` client. **None"
+      }
+    },
+    {
+      "ts_ms": 13076,
+      "event": "delta",
+      "data": {
+        "text": " of those appear here.** The ledger almost certainly has other P"
+      }
+    },
+    {
+      "ts_ms": 13484,
+      "event": "delta",
+      "data": {
+        "text": "Rs where node:* was rejected or isolated into"
+      }
+    },
+    {
+      "ts_ms": 13822,
+      "event": "delta",
+      "data": {
+        "text": " an adapter package (`@h"
+      }
+    },
+    {
+      "ts_ms": 14203,
+      "event": "delta",
+      "data": {
+        "text": "ono/node-server`, etc.), but they aren't linked to"
+      }
+    },
+    {
+      "ts_ms": 14610,
+      "event": "delta",
+      "data": {
+        "text": " #3813. Treat this answer as a lower b"
+      }
+    },
+    {
+      "ts_ms": 15226,
+      "event": "delta",
+      "data": {
+        "text": "ound on impact.\n\n## Suggested follow-ups\n\n1. Search the Hono repo for other P"
+      }
+    },
+    {
+      "ts_ms": 15393,
+      "event": "delta",
+      "data": {
+        "text": "Rs citing \"Web Standards\" or \"node:*\" rejections \u2014 particularly around `"
+      }
+    },
+    {
+      "ts_ms": 15838,
+      "event": "delta",
+      "data": {
+        "text": "context.ts`, `utils/`, and the `hc` client \u2014 to find"
+      }
+    },
+    {
+      "ts_ms": 16155,
+      "event": "delta",
+      "data": {
+        "text": " unlinked sibling decisions.\n2. Review the `@hono/node-server` package"
+      }
+    },
+    {
+      "ts_ms": 16538,
+      "event": "delta",
+      "data": {
+        "text": " boundary: the implicit contract is that node"
+      }
+    },
+    {
+      "ts_ms": 16920,
+      "event": "delta",
+      "data": {
+        "text": "-specific code lives *there*, not in core."
+      }
+    },
+    {
+      "ts_ms": 17300,
+      "event": "delta",
+      "data": {
+        "text": " Any node:* allowance in core weakens that split.\n3. Check issue #3729"
+      }
+    },
+    {
+      "ts_ms": 17785,
+      "event": "delta",
+      "data": {
+        "text": " (the issue that spawned #3813) and any follow-up issues for disc"
+      }
+    },
+    {
+      "ts_ms": 18108,
+      "event": "delta",
+      "data": {
+        "text": "ussions about `Buffer`/`node:fs` ergonomics \u2014"
+      }
+    },
+    {
+      "ts_ms": 18488,
+      "event": "delta",
+      "data": {
+        "text": " those are the places users will push back first if the"
+      }
+    },
+    {
+      "ts_ms": 18810,
+      "event": "delta",
+      "data": {
+        "text": " Uint8Array-only contract is revisited."
+      }
+    },
+    {
+      "ts_ms": 18836,
+      "event": "thought",
+      "data": {
+        "label": "resolved \u00b7 4K in \u00b7 946 out \u00b7 $0.138"
+      }
+    },
+    {
+      "ts_ms": 18836,
+      "event": "usage",
+      "data": {
+        "input_tokens": 4471,
+        "output_tokens": 946,
+        "cache_read_tokens": 0,
+        "cost_usd": 0.138
+      }
+    },
+    {
+      "ts_ms": 18836,
+      "event": "phase",
+      "data": "done"
+    }
+  ],
+  "captured_at": 1776959342.046891,
+  "event_count": 54
+}

@@ -57,7 +57,7 @@ export const TIMELINE: readonly TimelineCue[] = [
     kind: "type",
     payload: {
       fields: [
-        { selector: 'input[name="repo"]', text: "NousResearch/hermes-agent" },
+        { selector: 'input[name="repo"]', text: "vercel/next.js" },
         { selector: 'input[name="limit"]', text: "100" },
         { selector: 'input[name="minDiscussion"]', text: "3" },
       ],
@@ -76,7 +76,7 @@ export const TIMELINE: readonly TimelineCue[] = [
     startSec: 18,
     endSec: 43,
     kind: "fixture",
-    payload: { stream: "hermes-ingest-events" },
+    payload: { stream: "nextjs-ingest-events" },
     caption: "» 30 classifier calls, decisions extracted live",
   },
   {
@@ -84,7 +84,7 @@ export const TIMELINE: readonly TimelineCue[] = [
     startSec: 43,
     endSec: 50,
     kind: "fixture",
-    payload: { stream: "hermes-ingest-events" },
+    payload: { stream: "nextjs-ingest-events" },
     caption: "» stitching edges",
   },
   {
