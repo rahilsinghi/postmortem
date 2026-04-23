@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 
 import { CountUp } from "../components/CountUp";
+import { DemoHero } from "../components/DemoHero";
 import type { RepoSummary } from "../lib/api";
 import { fadeSlideItem, staggerContainer, useReducedMotion } from "../lib/motion";
 import { TEASER_QUERIES } from "../lib/teasers";
@@ -49,6 +50,9 @@ export function EntryGallery({ repos, apiBase }: { repos: RepoSummary[]; apiBase
         variants={container}
         className="mt-16 w-full max-w-5xl"
       >
+        <motion.div variants={item}>
+          <DemoHero />
+        </motion.div>
         <motion.div variants={item} className="mb-4 flex items-center justify-between">
           <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
             Hero repos
