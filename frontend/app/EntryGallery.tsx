@@ -2,9 +2,11 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useState } from "react";
 
 import { CountUp } from "../components/CountUp";
 import { DemoHero } from "../components/DemoHero";
+import { MCPConnectModal } from "../components/MCPConnectModal";
 import type { RepoSummary } from "../lib/api";
 import { fadeSlideItem, staggerContainer, useReducedMotion } from "../lib/motion";
 import { TEASER_QUERIES } from "../lib/teasers";
@@ -13,6 +15,7 @@ export function EntryGallery({ repos, apiBase }: { repos: RepoSummary[]; apiBase
   const reduced = useReducedMotion();
   const container = staggerContainer(reduced, 0.08, 0.15);
   const item = fadeSlideItem(reduced, 12, 0.35);
+  const [mcpOpen, setMcpOpen] = useState(false);
   return (
     <main className="flex min-h-full flex-1 flex-col items-center px-6 py-24">
       <motion.div
@@ -53,16 +56,29 @@ export function EntryGallery({ repos, apiBase }: { repos: RepoSummary[]; apiBase
         <motion.div variants={item}>
           <DemoHero />
         </motion.div>
-        <motion.div variants={item} className="mb-4 flex items-center justify-between">
+        <motion.div variants={item} className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
             Hero repos
           </h2>
-          <Link
-            href="/ingest"
-            className="rounded-full border border-zinc-800 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-100"
-          >
-            + ingest your own
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMcpOpen(true)}
+              className="group inline-flex items-center gap-1.5 rounded-full border border-[#d4a24c]/40 bg-[#d4a24c]/[0.06] px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-[#d4a24c] transition hover:border-[#d4a24c] hover:bg-[#d4a24c]/[0.12]"
+            >
+              <span
+                aria-hidden
+                className="inline-block h-1.5 w-1.5 rounded-full bg-[#d4a24c] transition group-hover:shadow-[0_0_8px_rgba(212,162,76,0.9)]"
+              />
+              connect to claude code
+            </button>
+            <Link
+              href="/ingest"
+              className="rounded-full border border-zinc-800 px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-100"
+            >
+              + ingest your own
+            </Link>
+          </div>
         </motion.div>
 
         {repos.length === 0 ? (
@@ -159,6 +175,8 @@ export function EntryGallery({ repos, apiBase }: { repos: RepoSummary[]; apiBase
       >
         Code lives. Intent is a ghost. Postmortem summons it.
       </motion.footer>
+
+      <MCPConnectModal open={mcpOpen} onClose={() => setMcpOpen(false)} />
     </main>
   );
 }
