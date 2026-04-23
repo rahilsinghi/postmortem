@@ -18,8 +18,9 @@ import { ReasoningTrace } from "./ReasoningTrace";
 import { ReasoningXRay, type TraceStep } from "./ReasoningXRay";
 
 // Query engine's upper bound for a single answer. Mirrors QUERY_MAX_TOKENS
-// on the backend — used as the scan-line denominator.
-const REASONING_MAX_TOKENS = 8192;
+// on the backend — used as the scan-line denominator so the progress bar
+// reaches 100% when the stream finishes a full-length answer.
+const REASONING_MAX_TOKENS = 4096;
 
 type Props = {
   repo: string;
