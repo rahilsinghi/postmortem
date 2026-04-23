@@ -16,6 +16,12 @@
   --accent-soft: #8a6a33;
   --accent-glow: rgba(212, 162, 76, 0.35);
 
+  /* Two-palette hierarchy — amber above for resolved historical data,
+   * cyan below for live system logic (Reasoning X-Ray), slate for
+   * faded past-state nodes (Time Machine). */
+  --cyan-signal: #67e8f9;
+  --slate-past: #334155;
+
   /* Typography scale — 5 sizes total. Kill half-step xs/sm variants. */
   --fs-xs: 10px;
   --fs-sm: 11px;
