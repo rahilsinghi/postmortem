@@ -150,7 +150,6 @@ export function DemoTerminal() {
   const [caption, setCaption] = useState<string | null>(null);
   const [totalCost, setTotalCost] = useState(0);
   const [toolCallCount, setToolCallCount] = useState(0);
-  const startedRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   // Auto-scroll to bottom as lines are added. Reading length counts as
@@ -162,14 +161,20 @@ export function DemoTerminal() {
     }
   }, [lines.length, caption]);
 
-  // Run the scripted sequence on mount (strictly once).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the script runs one-shot on mount; we don't want re-runs on demo.complete identity changes.
+  // Run the scripted sequence on mount. In StrictMode dev this effect is
+  // double-invoked; we rely on the `cancelled` flag + cleanup to discard
+  // the first run's in-flight work. A ref-based "started once" gate is
+  // WRONG here — it leaves StrictMode's second mount with no animation.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the script runs one-shot per mount pass; external deps shouldn't re-trigger it.
   useEffect(() => {
-    if (startedRef.current) return;
-    startedRef.current = true;
-
     let cancelled = false;
     let lineCounter = 0;
+    // Reset terminal state on each mount pass so StrictMode re-runs don't
+    // stack duplicate banners / lines on top of a prior half-run.
+    setLines([]);
+    setCaption(null);
+    setTotalCost(0);
+    setToolCallCount(0);
 
     const sleep = (ms: number) =>
       new Promise<void>((res) => {
