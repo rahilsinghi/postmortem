@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const INSTALL_COMMAND =
@@ -169,13 +170,29 @@ export function MCPConnectModal({ open, onClose }: { open: boolean; onClose: () 
               >
                 full docs · MCP-SERVER.md →
               </a>
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-full border border-zinc-700 px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider text-zinc-200 transition hover:border-zinc-500"
-              >
-                done
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-full border border-zinc-700 px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider text-zinc-400 transition hover:border-zinc-500 hover:text-zinc-200"
+                >
+                  close
+                </button>
+                <Link
+                  href="/demo/terminal"
+                  onClick={onClose}
+                  className="group inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/[0.08] px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider text-cyan-200 transition hover:border-cyan-400 hover:bg-cyan-400/[0.15]"
+                >
+                  <span
+                    aria-hidden
+                    className="inline-block h-1.5 w-1.5 rounded-full bg-cyan-300 transition group-hover:shadow-[0_0_8px_rgba(103,232,249,0.9)]"
+                  />
+                  watch 70-sec terminal demo
+                  <span aria-hidden className="transition group-hover:translate-x-0.5">
+                    →
+                  </span>
+                </Link>
+              </div>
             </div>
           </motion.div>
         </motion.div>

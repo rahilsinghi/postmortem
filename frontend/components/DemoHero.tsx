@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
 
 import { useDemo } from "../lib/demo/DemoProvider";
 import { useReducedMotion } from "../lib/motion";
@@ -9,9 +8,10 @@ import { useReducedMotion } from "../lib/motion";
 /**
  * Gallery entry cards:
  *   ▶ PLAY 3-MINUTE DEMO     — full web tour + terminal finale (DemoProvider)
- *   ⌘ PLAY MCP TERMINAL DEMO — standalone 70s terminal walkthrough
+ *   ⌘ PLAY MCP TERMINAL DEMO — opens the Connect modal first so users see the
+ *                              install command + tool list before the walkthrough.
  */
-export function DemoHero() {
+export function DemoHero({ onOpenMcp }: { onOpenMcp?: () => void }) {
   const { state, play } = useDemo();
   const reduced = useReducedMotion();
   const isArmed = state === "armed";
@@ -59,15 +59,16 @@ export function DemoHero() {
         </span>
       </motion.button>
 
-      {/* Secondary — standalone MCP terminal demo, for users who just want
-          the Claude-Code integration beat. Linked route so it's sharable. */}
+      {/* Secondary — opens the Connect modal first so users see the install
+          command + tool reference, then jump into the terminal walkthrough. */}
       <motion.div
         initial={reduced ? false : { opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={reduced ? { duration: 0 } : { duration: 0.4, delay: 0.1, ease: "easeOut" }}
       >
-        <Link
-          href="/demo/terminal"
+        <button
+          type="button"
+          onClick={onOpenMcp}
           className="group relative flex w-full items-center justify-between gap-6 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 text-left transition hover:border-cyan-400/50"
         >
           <div className="flex items-center gap-4">
@@ -85,14 +86,14 @@ export function DemoHero() {
                 Postmortem as a Claude Code MCP tool
               </p>
               <p className="mt-0.5 max-w-xl text-[13px] text-zinc-400">
-                Standalone terminal walkthrough of 5 MCP tools — list, query, open-decision.
+                See the install command and 5-tool surface, then watch the terminal walkthrough.
               </p>
             </div>
           </div>
           <span className="font-mono text-xs uppercase tracking-wider text-zinc-500 transition group-hover:text-cyan-300">
-            Open terminal →
+            Connect + watch →
           </span>
-        </Link>
+        </button>
       </motion.div>
     </div>
   );

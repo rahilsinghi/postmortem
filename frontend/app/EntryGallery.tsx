@@ -54,7 +54,7 @@ export function EntryGallery({ repos, apiBase }: { repos: RepoSummary[]; apiBase
         className="mt-16 w-full max-w-5xl"
       >
         <motion.div variants={item}>
-          <DemoHero />
+          <DemoHero onOpenMcp={() => setMcpOpen(true)} />
         </motion.div>
         <motion.div variants={item} className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-500">
