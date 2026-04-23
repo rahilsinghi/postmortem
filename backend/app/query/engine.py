@@ -105,6 +105,19 @@ async def stream_query(
             "edges": len(snapshot.edges),
         },
     )
+    # Reasoning X-Ray — every `thought` line is deterministic and true
+    # at the moment of emission (no theatrics). Phase-aligned so the UI's
+    # cyan scan-line lands at real timing beats.
+    yield _sse_event(
+        "thought",
+        {
+            "label": (
+                f"loading ledger · {snapshot.decision_count} decisions · "
+                f"{snapshot.citation_count} citations · "
+                f"{len(snapshot.edges)} edges"
+            ),
+        },
+    )
 
     system_blocks: list[TextBlockParam] = [
         {
@@ -115,6 +128,17 @@ async def stream_query(
     ]
     user_text = build_user_prompt(snapshot, question)
 
+    categories = {d["category"] for d in snapshot.decisions if d.get("category")}
+    yield _sse_event(
+        "thought",
+        {
+            "label": (
+                f"scanning {snapshot.decision_count} decisions across "
+                f"{len(categories)} categories · token budget "
+                f"{QUERY_MAX_TOKENS // 1000}K"
+            ),
+        },
+    )
     yield _sse_event("phase", "reasoning")
 
     collected_text: list[str] = []
@@ -168,6 +192,10 @@ async def stream_query(
     full_answer = "".join(collected_text)
 
     if opts.self_check and full_answer.strip():
+        yield _sse_event(
+            "thought",
+            {"label": "cross-checking every cited claim against ledger text"},
+        )
         yield _sse_event("phase", "self_checking")
         self_check_payload = (
             "Answer to verify:\n---\n"
@@ -222,6 +250,15 @@ async def stream_query(
             )
 
     totals = tracker.totals()
+    yield _sse_event(
+        "thought",
+        {
+            "label": (
+                f"resolved · {totals.input_tokens // 1000}K in · "
+                f"{totals.output_tokens} out · ${round(totals.cost_usd, 4)}"
+            ),
+        },
+    )
     yield _sse_event(
         "usage",
         {
