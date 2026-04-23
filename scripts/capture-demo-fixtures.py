@@ -26,7 +26,9 @@ from urllib.parse import quote
 import httpx
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-FIXTURE_DIR = REPO_ROOT / "public" / "demo"
+# Next.js serves static assets from frontend/public/ — fixtures must live
+# there so the demo layer's fetch('/demo/*.json') round-trip resolves.
+FIXTURE_DIR = REPO_ROOT / "frontend" / "public" / "demo"
 
 BACKEND = "http://127.0.0.1:8765"
 
