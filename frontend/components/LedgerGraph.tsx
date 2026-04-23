@@ -351,7 +351,7 @@ function CameraController({
 }: {
   nodes: FlowNode<DecisionNodeData>[];
   threadAnchorId: string | null | undefined;
-  containerRef: React.RefObject<HTMLDivElement | null>;
+  containerRef?: React.RefObject<HTMLDivElement | null> | null;
 }) {
   const rf = useReactFlow();
   const anchorNode = threadAnchorId ? nodes.find((n) => n.id === threadAnchorId) : null;
@@ -371,7 +371,12 @@ function CameraController({
   // ask panel as those columns grow. Debounced via rAF so rapid drags don't
   // thrash fitView.
   useEffect(() => {
-    const el = containerRef.current;
+    // Guard against the edge case where the prop is undefined (can happen
+    // during React fast-refresh where a cached render carries a stale
+    // component signature, or if a future consumer forgets to pass it).
+    const ref = containerRef;
+    if (!ref) return;
+    const el = ref.current;
     if (!el) return;
     let raf = 0;
     let lastW = el.clientWidth;
