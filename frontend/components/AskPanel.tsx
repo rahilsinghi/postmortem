@@ -5,8 +5,11 @@ import { type FormEvent, useCallback, useEffect, useRef, useState } from "react"
 
 import type { Decision } from "../lib/api";
 import { parseCitations } from "../lib/citations";
+import { useDemo } from "../lib/demo/DemoProvider";
+import { type FixtureEvent, fakeStartQuery } from "../lib/demo/fixtureClient";
 import { fadeSlideItem, staggerContainer, useReducedMotion } from "../lib/motion";
 import {
+  type QueryEvents,
   type QueryPhase,
   type SelfCheckResult,
   type StatsEvent,
@@ -51,6 +54,7 @@ export function AskPanel({
   const [xraySteps, setXraySteps] = useState<TraceStep[]>([]);
   const [outputTokens, setOutputTokens] = useState(0);
   const reduced = useReducedMotion();
+  const { isDemo } = useDemo();
   const esRef = useRef<EventSource | null>(null);
   const streamStartRef = useRef<number>(0);
   const seenCitationsRef = useRef<Set<string>>(new Set());
@@ -84,51 +88,63 @@ export function AskPanel({
       streamStartRef.current = performance.now();
       seenCitationsRef.current.clear();
       streamedCharsRef.current = 0;
-      esRef.current = startQuery(
-        repo,
-        q,
-        {
-          onPhase: (p) => {
-            setPhase(p);
-            pushStep("phase", p.replaceAll("_", " "));
-          },
-          onStats: setStats,
-          onDelta: (text) => {
-            setAnswer((prev) => prev + text);
-            // Rough running token estimate so the scan-line moves during the
-            // stream (the real output_tokens count only arrives in `usage`).
-            streamedCharsRef.current += text.length;
-            setOutputTokens(Math.floor(streamedCharsRef.current / 4));
-            // Synthesize a "resolved citation" trace step the first time each
-            // unique citation token appears in the stream. `decisions` gives
-            // us the human-readable title to pair with the PR number.
-            const matches = parseCitations(text);
-            for (const m of matches) {
-              if (seenCitationsRef.current.has(m.token)) continue;
-              seenCitationsRef.current.add(m.token);
-              if (!m.prNumber) continue;
-              const title = decisions.find((d) => d.pr_number === m.prNumber)?.title;
-              const suffix = title ? ` · ${title.slice(0, 48)}` : "";
-              pushStep("citation", `resolved citation → PR #${m.prNumber}${suffix}`);
-            }
-          },
-          onSelfCheck: setSelfCheck,
-          onUsage: (u) => {
-            setUsage(u);
-            setOutputTokens(u.output_tokens);
-          },
-          onError: setError,
-          onSubgraph: (sub) => onSubgraph?.(sub.anchor_pr, sub.included_prs),
-          onThought: (t) => pushStep("thought", t.label),
+
+      const handlers: QueryEvents = {
+        onPhase: (p) => {
+          setPhase(p);
+          pushStep("phase", p.replaceAll("_", " "));
         },
-        {
+        onStats: setStats,
+        onDelta: (text) => {
+          setAnswer((prev) => prev + text);
+          // Rough running token estimate so the scan-line moves during the
+          // stream (the real output_tokens count only arrives in `usage`).
+          streamedCharsRef.current += text.length;
+          setOutputTokens(Math.floor(streamedCharsRef.current / 4));
+          // Synthesize a "resolved citation" trace step the first time each
+          // unique citation token appears in the stream. `decisions` gives
+          // us the human-readable title to pair with the PR number.
+          const matches = parseCitations(text);
+          for (const m of matches) {
+            if (seenCitationsRef.current.has(m.token)) continue;
+            seenCitationsRef.current.add(m.token);
+            if (!m.prNumber) continue;
+            const title = decisions.find((d) => d.pr_number === m.prNumber)?.title;
+            const suffix = title ? ` · ${title.slice(0, 48)}` : "";
+            pushStep("citation", `resolved citation → PR #${m.prNumber}${suffix}`);
+          }
+        },
+        onSelfCheck: setSelfCheck,
+        onUsage: (u) => {
+          setUsage(u);
+          setOutputTokens(u.output_tokens);
+        },
+        onError: setError,
+        onSubgraph: (sub) => onSubgraph?.(sub.anchor_pr, sub.included_prs),
+        onThought: (t) => pushStep("thought", t.label),
+      };
+
+      if (isDemo) {
+        // Lazy-load the right fixture for this run mode, then replay.
+        const path =
+          runMode === "impact" ? "/demo/hono-impact-events.json" : "/demo/hono-query-events.json";
+        fetch(path, { cache: "force-cache" })
+          .then((r) => r.json())
+          .then((body: { events: FixtureEvent[] }) => {
+            esRef.current = fakeStartQuery(body.events, handlers, {
+              speed: 1,
+            }) as unknown as EventSource;
+          })
+          .catch((err) => setError(`demo fixture load failed: ${String(err)}`));
+      } else {
+        esRef.current = startQuery(repo, q, handlers, {
           selfCheck: selfCheckEnabled,
           mode: runMode,
           anchorPr: runMode === "impact" && selectedDecision ? selectedDecision.pr_number : null,
-        },
-      );
+        });
+      }
     },
-    [repo, selfCheckEnabled, mode, selectedDecision, onSubgraph, decisions, pushStep],
+    [repo, selfCheckEnabled, mode, selectedDecision, onSubgraph, decisions, pushStep, isDemo],
   );
 
   const canRunImpact = selectedDecision !== null && selectedDecision !== undefined;
