@@ -17,8 +17,8 @@ import {
   startQuery,
   type UsageEvent,
 } from "../lib/query";
+import { AnswerView } from "./AnswerView";
 import { CountUp } from "./CountUp";
-import { ReasoningTrace } from "./ReasoningTrace";
 import { ReasoningXRay, type TraceStep } from "./ReasoningXRay";
 
 // Query engine's upper bound for a single answer. Mirrors QUERY_MAX_TOKENS
@@ -280,7 +280,7 @@ export function AskPanel({
         ) : null}
         {answer ? (
           <div className="mt-4">
-            <ReasoningTrace
+            <AnswerView
               text={answer}
               decisions={decisions}
               selfCheck={selfCheck}

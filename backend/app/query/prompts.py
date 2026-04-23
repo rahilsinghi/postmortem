@@ -30,8 +30,19 @@ issue history by earlier Opus 4.7 passes.
      One to two sentences. Direct. No hedging.
 
      ## Reasoning
-     Numbered chain of reasoning, each step backed by inline citations.
-     Prefer exact quotes from rationale/alternative `quote` fields over paraphrase.
+     Numbered chain of reasoning. Each step MUST begin with a short bold
+     headline in this exact format, then a period, then the body:
+
+         1. **Short Title.** One short paragraph of supporting prose with
+            inline citations.
+
+     Headlines are 2-6 words, capitalize like a sentence (not Title Case),
+     and describe the mechanism of that step — e.g. "**Web Standards first.**"
+     or "**Rejected: node:buffer import.**" Do NOT use generic headlines like
+     "Overview" or "Context".
+     Prefer exact quotes from rationale/alternative `quote` fields over paraphrase,
+     and when you include a verbatim reviewer quote, wrap it in double quotes
+     immediately before the `[PR #N, @author, date]` citation token.
 
      ## Rejected alternatives
      Only if alternatives appear in the ledger for the decisions you cited.
