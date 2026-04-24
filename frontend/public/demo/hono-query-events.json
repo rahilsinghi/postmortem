@@ -1,12 +1,12 @@
 {
   "events": [
     {
-      "ts_ms": 58,
+      "ts_ms": 50,
       "event": "phase",
       "data": "retrieving"
     },
     {
-      "ts_ms": 59,
+      "ts_ms": 80,
       "event": "stats",
       "data": {
         "repo": "honojs/hono",
@@ -17,383 +17,383 @@
       }
     },
     {
-      "ts_ms": 59,
+      "ts_ms": 110,
       "event": "thought",
       "data": {
         "label": "loading ledger \u00b7 59 decisions \u00b7 236 citations \u00b7 27 edges"
       }
     },
     {
-      "ts_ms": 59,
+      "ts_ms": 140,
       "event": "thought",
       "data": {
         "label": "scanning 59 decisions across 10 categories \u00b7 token budget 4K"
       }
     },
     {
-      "ts_ms": 59,
-      "event": "phase",
-      "data": "reasoning"
-    },
-    {
-      "ts_ms": 2650,
-      "event": "reasoning",
-      "data": {
-        "text": " I"
-      }
-    },
-    {
-      "ts_ms": 2693,
-      "event": "reasoning",
-      "data": {
-        "text": "'m searching through the decision ledger to understand why Hono excludes node:* modules from its core,"
-      }
-    },
-    {
-      "ts_ms": 2764,
-      "event": "reasoning",
-      "data": {
-        "text": " and I'm finding some relevant context in the past"
-      }
-    },
-    {
-      "ts_ms": 2835,
-      "event": "reasoning",
-      "data": {
-        "text": " decisions, particularly around how certain Node.js APIs were"
-      }
-    },
-    {
-      "ts_ms": 2884,
-      "event": "reasoning",
-      "data": {
-        "text": " handled in previous implementations."
-      }
-    },
-    {
-      "ts_ms": 6039,
-      "event": "reasoning",
-      "data": {
-        "text": "\n\nThe pattern"
-      }
-    },
-    {
-      "ts_ms": 6109,
-      "event": "reasoning",
-      "data": {
-        "text": " is clear: Hono prioritizes web-standard APIs over Node-specific ones when possible, and av"
-      }
-    },
-    {
-      "ts_ms": 6197,
-      "event": "reasoning",
-      "data": {
-        "text": "oids node:* imports in the core to maintain portability across different JavaScript runtimes like Deno, Bun,"
-      }
-    },
-    {
-      "ts_ms": 6253,
-      "event": "reasoning",
-      "data": {
-        "text": " and Cloudflare Workers. However, there's a practical distinction\u2014"
-      }
-    },
-    {
-      "ts_ms": 6372,
-      "event": "reasoning",
-      "data": {
-        "text": "adapters for specific runtimes are allowed to use node:* modules when necessary"
-      }
-    },
-    {
-      "ts_ms": 6384,
-      "event": "reasoning",
-      "data": {
-        "text": ", but the core library itself should remain runtime-agnostic."
-      }
-    },
-    {
-      "ts_ms": 10863,
-      "event": "reasoning",
-      "data": {
-        "text": " ap"
-      }
-    },
-    {
-      "ts_ms": 10962,
-      "event": "reasoning",
-      "data": {
-        "text": "ters like Bun and Deno, node:* modules are acceptable"
-      }
-    },
-    {
-      "ts_ms": 11010,
-      "event": "reasoning",
-      "data": {
-        "text": " when web-standard alternatives don't exist or are impractical to implement \u2014 the prag"
-      }
-    },
-    {
-      "ts_ms": 11074,
-      "event": "reasoning",
-      "data": {
-        "text": "matism outweighs the principle when the adapter is explicitly runtime-specific."
-      }
-    },
-    {
-      "ts_ms": 12925,
-      "event": "reasoning",
-      "data": {
-        "text": "\n\nNow"
-      }
-    },
-    {
-      "ts_ms": 12999,
-      "event": "reasoning",
-      "data": {
-        "text": " I'm reviewing the rejected alternatives and related PRs to make sure I have the full picture of"
-      }
-    },
-    {
-      "ts_ms": 13033,
-      "event": "reasoning",
-      "data": {
-        "text": " the policy and its exceptions."
-      }
-    },
-    {
-      "ts_ms": 16950,
-      "event": "reasoning",
-      "data": {
-        "text": " Now"
-      }
-    },
-    {
-      "ts_ms": 17026,
-      "event": "reasoning",
-      "data": {
-        "text": " I'm refining the rejected alternatives section with the proper format \u2014"
-      }
-    },
-    {
-      "ts_ms": 17096,
-      "event": "reasoning",
-      "data": {
-        "text": " each one needs the alternative name, rejection reason, and citation."
-      }
-    },
-    {
-      "ts_ms": 17187,
-      "event": "reasoning",
-      "data": {
-        "text": " The key insight here is that the third alternative reveals important nuance: the web"
-      }
-    },
-    {
-      "ts_ms": 17248,
-      "event": "reasoning",
-      "data": {
-        "text": "-standards-first policy applies to Hono's core,"
-      }
-    },
-    {
-      "ts_ms": 17320,
-      "event": "reasoning",
-      "data": {
-        "text": " but adapters for specific runtimes like Deno can make different"
-      }
-    },
-    {
-      "ts_ms": 17379,
-      "event": "reasoning",
-      "data": {
-        "text": " tradeoffs. Let me finalize this."
-      }
-    },
-    {
-      "ts_ms": 17559,
-      "event": "delta",
-      "data": {
-        "text": "## Answer\nHono's core targets Web Standards APIs, and `node:*` modules aren't part"
-      }
-    },
-    {
-      "ts_ms": 17565,
-      "event": "delta",
-      "data": {
-        "text": " of those standards \u2014 so the maintainers reject them wherever a web-standard equivalent ("
-      }
-    },
-    {
-      "ts_ms": 17565,
-      "event": "delta",
-      "data": {
-        "text": "e.g., `crypto.subtle`, `Uint8Array`) is sufficient. The rule is rel"
-      }
-    },
-    {
-      "ts_ms": 17565,
-      "event": "delta",
-      "data": {
-        "text": "axed in runtime adapters, where `node:path` and similar are acc"
-      }
-    },
-    {
-      "ts_ms": 17565,
-      "event": "delta",
-      "data": {
-        "text": "epted when implementing a cross-runtime equivalent would be prohibitive"
-      }
-    },
-    {
-      "ts_ms": 17636,
-      "event": "delta",
-      "data": {
-        "text": ".\n\n## Reasoning\n\n1. **Core targets Web Standards.** The canonical statement of the policy came"
-      }
-    },
-    {
-      "ts_ms": 17778,
-      "event": "delta",
-      "data": {
-        "text": " during the Buffer \u2192 Uint8Array discussion: \"It is importing just types, but"
-      }
-    },
-    {
-      "ts_ms": 17885,
-      "event": "delta",
-      "data": {
-        "text": " I think we should not use `node:*` modules in the core of `hono`. Actually, `Buffer` is not in Web Standards API.\" [PR #3813 inline, @yusukebe, 2025-01"
-      }
-    },
-    {
-      "ts_ms": 18037,
-      "event": "delta",
-      "data": {
-        "text": "-09]\n\n2. **Prefer web-standard equivalents.** In the ETag middleware, `node"
-      }
-    },
-    {
-      "ts_ms": 18161,
-      "event": "delta",
-      "data": {
-        "text": ":crypto` would have given exact, incremental S"
-      }
-    },
-    {
-      "ts_ms": 18299,
-      "event": "delta",
-      "data": {
-        "text": "HA1 across runtimes, but was rejected in favor of `crypto.subtle`:"
-      }
-    },
-    {
-      "ts_ms": 18411,
-      "event": "delta",
-      "data": {
-        "text": " \"I didn't adopt it because I thought that 'node:*' should not be used where `crypto.subtle` is sufficient.\" [PR #3604, @usualoma, 2024-10-31]\n\n3"
-      }
-    },
-    {
-      "ts_ms": 18532,
-      "event": "delta",
-      "data": {
-        "text": ". **Non-Node runtimes break.** `Buffer` isn't a global in De"
-      }
-    },
-    {
-      "ts_ms": 18669,
-      "event": "delta",
-      "data": {
-        "text": "no, so typing `c.body()` against `node:buffer` would leak Node"
-      }
-    },
-    {
-      "ts_ms": 18820,
-      "event": "delta",
-      "data": {
-        "text": " assumptions into runtimes that don't share them"
-      }
-    },
-    {
-      "ts_ms": 18960,
-      "event": "delta",
-      "data": {
-        "text": ": \"Deno does not have a Buffer exposed to the global scope\" [PR #3813 inline, @askorupskyy, 2025-01-09]\n\n4. **Relaxed"
-      }
-    },
-    {
-      "ts_ms": 19050,
-      "event": "delta",
-      "data": {
-        "text": " in adapters, not core.** The no-`node:*` rule is scoped to core \u2014 runtime adapters may"
-      }
-    },
-    {
-      "ts_ms": 19194,
-      "event": "delta",
-      "data": {
-        "text": " depend on `node:*` when writing a web-standard equivalent is too cost"
-      }
-    },
-    {
-      "ts_ms": 19343,
-      "event": "delta",
-      "data": {
-        "text": "ly. When serve-static needed a safe"
-      }
-    },
-    {
-      "ts_ms": 19481,
-      "event": "delta",
-      "data": {
-        "text": " `join`, the reviewer explicitly said: \"I think the reason is probably because we ha"
-      }
-    },
-    {
-      "ts_ms": 19586,
-      "event": "delta",
-      "data": {
-        "text": "ven't used modules in the 'node:' namespace in this file before, but is that correct? (We have already used them in bun.) If that is"
-      }
-    },
-    {
-      "ts_ms": 19725,
-      "event": "delta",
-      "data": {
-        "text": " the case, as mentioned below, `join` processing is difficult, so I think it would be safer to depend on `nodo"
-      }
-    },
-    {
-      "ts_ms": 19826,
-      "event": "delta",
-      "data": {
-        "text": ":path` even in Deno.\" [PR #4291, @usualoma, 2025-07-26]\n\n## Rejected alternatives\n- **Import Buffer type from `node:buffer`"
-      }
-    },
-    {
-      "ts_ms": 19969,
-      "event": "delta",
-      "data": {
-        "text": " and add it to `c.body()`** \u2014 rejected because \"It is importing just types, but I think we should not use `node:*` modules in the core of `hono`. Actually,"
-      }
-    },
-    {
-      "ts_ms": 19969,
-      "event": "delta",
-      "data": {
-        "text": " `Buffer` is"
-      }
-    },
-    {
-      "ts_ms": 19999,
+      "ts_ms": 170,
       "event": "thought",
       "data": {
         "label": "resolved \u00b7 238K in \u00b7 4096 out \u00b7 $3.8786"
       }
     },
     {
-      "ts_ms": 20000,
+      "ts_ms": 250,
+      "event": "phase",
+      "data": "reasoning"
+    },
+    {
+      "ts_ms": 400,
+      "event": "reasoning",
+      "data": {
+        "text": " I"
+      }
+    },
+    {
+      "ts_ms": 591,
+      "event": "reasoning",
+      "data": {
+        "text": "'m searching through the decision ledger to understand why Hono excludes node:* modules from its core,"
+      }
+    },
+    {
+      "ts_ms": 783,
+      "event": "reasoning",
+      "data": {
+        "text": " and I'm finding some relevant context in the past"
+      }
+    },
+    {
+      "ts_ms": 975,
+      "event": "reasoning",
+      "data": {
+        "text": " decisions, particularly around how certain Node.js APIs were"
+      }
+    },
+    {
+      "ts_ms": 1166,
+      "event": "reasoning",
+      "data": {
+        "text": " handled in previous implementations."
+      }
+    },
+    {
+      "ts_ms": 1358,
+      "event": "reasoning",
+      "data": {
+        "text": "\n\nThe pattern"
+      }
+    },
+    {
+      "ts_ms": 1550,
+      "event": "reasoning",
+      "data": {
+        "text": " is clear: Hono prioritizes web-standard APIs over Node-specific ones when possible, and av"
+      }
+    },
+    {
+      "ts_ms": 1741,
+      "event": "reasoning",
+      "data": {
+        "text": "oids node:* imports in the core to maintain portability across different JavaScript runtimes like Deno, Bun,"
+      }
+    },
+    {
+      "ts_ms": 1933,
+      "event": "reasoning",
+      "data": {
+        "text": " and Cloudflare Workers. However, there's a practical distinction\u2014"
+      }
+    },
+    {
+      "ts_ms": 2125,
+      "event": "reasoning",
+      "data": {
+        "text": "adapters for specific runtimes are allowed to use node:* modules when necessary"
+      }
+    },
+    {
+      "ts_ms": 2316,
+      "event": "reasoning",
+      "data": {
+        "text": ", but the core library itself should remain runtime-agnostic."
+      }
+    },
+    {
+      "ts_ms": 2508,
+      "event": "reasoning",
+      "data": {
+        "text": " ap"
+      }
+    },
+    {
+      "ts_ms": 2700,
+      "event": "reasoning",
+      "data": {
+        "text": "ters like Bun and Deno, node:* modules are acceptable"
+      }
+    },
+    {
+      "ts_ms": 2891,
+      "event": "reasoning",
+      "data": {
+        "text": " when web-standard alternatives don't exist or are impractical to implement \u2014 the prag"
+      }
+    },
+    {
+      "ts_ms": 3083,
+      "event": "reasoning",
+      "data": {
+        "text": "matism outweighs the principle when the adapter is explicitly runtime-specific."
+      }
+    },
+    {
+      "ts_ms": 3275,
+      "event": "reasoning",
+      "data": {
+        "text": "\n\nNow"
+      }
+    },
+    {
+      "ts_ms": 3466,
+      "event": "reasoning",
+      "data": {
+        "text": " I'm reviewing the rejected alternatives and related PRs to make sure I have the full picture of"
+      }
+    },
+    {
+      "ts_ms": 3658,
+      "event": "reasoning",
+      "data": {
+        "text": " the policy and its exceptions."
+      }
+    },
+    {
+      "ts_ms": 3850,
+      "event": "reasoning",
+      "data": {
+        "text": " Now"
+      }
+    },
+    {
+      "ts_ms": 4041,
+      "event": "reasoning",
+      "data": {
+        "text": " I'm refining the rejected alternatives section with the proper format \u2014"
+      }
+    },
+    {
+      "ts_ms": 4233,
+      "event": "reasoning",
+      "data": {
+        "text": " each one needs the alternative name, rejection reason, and citation."
+      }
+    },
+    {
+      "ts_ms": 4425,
+      "event": "reasoning",
+      "data": {
+        "text": " The key insight here is that the third alternative reveals important nuance: the web"
+      }
+    },
+    {
+      "ts_ms": 4616,
+      "event": "reasoning",
+      "data": {
+        "text": "-standards-first policy applies to Hono's core,"
+      }
+    },
+    {
+      "ts_ms": 4808,
+      "event": "reasoning",
+      "data": {
+        "text": " but adapters for specific runtimes like Deno can make different"
+      }
+    },
+    {
+      "ts_ms": 5000,
+      "event": "reasoning",
+      "data": {
+        "text": " tradeoffs. Let me finalize this."
+      }
+    },
+    {
+      "ts_ms": 5000,
+      "event": "delta",
+      "data": {
+        "text": "## Answer\nHono's core targets Web Standards APIs, and `node:*` modules aren't part"
+      }
+    },
+    {
+      "ts_ms": 5562,
+      "event": "delta",
+      "data": {
+        "text": " of those standards \u2014 so the maintainers reject them wherever a web-standard equivalent ("
+      }
+    },
+    {
+      "ts_ms": 6125,
+      "event": "delta",
+      "data": {
+        "text": "e.g., `crypto.subtle`, `Uint8Array`) is sufficient. The rule is rel"
+      }
+    },
+    {
+      "ts_ms": 6687,
+      "event": "delta",
+      "data": {
+        "text": "axed in runtime adapters, where `node:path` and similar are acc"
+      }
+    },
+    {
+      "ts_ms": 7250,
+      "event": "delta",
+      "data": {
+        "text": "epted when implementing a cross-runtime equivalent would be prohibitive"
+      }
+    },
+    {
+      "ts_ms": 7812,
+      "event": "delta",
+      "data": {
+        "text": ".\n\n## Reasoning\n\n1. **Core targets Web Standards.** The canonical statement of the policy came"
+      }
+    },
+    {
+      "ts_ms": 8375,
+      "event": "delta",
+      "data": {
+        "text": " during the Buffer \u2192 Uint8Array discussion: \"It is importing just types, but"
+      }
+    },
+    {
+      "ts_ms": 8937,
+      "event": "delta",
+      "data": {
+        "text": " I think we should not use `node:*` modules in the core of `hono`. Actually, `Buffer` is not in Web Standards API.\" [PR #3813 inline, @yusukebe, 2025-01"
+      }
+    },
+    {
+      "ts_ms": 9500,
+      "event": "delta",
+      "data": {
+        "text": "-09]\n\n2. **Prefer web-standard equivalents.** In the ETag middleware, `node"
+      }
+    },
+    {
+      "ts_ms": 10062,
+      "event": "delta",
+      "data": {
+        "text": ":crypto` would have given exact, incremental S"
+      }
+    },
+    {
+      "ts_ms": 10625,
+      "event": "delta",
+      "data": {
+        "text": "HA1 across runtimes, but was rejected in favor of `crypto.subtle`:"
+      }
+    },
+    {
+      "ts_ms": 11187,
+      "event": "delta",
+      "data": {
+        "text": " \"I didn't adopt it because I thought that 'node:*' should not be used where `crypto.subtle` is sufficient.\" [PR #3604, @usualoma, 2024-10-31]\n\n3"
+      }
+    },
+    {
+      "ts_ms": 11750,
+      "event": "delta",
+      "data": {
+        "text": ". **Non-Node runtimes break.** `Buffer` isn't a global in De"
+      }
+    },
+    {
+      "ts_ms": 12312,
+      "event": "delta",
+      "data": {
+        "text": "no, so typing `c.body()` against `node:buffer` would leak Node"
+      }
+    },
+    {
+      "ts_ms": 12875,
+      "event": "delta",
+      "data": {
+        "text": " assumptions into runtimes that don't share them"
+      }
+    },
+    {
+      "ts_ms": 13437,
+      "event": "delta",
+      "data": {
+        "text": ": \"Deno does not have a Buffer exposed to the global scope\" [PR #3813 inline, @askorupskyy, 2025-01-09]\n\n4. **Relaxed"
+      }
+    },
+    {
+      "ts_ms": 14000,
+      "event": "delta",
+      "data": {
+        "text": " in adapters, not core.** The no-`node:*` rule is scoped to core \u2014 runtime adapters may"
+      }
+    },
+    {
+      "ts_ms": 14562,
+      "event": "delta",
+      "data": {
+        "text": " depend on `node:*` when writing a web-standard equivalent is too cost"
+      }
+    },
+    {
+      "ts_ms": 15125,
+      "event": "delta",
+      "data": {
+        "text": "ly. When serve-static needed a safe"
+      }
+    },
+    {
+      "ts_ms": 15687,
+      "event": "delta",
+      "data": {
+        "text": " `join`, the reviewer explicitly said: \"I think the reason is probably because we ha"
+      }
+    },
+    {
+      "ts_ms": 16250,
+      "event": "delta",
+      "data": {
+        "text": "ven't used modules in the 'node:' namespace in this file before, but is that correct? (We have already used them in bun.) If that is"
+      }
+    },
+    {
+      "ts_ms": 16812,
+      "event": "delta",
+      "data": {
+        "text": " the case, as mentioned below, `join` processing is difficult, so I think it would be safer to depend on `nodo"
+      }
+    },
+    {
+      "ts_ms": 17375,
+      "event": "delta",
+      "data": {
+        "text": ":path` even in Deno.\" [PR #4291, @usualoma, 2025-07-26]\n\n## Rejected alternatives\n- **Import Buffer type from `node:buffer`"
+      }
+    },
+    {
+      "ts_ms": 17937,
+      "event": "delta",
+      "data": {
+        "text": " and add it to `c.body()`** \u2014 rejected because \"It is importing just types, but I think we should not use `node:*` modules in the core of `hono`. Actually,"
+      }
+    },
+    {
+      "ts_ms": 18500,
+      "event": "delta",
+      "data": {
+        "text": " `Buffer` is"
+      }
+    },
+    {
+      "ts_ms": 18900,
       "event": "usage",
       "data": {
         "input_tokens": 238093,
@@ -411,7 +411,7 @@
       }
     },
     {
-      "ts_ms": 20000,
+      "ts_ms": 19500,
       "event": "phase",
       "data": "done"
     }

@@ -1,20 +1,20 @@
 /**
  * The demo layer's cue list — the single source of truth for what the user
- * sees at every moment of the 150-second autoplay (web segment of the
+ * sees at every moment of the 153-second autoplay (web segment of the
  * combined 3-minute reel; terminal adds the final 30s). Every visual change
  * is gated by exactly one cue id. No implicit timers in child components.
  *
  * A cue's window is [startSec, endSec) (half-open): at endSec, the NEXT
  * cue is considered active. This avoids flicker at boundaries.
  *
- * Act structure (150s total):
+ * Act structure (153s total):
  *   Act 1 — Gallery → Ingest (0–40s)   … classifier/extractor stream
  *   Act 2 — Ledger + Time Machine (40–55s)
  *   Act 3 — Ask + Reasoning X-Ray (55–80s)   … live Opus thinking lines
  *   Act 4 — Impact Ripple (80–95s)
- *   Act 5 — Conflict Finder (95–113s)        … NEW — 4 cached conflicts
- *   Act 6 — Ghost Interview (113–145s)       … NEW — @yusukebe voice
- *   Act 7 — Hand-off to terminal (145–150s)
+ *   Act 5 — Conflict Finder (95–113s)        … 4 cached conflicts
+ *   Act 6 — Ghost Interview (113–148s)       … @yusukebe voice
+ *   Act 7 — Hand-off to terminal (148–153s)
  */
 
 export type CueKind =
@@ -251,27 +251,36 @@ export const TIMELINE: readonly TimelineCue[] = [
     payload: { selector: "[data-demo-target='interview-open']" },
   },
   {
-    id: "pick-subject-yusukebe",
+    // Extra dwell so viewers can actually read the candidate list before
+    // we pick. User feedback: the picker flashed by too quickly.
+    id: "browse-subjects",
     startSec: 119,
     endSec: 122,
+    kind: "caption",
+    caption: "» 8 maintainers · ranked by citation count",
+  },
+  {
+    id: "pick-subject-yusukebe",
+    startSec: 122,
+    endSec: 125,
     kind: "click",
     payload: { selector: "[data-demo-target='interview-pick-yusukebe']" },
     caption: "» interviewing @yusukebe",
   },
   {
     id: "interview-stream",
-    startSec: 122,
-    endSec: 145,
+    startSec: 125,
+    endSec: 148,
     kind: "fixture",
     payload: { stream: "hono-interview-yusukebe" },
     caption: "» opus speaks in the maintainer's own words",
   },
 
-  // ── Act 7 · Hand-off to terminal (145–150s) ──────────────────────────
+  // ── Act 7 · Hand-off to terminal (148–153s) ──────────────────────────
   {
     id: "nav-to-terminal",
-    startSec: 145,
-    endSec: 150,
+    startSec: 148,
+    endSec: 153,
     kind: "navigate",
     payload: { path: "/demo/terminal", continueToTerminal: true },
     caption: "» now, inside your editor",
