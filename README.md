@@ -36,32 +36,37 @@ Point Postmortem at any public GitHub repo. It reads the entire intent layer —
 
 - A queryable graph of architectural decisions with rationale and rejected alternatives
 - Every claim cites an exact reviewer quote, verified by a second-pass self-check (unverified citations render red)
-- Three query modes: **Query** (ask anything), **Impact Ripple** (what breaks if X changes?), **Open Decision** (full rationale for one PR)
+- Five modes: **Query** (ask anything), **Impact Ripple** (what breaks if X changes?), **Open Decision** (full rationale for one PR), **Ghost Interview** (Opus speaks in a maintainer's own verbatim quotes), **Conflict Finder** (pairs of decisions that quietly contradict each other)
 
 Sample questions it answers well:
 
 - *"Why does this codebase use Uint8Array instead of Buffer?"*
 - *"What alternatives did the maintainers reject when they chose this routing scheme?"*
 - *"What breaks if we relax the `node:*`-modules ban in core?"*
+- *"Interview @yusukebe about the architectural decisions he shaped in hono."*
+- *"Which decisions in this ledger contradict each other?"*
 
 ---
 
 ## Feature tour
 
-The web UI has four signature interactions. A 3-minute autoplay on the gallery walks through every one.
+The web UI has seven signature interactions. A 3-minute autoplay on the gallery walks through every one — the voiceover script lives at [`docs/DEMO-TTS-SCRIPT.md`](docs/DEMO-TTS-SCRIPT.md).
 
 | Feature | What it does |
 |---|---|
 | **Time Machine** | Scrub through the ledger's chronology. Nodes fade in at their real PR-merge dates; three years of architectural thought compressed into a 10-second reveal. |
-| **Reasoning X-Ray** | Cyan scan-line + live trace while Opus answers — phase events, citation-token discoveries, self-check verdict. Not fabricated; every line is real signal. |
+| **Reasoning X-Ray** | Cyan scan-line + live trace while Opus answers — phase events, citation-token discoveries, self-check verdict, and Opus 4.7's own **adaptive-thinking tokens** streamed as they arrive. Not fabricated; every line is real signal. |
 | **Provenance Peek** | Hover any citation chip → editorial card unfurls with the verbatim reviewer quote, source-type glyph, author, timestamp, related-thread link. |
 | **Follow the Thread** | Click a citation → the graph spring-pans to the cited decision, kin nodes (same PR / same author / edge-connected) soft-tint. Citations become a map. |
+| **Ghost Interview** | Pick a maintainer from the eight most-cited contributors. Opus reads everything they wrote across the ledger and answers six scripted questions in their register — every sentence either a verbatim quote or openly marked paraphrase. Cached per `(repo, author)` so re-opening is instant. |
+| **Conflict Finder** | One-click scan: Opus looks across the entire ledger for pairs of decisions that contradict each other through supersedes chains or overlapping categories. Ranks by severity (`high` / `medium` / `low`) and pins the verbatim quotes from both sides. |
+| **Impact Ripple** | BFS over the decision graph from any anchor, hands only that slice to Opus, traces cascading consequences with cited claims. |
 
 Plus:
 
-- **Impact Ripple** — BFS over the decision graph from any anchor, hand only that slice to Opus, traces cascading consequences with cited claims.
 - **Live ingestion** — paste any public repo, watch classifier + extractor stream in real time with per-PR cost.
 - **Cost engine** — every ingestion and query persists to `query_runs` / `ingestion_runs`; gallery cards show lifetime spend per repo.
+- **Demo layer** — the 3-minute autoplay runs off local fixtures (`frontend/public/demo/*.json`), so the reel is cold-boot capable and doesn't cost an Opus token. Useful for recording.
 
 ---
 
@@ -222,10 +227,12 @@ Config lives at [`frontend/vercel.json`](frontend/vercel.json) and [`backend/fly
           ┌──────────────────┬──────────────────────┐│
           ▼                  ▼                      ▼▼
     FastAPI /api        MCP stdio server      scripts/ingest.py
-      • /query            • postmortem_query    (CLI path)
-      • /impact           • postmortem_impact
+      • /query (SSE)      • postmortem_query    (CLI path)
+      • /impact (SSE)     • postmortem_impact
       • /ingest (SSE)     • postmortem_list_*
-      • /repos, /ledger   • postmortem_open_decision
+      • /interview/*      • postmortem_open_decision
+      • /conflicts
+      • /repos, /ledger
           │                       │
           ▼                       ▼
     Next.js frontend         Claude Code
@@ -257,8 +264,9 @@ Three sub-agents live in [`backend/app/agents/`](backend/app/agents/):
 Claude Opus 4.7 shipped on April 16, 2026. Postmortem uses its new capabilities as load-bearing infrastructure:
 
 - **1M-token context** — full decision ledger in one pass at query time (hono's 59 decisions serialise to ~145K tokens — plenty of headroom)
+- **Adaptive thinking** — `thinking: {type: "adaptive", display: "summarized"}` on every `/api/query` call with `effort: max`; the streamed `thinking_delta` tokens feed the Reasoning X-Ray live so users watch Opus's own reasoning, not a decorative spinner
 - **Agentic self-checking** — every inline citation is verified against the ledger before the answer is returned; unverified claims tinted red
-- **Prompt caching** — system prompts cached via `cache_control: ephemeral`, cuts extractor cost ~40% on the second call in a batch
+- **Prompt caching** — system prompts cached via `cache_control: ephemeral`, cuts extractor cost ~40% on the second call in a batch and makes Ghost Interview re-opens effectively free after the first generation
 - **Streaming** — SSE word-boundary reasoning surfaces live; citation chips resolved client-side against the loaded ledger
 
 Three sub-agents live in `.claude/agents/`, four Skills in `.claude/skills/` cover supporting capabilities (PR archaeology, commit rationale, citation formatting, ledger writing).
@@ -267,7 +275,8 @@ Three sub-agents live in `.claude/agents/`, four Skills in `.claude/skills/` cov
 
 ## Demo + voiceover scripts
 
-- [`docs/DEMO-VOICEOVER.md`](docs/DEMO-VOICEOVER.md) — ElevenLabs-ready voiceover script for the 3-min combined reel. Cue-mapped, pronunciation glossary, music direction.
+- [`docs/DEMO-TTS-SCRIPT.md`](docs/DEMO-TTS-SCRIPT.md) — **current narration script**, timing-annotated for the 3-minute combined reel (153s web + 30s terminal). Drop straight into ElevenLabs.
+- [`docs/DEMO-VOICEOVER.md`](docs/DEMO-VOICEOVER.md) — previous voiceover draft, music + pronunciation direction.
 - [`docs/DEMO-MCP.md`](docs/DEMO-MCP.md) — terminal-native MCP demo script (live-terminal recording workflow as an alternative to the web emulator).
 - [`docs/DEMO-SCRIPT.md`](docs/DEMO-SCRIPT.md) — legacy 2-min manual demo walkthrough.
 
@@ -279,6 +288,7 @@ Every major wave of work has an approved design spec in [`docs/superpowers/specs
 
 - `ambitious-demo-bundle` — Time Machine + Reasoning X-Ray + Provenance Peek + Follow the Thread
 - `demo-layer` — 3-minute cinematic autoplay architecture (URL-flag driven, fixture-replay, zero-backend)
+- `ghost-interview` — subject-picker → 6-exchange scripted voice-matched interview with one live follow-up, DuckDB-cached per `(repo, author)`
 
 Full SPEC of the underlying product: [`docs/SPEC.md`](docs/SPEC.md) (locked Day 1, 975 lines).
 
