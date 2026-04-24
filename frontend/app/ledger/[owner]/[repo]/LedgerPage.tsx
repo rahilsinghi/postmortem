@@ -132,13 +132,13 @@ export function LedgerPage({
     return () => window.removeEventListener("keydown", onKey);
   }, [selectedId]);
 
-  const [ownerSlug, repoSlug] = ledger.repo.split("/", 2) as [string, string?];
-  const owner = ownerSlug ?? "";
-  const repo = repoSlug ?? "";
+  const repoSlugs = ledger.repo.split("/");
+  const owner = repoSlugs[0] ?? "";
+  const repo = repoSlugs[1] ?? "";
 
   return (
     <InterviewProvider owner={owner} repo={repo}>
-    <div className="flex h-screen flex-col bg-black text-zinc-100">
+      <div className="flex h-screen flex-col bg-black text-zinc-100">
       <header className="flex items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-5 py-3 backdrop-blur">
         <div className="flex items-baseline gap-3">
           <Link
@@ -309,8 +309,8 @@ export function LedgerPage({
           </Panel>
         </Group>
       </div>
-      <InterviewDrawer owner={owner} repo={repo} decisions={ledger.decisions} />
-    </div>
+        <InterviewDrawer owner={owner} repo={repo} decisions={ledger.decisions} />
+      </div>
     </InterviewProvider>
   );
 }
