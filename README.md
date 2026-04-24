@@ -1,11 +1,27 @@
+<div align="center">
+
 # Postmortem
 
 **A decision-archaeology agent for any GitHub repo.**
+
 Point it at a codebase — it reads every PR review, every rejected alternative, every architectural debate, and builds a queryable ledger. Ask it anything; get a cited answer back in seconds.
 
-Built in 5 days during [*Built with Opus 4.7: a Claude Code Hackathon*](https://cerebralvalley.ai/events/~/e/built-with-4-7-hackathon) — April 21–26, 2026.
+[![Live app](https://img.shields.io/badge/live-postmortem--mauve.vercel.app-d4a24c?style=flat-square)](https://postmortem-mauve.vercel.app/)
+[![Backend](https://img.shields.io/badge/api-fly.io-7c3aed?style=flat-square)](https://postmortem-backend.fly.dev/healthz)
+[![Built with Opus 4.7](https://img.shields.io/badge/built%20with-Claude%20Opus%204.7-000?style=flat-square)](https://www.anthropic.com/claude/opus)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](./LICENSE)
 
 > *Code lives. Intent is a ghost. Postmortem summons it.*
+
+### ▶ Watch the 3-minute demo
+
+[![Postmortem demo — 3 minutes](https://img.youtube.com/vi/9nbIVa_jnsU/maxresdefault.jpg)](https://youtu.be/9nbIVa_jnsU)
+
+*Ingest → ledger → cited answers → Impact Ripple → Conflict Finder → Ghost Interview → Claude Code MCP finale*
+
+</div>
+
+Shipped in 5 days during [*Built with Opus 4.7: a Claude Code Hackathon*](https://cerebralvalley.ai/events/~/e/built-with-4-7-hackathon) · April 21–26, 2026. The gallery's **▶ Play the Postmortem demo** button replays the same reel live in-browser.
 
 ---
 
@@ -14,9 +30,10 @@ Built in 5 days during [*Built with Opus 4.7: a Claude Code Hackathon*](https://
 | | |
 |---|---|
 | **Live app** | **[postmortem-mauve.vercel.app](https://postmortem-mauve.vercel.app/)** — gallery, ledger graph, ask panel, 3-min autoplay demo |
+| **Demo video** | **[youtu.be/9nbIVa_jnsU](https://youtu.be/9nbIVa_jnsU)** — 3-min reel, chapter-marked, every feature on camera |
 | **Live API** | **[postmortem-backend.fly.dev](https://postmortem-backend.fly.dev/healthz)** — FastAPI + SSE streaming + DuckDB ledger (EWR region, Fly.io) |
 | **MCP server** | `claude mcp add postmortem -- uv run --project /path/to/backend python -m app.mcp_server` (click **Connect to Claude Code** on the gallery for a one-click copy) |
-| **Stack** | Next.js 16 · FastAPI · DuckDB · Anthropic Opus 4.7 · 1M context · self-check · SSE streaming |
+| **Stack** | Next.js 16 · FastAPI · DuckDB · Anthropic Opus 4.7 · 1M context · adaptive thinking · self-check · SSE streaming |
 | **Hero ledgers** | hono · zustand · next.js · shadcn/ui · self-graphify · supabase — **155 decisions, 1,876 citations, $85** |
 | **License** | MIT |
 
@@ -50,7 +67,7 @@ Sample questions it answers well:
 
 ## Feature tour
 
-The web UI has seven signature interactions. A 3-minute autoplay on the gallery walks through every one — the voiceover script lives at [`docs/DEMO-TTS-SCRIPT.md`](docs/DEMO-TTS-SCRIPT.md).
+The web UI has seven signature interactions. The [3-minute demo video](https://youtu.be/9nbIVa_jnsU) is a guided tour; the autoplay button on the live gallery replays the same reel in your own browser, and the narration script lives at [`docs/DEMO-TTS-SCRIPT.md`](docs/DEMO-TTS-SCRIPT.md).
 
 | Feature | What it does |
 |---|---|
@@ -294,12 +311,16 @@ Full SPEC of the underlying product: [`docs/SPEC.md`](docs/SPEC.md) (locked Day 
 
 ---
 
-## Submission status
+## Shipped
 
-Submission: Sunday, April 26, 2026, 8:00 PM EST.
+Submitted Sunday, April 26, 2026 at 8:00 PM EST · [demo video](https://youtu.be/9nbIVa_jnsU) · [live app](https://postmortem-mauve.vercel.app/) · [backend](https://postmortem-backend.fly.dev/healthz).
 
-Postmortem ships with its own commit history in the ledger — the classifier accepted 6 of its own architectural decisions, and the graph-stitcher traced supersedes chains through the build days. Follow the commits to see how this repo became its own test case.
+Postmortem ships with its own commit history inside its own ledger — the classifier accepted six of this repo's architectural decisions, and the graph-stitcher traced supersedes chains through the build days. Clone it, open the self-graphify ledger, and you can follow exactly how this product became its own test case.
+
+## Credits
+
+Built by [@rahilsinghi](https://github.com/rahilsinghi), paired with **Claude Code + Opus 4.7** end-to-end. Every commit, every spec, and every plan is in the public repo. Voiceover rendered via ElevenLabs. Thanks to the Cerebral Valley × Anthropic team for putting on the hackathon.
 
 ## License
 
-MIT.
+MIT — see [LICENSE](LICENSE).
