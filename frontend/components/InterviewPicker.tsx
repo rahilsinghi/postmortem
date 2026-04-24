@@ -2,7 +2,39 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { useDemo } from "../lib/demo/DemoProvider";
 import { fetchSubjects, type InterviewSubject } from "../lib/interview";
+
+// Stand-in subject list for demo playback so the picker has content without
+// hitting the API. Mirrors the prod shape; kept in-file so fixture tweaks
+// don't require a separate JSON round-trip for the single hero subject.
+const DEMO_SUBJECTS: InterviewSubject[] = [
+  {
+    handle: "yusukebe",
+    avatar_url: "https://github.com/yusukebe.png?size=80",
+    citation_count: 292,
+    decision_count: 59,
+    span_start: "2022-01-07T00:00:00",
+    span_end: "2026-04-04T00:00:00",
+  },
+  {
+    handle: "askorupskyy",
+    avatar_url: "https://github.com/askorupskyy.png?size=80",
+    citation_count: 62,
+    decision_count: 9,
+    span_start: "2023-11-02T00:00:00",
+    span_end: "2025-09-18T00:00:00",
+  },
+  {
+    handle: "usualoma",
+    avatar_url: "https://github.com/usualoma.png?size=80",
+    citation_count: 41,
+    decision_count: 7,
+    span_start: "2022-11-03T00:00:00",
+    span_end: "2026-02-12T00:00:00",
+  },
+];
 
 export function InterviewPicker({
   open,
@@ -17,6 +49,7 @@ export function InterviewPicker({
   onClose: () => void;
   onPick: (handle: string) => void;
 }) {
+  const { isDemo } = useDemo();
   const [subjects, setSubjects] = useState<InterviewSubject[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
@@ -24,10 +57,16 @@ export function InterviewPicker({
 
   useEffect(() => {
     if (!open || subjects !== null) return;
+    if (isDemo) {
+      // Skip the /api/interview/subjects round-trip during playback so the
+      // picker is populated instantly, matching the rehearsed timing.
+      setSubjects(DEMO_SUBJECTS);
+      return;
+    }
     fetchSubjects(owner, repo)
       .then(setSubjects)
       .catch((e) => setError(String(e)));
-  }, [open, owner, repo, subjects]);
+  }, [open, owner, repo, subjects, isDemo]);
 
   const filtered = useMemo(() => {
     if (!subjects) return [];
@@ -48,7 +87,10 @@ export function InterviewPicker({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, filtered, hoverIdx, onClose, onPick]);
 
-  return (
+  // Portal to document.body so ancestor transforms (framer-motion) can't
+  // trap our `fixed inset-0` inside a nested stacking context.
+  if (typeof document === "undefined") return null;
+  const tree = (
     <AnimatePresence>
       {open ? (
         <motion.div
@@ -96,6 +138,7 @@ export function InterviewPicker({
                 <button
                   type="button"
                   key={s.handle}
+                  data-demo-target={`interview-pick-${s.handle}`}
                   className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition ${
                     idx === hoverIdx ? "bg-zinc-900" : "hover:bg-zinc-900/60"
                   }`}
@@ -126,4 +169,5 @@ export function InterviewPicker({
       ) : null}
     </AnimatePresence>
   );
+  return createPortal(tree, document.body);
 }

@@ -78,6 +78,26 @@ export function LedgerPage({
     const chip = document.querySelector<HTMLElement>('.relative.inline-block a[href*="github"]');
     chip?.click();
   });
+  useCueTrigger("open-conflict-finder", () => {
+    document
+      .querySelector<HTMLButtonElement>('[data-demo-target="conflict-finder-open"]')
+      ?.click();
+  });
+  useCueTrigger("close-conflict-finder", () => {
+    document
+      .querySelector<HTMLButtonElement>('[data-demo-target="conflict-finder-close"]')
+      ?.click();
+  });
+  useCueTrigger("open-interview-picker", () => {
+    document
+      .querySelector<HTMLButtonElement>('[data-demo-target="interview-open"]')
+      ?.click();
+  });
+  useCueTrigger("pick-subject-yusukebe", () => {
+    document
+      .querySelector<HTMLButtonElement>('[data-demo-target="interview-pick-yusukebe"]')
+      ?.click();
+  });
 
   // Time Machine: a single cutoff motion value shared by the graph (per-node
   // opacity pipeline) and the scrubber rail. Starts at +Infinity ("present"

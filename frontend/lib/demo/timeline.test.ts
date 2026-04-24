@@ -3,10 +3,13 @@ import { describe, expect, test } from "vitest";
 import { activeCue, progressOfCue, TIMELINE, totalDurationSec } from "./timeline";
 
 describe("timeline", () => {
-  test("TIMELINE has 20 cues summing to ~120 seconds (web segment of combined 3min demo)", () => {
-    expect(TIMELINE.length).toBe(20);
-    expect(Math.round(totalDurationSec())).toBeGreaterThanOrEqual(115);
-    expect(Math.round(totalDurationSec())).toBeLessThanOrEqual(125);
+  test("TIMELINE sums to ~150 seconds (web segment of combined 3min demo)", () => {
+    // The reel now covers gallery → ledger → ask + X-Ray → impact →
+    // conflicts → ghost interview → terminal hand-off. Actual cue count
+    // and exact duration can flex within a tight band as we tune pacing.
+    expect(TIMELINE.length).toBeGreaterThanOrEqual(20);
+    expect(Math.round(totalDurationSec())).toBeGreaterThanOrEqual(145);
+    expect(Math.round(totalDurationSec())).toBeLessThanOrEqual(155);
   });
 
   test("activeCue returns null before play", () => {

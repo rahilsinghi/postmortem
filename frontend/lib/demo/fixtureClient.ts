@@ -4,6 +4,7 @@ import type { IngestEvent, IngestHandlers } from "../ingest";
 import type {
   QueryEvents,
   QueryPhase,
+  ReasoningEvent,
   SelfCheckResult,
   StatsEvent,
   SubgraphEvent,
@@ -82,6 +83,9 @@ export function fakeStartQuery(
           break;
         case "thought":
           handlers.onThought?.(ev.data as ThoughtEvent);
+          break;
+        case "reasoning":
+          handlers.onReasoning?.(ev.data as ReasoningEvent);
           break;
         case "subgraph":
           handlers.onSubgraph?.(ev.data as SubgraphEvent);

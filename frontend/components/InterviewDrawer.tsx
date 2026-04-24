@@ -2,11 +2,73 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Decision } from "../lib/api";
+import { useDemo } from "../lib/demo/DemoProvider";
 import { askFollowup, startInterview, type SubjectMeta } from "../lib/interview";
 import { useInterview } from "../lib/InterviewProvider";
 import { useReducedMotion } from "../lib/motion";
 import { InterviewBubble } from "./InterviewBubble";
+
+/** Fixture event shape written by scripts/freeze-interview-fixture.py. */
+type FixtureEvent = { ts_ms: number; event: string; data: unknown };
+
+/**
+ * Replay a captured interview SSE stream into the same dispatch shape the
+ * live `startInterview` drives. Used only while the demo provider reports
+ * `isDemo === true`; production playback is untouched.
+ */
+function replayInterviewFixture(
+  subject: string,
+  onMeta: (m: SubjectMeta) => void,
+  dispatch: ReturnType<typeof useInterview>["dispatch"],
+): () => void {
+  const timers: ReturnType<typeof setTimeout>[] = [];
+  let cancelled = false;
+
+  fetch(`/demo/hono-interview-${subject}.json`, { cache: "no-store" })
+    .then((r) => r.json() as Promise<{ events: FixtureEvent[] }>)
+    .then((body) => {
+      if (cancelled) return;
+      for (const ev of body.events) {
+        const id = setTimeout(() => {
+          if (cancelled) return;
+          switch (ev.event) {
+            case "subject_meta":
+              onMeta(ev.data as SubjectMeta);
+              break;
+            case "exchange_start": {
+              const p = ev.data as { index: number; question: string };
+              dispatch({ type: "exchange_start", index: p.index, question: p.question });
+              break;
+            }
+            case "exchange_delta": {
+              const p = ev.data as { index: number; text_delta: string };
+              dispatch({ type: "exchange_delta", index: p.index, text: p.text_delta });
+              break;
+            }
+            case "exchange_end": {
+              const p = ev.data as { index: number };
+              dispatch({ type: "exchange_end", index: p.index });
+              break;
+            }
+            case "script_end":
+              dispatch({ type: "script_end" });
+              break;
+          }
+        }, ev.ts_ms);
+        timers.push(id);
+      }
+    })
+    .catch((err) => {
+      if (!cancelled) dispatch({ type: "error", message: String(err) });
+    });
+
+  return () => {
+    cancelled = true;
+    for (const id of timers) clearTimeout(id);
+  };
+}
 
 export function InterviewDrawer({
   owner,
@@ -18,6 +80,7 @@ export function InterviewDrawer({
   decisions: Decision[];
 }) {
   const { state, close, toggleCollapse, dispatch } = useInterview();
+  const { isDemo } = useDemo();
   const reduced = useReducedMotion();
   const [meta, setMeta] = useState<SubjectMeta | null>(null);
   const followInputRef = useRef<HTMLInputElement>(null);
@@ -29,9 +92,13 @@ export function InterviewDrawer({
     if (el) el.scrollTop = el.scrollHeight;
   }, [state.exchanges, state.followupAnswer]);
 
-  // Open an EventSource when a subject is loaded.
+  // Open an EventSource when a subject is loaded. In demo mode, replay a
+  // captured fixture so playback is deterministic and API-free.
   useEffect(() => {
     if (!state.subject || state.status !== "loading_script") return;
+    if (isDemo) {
+      return replayInterviewFixture(state.subject, setMeta, dispatch);
+    }
     const es = startInterview(owner, repo, state.subject, {
       onSubjectMeta: setMeta,
       onExchangeStart: (p) =>
@@ -43,7 +110,7 @@ export function InterviewDrawer({
       onError: (m) => dispatch({ type: "error", message: m }),
     });
     return () => es.close();
-  }, [owner, repo, state.subject, state.status, dispatch]);
+  }, [owner, repo, state.subject, state.status, dispatch, isDemo]);
 
   if (!state.subject) return null;
 
@@ -67,7 +134,12 @@ export function InterviewDrawer({
     if (followInputRef.current) followInputRef.current.value = "";
   };
 
-  return (
+  // Portal to document.body. The ledger toolbar ancestors include
+  // framer-motion layouts whose transforms would otherwise convert our
+  // `fixed right-0 top-0` into position-relative-to-the-toolbar, and the
+  // drawer would render inline instead of docking the viewport edge.
+  if (typeof document === "undefined") return null;
+  const tree = (
     <motion.aside
       aria-label={`interview with @${state.subject}`}
       initial={reduced ? false : { x: 40 }}
@@ -210,4 +282,5 @@ export function InterviewDrawer({
       )}
     </motion.aside>
   );
+  return createPortal(tree, document.body);
 }

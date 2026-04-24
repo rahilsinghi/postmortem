@@ -1,0 +1,357 @@
+{
+  "events": [
+    {
+      "ts_ms": 100,
+      "event": "subject_meta",
+      "data": {
+        "handle": "yusukebe",
+        "avatar_url": "https://github.com/yusukebe.png?size=80",
+        "decision_count": 59,
+        "citation_count": 292
+      }
+    },
+    {
+      "ts_ms": 600,
+      "event": "exchange_start",
+      "data": {
+        "index": 0,
+        "question": "What's the decision in Hono you're most associated with \u2014 the one you'd point to first?"
+      }
+    },
+    {
+      "ts_ms": 1000,
+      "event": "exchange_delta",
+      "data": {
+        "index": 0,
+        "text_delta": "The WebSocket helper is one I pushed hard on, where we ship per-runtime adapters exporting `upgradeWebSocket` from each runtime's module (pa"
+      }
+    },
+    {
+      "ts_ms": 1360,
+      "event": "exchange_delta",
+      "data": {
+        "index": 0,
+        "text_delta": "raphrased \u2014 see [PR #2265]). I argued against a runtime-neutral `hono/ws` layer: \"In the case of your proposed API, it makes sense if the `u"
+      }
+    },
+    {
+      "ts_ms": 1720,
+      "event": "exchange_delta",
+      "data": {
+        "index": 0,
+        "text_delta": "pgradeWebSocket` exported from `'hono/ws'` has a lot of common processes. However, its implementation varies widely from runtime to runtime,"
+      }
+    },
+    {
+      "ts_ms": 2080,
+      "event": "exchange_delta",
+      "data": {
+        "index": 0,
+        "text_delta": " so I think the current implementation where `hono/ws` exports only type `UpgradeWebSocket` is fine.\" [PR #1974823229, @yusukebe, 2024-03-05"
+      }
+    },
+    {
+      "ts_ms": 2440,
+      "event": "exchange_delta",
+      "data": {
+        "index": 0,
+        "text_delta": "]. We also declined to embed CrossWS because \"our policy is 'not to depend on external libraries'\" [PR #1967301454, @yusukebe, 2024-03-05]."
+      }
+    },
+    {
+      "ts_ms": 2800,
+      "event": "exchange_end",
+      "data": {
+        "index": 0
+      }
+    },
+    {
+      "ts_ms": 3400,
+      "event": "exchange_start",
+      "data": {
+        "index": 1,
+        "question": "On the bundler issue with `cloudflare:workers`, why did you reject the magic-comment approach that other libraries use?"
+      }
+    },
+    {
+      "ts_ms": 3800,
+      "event": "exchange_delta",
+      "data": {
+        "index": 1,
+        "text_delta": "\"I like this approach rather than [the approach in the comment](https://github.com/honojs"
+      }
+    },
+    {
+      "ts_ms": 4160,
+      "event": "exchange_delta",
+      "data": {
+        "index": 1,
+        "text_delta": "/hono/pull/4234#pullrequestreview-2941954213), because the implementation should not have"
+      }
+    },
+    {
+      "ts_ms": 4520,
+      "event": "exchange_delta",
+      "data": {
+        "index": 1,
+        "text_delta": " these bundler-specific words like `@vite-ignore`.\" [PR #2989200103, @yusukebe, 2025-06-1"
+      }
+    },
+    {
+      "ts_ms": 4880,
+      "event": "exchange_delta",
+      "data": {
+        "index": 1,
+        "text_delta": "9]. Assigning `'cloudflare:workers'` to a variable evades the bundler scheme-resolution c"
+      }
+    },
+    {
+      "ts_ms": 5240,
+      "event": "exchange_delta",
+      "data": {
+        "index": 1,
+        "text_delta": "heck without leaking Vite or webpack vocabulary into core (paraphrased \u2014 see [PR #4234])."
+      }
+    },
+    {
+      "ts_ms": 5600,
+      "event": "exchange_end",
+      "data": {
+        "index": 1
+      }
+    },
+    {
+      "ts_ms": 6200,
+      "event": "exchange_start",
+      "data": {
+        "index": 2,
+        "question": "Can you walk through a review where you pushed back on a contributor's proposed shape?"
+      }
+    },
+    {
+      "ts_ms": 6600,
+      "event": "exchange_delta",
+      "data": {
+        "index": 2,
+        "text_delta": "On the AWS Lambda binary content-type option, the contributor proposed `contentTypesAsBinary: string[]`, and I"
+      }
+    },
+    {
+      "ts_ms": 6960,
+      "event": "exchange_delta",
+      "data": {
+        "index": 2,
+        "text_delta": " suggested: \"How about adding the following type or replacing `string[]`? `(contentType: string) => boolean) |"
+      }
+    },
+    {
+      "ts_ms": 7320,
+      "event": "exchange_delta",
+      "data": {
+        "index": 2,
+        "text_delta": " undefined`\" [PR #2174077898, @yusukebe, 2025-08-06]. A callback gives users the extension point the array nev"
+      }
+    },
+    {
+      "ts_ms": 7680,
+      "event": "exchange_delta",
+      "data": {
+        "index": 2,
+        "text_delta": "er could (paraphrased \u2014 see [PR #4250]). I did something similar on the CSRF PR, where I pushed to narrow `sec"
+      }
+    },
+    {
+      "ts_ms": 8040,
+      "event": "exchange_delta",
+      "data": {
+        "index": 2,
+        "text_delta": "FetchSite` away from loose `string | string[]` to the four actual values (paraphrased \u2014 see [PR #2281702926])."
+      }
+    },
+    {
+      "ts_ms": 8400,
+      "event": "exchange_end",
+      "data": {
+        "index": 2
+      }
+    },
+    {
+      "ts_ms": 9000,
+      "event": "exchange_start",
+      "data": {
+        "index": 3,
+        "question": "Was there a trade-off you accepted reluctantly?"
+      }
+    },
+    {
+      "ts_ms": 9400,
+      "event": "exchange_delta",
+      "data": {
+        "index": 3,
+        "text_delta": "Yes \u2014 on propagating middleware response types through RPC, I laid it out as a choice: \"So, we should choose. 1. Make them behave a"
+      }
+    },
+    {
+      "ts_ms": 9760,
+      "event": "exchange_delta",
+      "data": {
+        "index": 3,
+        "text_delta": "s expected 2. Keep the performance. Both are important. ... I think we can accept this PR, though bringing the performance degradat"
+      }
+    },
+    {
+      "ts_ms": 10120,
+      "event": "exchange_delta",
+      "data": {
+        "index": 3,
+        "text_delta": "ion since making consistency is significant, and we may resolve the performance issue in other ways.\" [PR #3375818109, @yusukebe, 2"
+      }
+    },
+    {
+      "ts_ms": 10480,
+      "event": "exchange_delta",
+      "data": {
+        "index": 3,
+        "text_delta": "025-10-15]. I had made a similar call earlier on ResponseInit: \"So I think it is okay to merge it, ignoring the performance issue. "
+      }
+    },
+    {
+      "ts_ms": 10840,
+      "event": "exchange_delta",
+      "data": {
+        "index": 3,
+        "text_delta": "As for the performance of TypeScript, it is ideal to optimize it as a separate issue.\" [PR #2562229904, @yusukebe, 2024-12-26]."
+      }
+    },
+    {
+      "ts_ms": 11200,
+      "event": "exchange_end",
+      "data": {
+        "index": 3
+      }
+    },
+    {
+      "ts_ms": 11800,
+      "event": "exchange_start",
+      "data": {
+        "index": 4,
+        "question": "Was there a decision that superseded an earlier approach you'd argued for?"
+      }
+    },
+    {
+      "ts_ms": 12200,
+      "event": "exchange_delta",
+      "data": {
+        "index": 4,
+        "text_delta": "On request cloning, the first instinct was to clone inside HonoRequest, and I rejected that: \"Why I didn't implement cloning the request is t"
+      }
+    },
+    {
+      "ts_ms": 12560,
+      "event": "exchange_delta",
+      "data": {
+        "index": 4,
+        "text_delta": "hat it will introduce significant performance degradation.\" [PR #3255686168, @yusukebe]. A `new()` reconstruction method was also proposed, a"
+      }
+    },
+    {
+      "ts_ms": 12920,
+      "event": "exchange_delta",
+      "data": {
+        "index": 4,
+        "text_delta": "nd I said \"Adding a `new()` function is a great idea that I also think is similar! And the implementation seems to be fine. But it's not good"
+      }
+    },
+    {
+      "ts_ms": 13280,
+      "event": "exchange_delta",
+      "data": {
+        "index": 4,
+        "text_delta": " that the logic/code has increased. The core object, `HonoRequest`, should be simple and small.\" [PR #3296637257, @yusukebe]. We landed on a "
+      }
+    },
+    {
+      "ts_ms": 13640,
+      "event": "exchange_delta",
+      "data": {
+        "index": 4,
+        "text_delta": "standalone `cloneRawRequest` utility in `hono/request` instead \u2014 \"Keeping the structure simple is important.\" [PR #3379419848, @yusukebe]."
+      }
+    },
+    {
+      "ts_ms": 14000,
+      "event": "exchange_end",
+      "data": {
+        "index": 4
+      }
+    },
+    {
+      "ts_ms": 14600,
+      "event": "exchange_start",
+      "data": {
+        "index": 5,
+        "question": "Anything you flagged as follow-up but deliberately did not ship?"
+      }
+    },
+    {
+      "ts_ms": 15000,
+      "event": "exchange_delta",
+      "data": {
+        "index": 5,
+        "text_delta": "On the etag `generateDigest` option, a stream-based variant came up and I scoped it out: \"I fee"
+      }
+    },
+    {
+      "ts_ms": 15360,
+      "event": "exchange_delta",
+      "data": {
+        "index": 5,
+        "text_delta": "l that `generateDigestStream` is outside the scope of this PR. So, how about we implement only "
+      }
+    },
+    {
+      "ts_ms": 15720,
+      "event": "exchange_delta",
+      "data": {
+        "index": 5,
+        "text_delta": "`generateDigest` in this PR?\" [PR #2630365311, @yusukebe, 2025-02-03]. Similarly on the MCP-dri"
+      }
+    },
+    {
+      "ts_ms": 16080,
+      "event": "exchange_delta",
+      "data": {
+        "index": 5,
+        "text_delta": "ven bearerAuth work, I explicitly deferred the parallel JWT/JWK changes: \"We may need to apply "
+      }
+    },
+    {
+      "ts_ms": 16440,
+      "event": "exchange_delta",
+      "data": {
+        "index": 5,
+        "text_delta": "similar changes to JWT/JWK, but we can do them later.\" [PR #3471756303, @yusukebe, 2025-10-31]."
+      }
+    },
+    {
+      "ts_ms": 16800,
+      "event": "exchange_end",
+      "data": {
+        "index": 5
+      }
+    },
+    {
+      "ts_ms": 17400,
+      "event": "script_end",
+      "data": {
+        "usage": {
+          "input_tokens": 42158,
+          "output_tokens": 1511,
+          "cache_read_input_tokens": 0
+        }
+      }
+    }
+  ],
+  "total_ms": 17400,
+  "event_count": 44
+}
