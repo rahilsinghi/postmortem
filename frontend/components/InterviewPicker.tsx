@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useDemo } from "../lib/demo/DemoProvider";
 import { fetchSubjects, type InterviewSubject } from "../lib/interview";
 
@@ -86,7 +87,10 @@ export function InterviewPicker({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, filtered, hoverIdx, onClose, onPick]);
 
-  return (
+  // Portal to document.body so ancestor transforms (framer-motion) can't
+  // trap our `fixed inset-0` inside a nested stacking context.
+  if (typeof document === "undefined") return null;
+  const tree = (
     <AnimatePresence>
       {open ? (
         <motion.div
@@ -165,4 +169,5 @@ export function InterviewPicker({
       ) : null}
     </AnimatePresence>
   );
+  return createPortal(tree, document.body);
 }

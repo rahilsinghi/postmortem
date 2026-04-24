@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { type Conflict, type ConflictReport, fetchConflicts } from "../lib/conflicts";
 import { useDemo } from "../lib/demo/DemoProvider";
 import { useReducedMotion } from "../lib/motion";
@@ -63,7 +64,12 @@ export function ConflictFinderPanel({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  return (
+  // Mount the modal on document.body via a portal so ancestor elements with
+  // `transform` (framer-motion often applies one) can't trap our `fixed`
+  // positioning inside their stacking context. Without this the whole modal
+  // renders in-flow inside the toolbar instead of covering the viewport.
+  if (typeof document === "undefined") return null;
+  const tree = (
     <AnimatePresence>
       {open ? (
         <motion.div
@@ -142,6 +148,7 @@ export function ConflictFinderPanel({
       ) : null}
     </AnimatePresence>
   );
+  return createPortal(tree, document.body);
 }
 
 const SEVERITY_PALETTE: Record<

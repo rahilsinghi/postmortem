@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Decision } from "../lib/api";
 import { useDemo } from "../lib/demo/DemoProvider";
 import { askFollowup, startInterview, type SubjectMeta } from "../lib/interview";
@@ -133,7 +134,12 @@ export function InterviewDrawer({
     if (followInputRef.current) followInputRef.current.value = "";
   };
 
-  return (
+  // Portal to document.body. The ledger toolbar ancestors include
+  // framer-motion layouts whose transforms would otherwise convert our
+  // `fixed right-0 top-0` into position-relative-to-the-toolbar, and the
+  // drawer would render inline instead of docking the viewport edge.
+  if (typeof document === "undefined") return null;
+  const tree = (
     <motion.aside
       aria-label={`interview with @${state.subject}`}
       initial={reduced ? false : { x: 40 }}
@@ -276,4 +282,5 @@ export function InterviewDrawer({
       )}
     </motion.aside>
   );
+  return createPortal(tree, document.body);
 }
