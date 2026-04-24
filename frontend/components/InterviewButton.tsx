@@ -33,6 +33,7 @@ export function InterviewButton({
       <>
         <button
           type="button"
+          data-demo-target="interview-open"
           onClick={click}
           className="inline-flex items-center gap-1.5 rounded-md border border-[#d4a24c]/50 bg-[#d4a24c]/[0.05] px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-[#d4a24c] transition hover:border-[#d4a24c] hover:bg-[#d4a24c]/[0.12]"
         >

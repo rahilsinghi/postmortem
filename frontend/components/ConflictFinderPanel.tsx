@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { type Conflict, type ConflictReport, fetchConflicts } from "../lib/conflicts";
+import { useDemo } from "../lib/demo/DemoProvider";
 import { useReducedMotion } from "../lib/motion";
 
 /**
@@ -25,6 +26,7 @@ export function ConflictFinderPanel({
   onClose: () => void;
 }) {
   const reduced = useReducedMotion();
+  const { isDemo } = useDemo();
   const [report, setReport] = useState<ConflictReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,7 +36,14 @@ export function ConflictFinderPanel({
     if (report && report.repo === repo) return;
     setError(null);
     setLoading(true);
-    fetchConflicts(repo)
+    // In demo mode, replay the captured conflicts fixture so playback has
+    // zero API cost and is identical on every run. The real endpoint runs
+    // unchanged outside the demo.
+    const loader = isDemo
+      ? fetch("/demo/hono-conflicts.json", { cache: "no-store" })
+          .then((r) => r.json() as Promise<ConflictReport>)
+      : fetchConflicts(repo);
+    loader
       .then((r) => {
         setReport(r);
         setLoading(false);
@@ -43,7 +52,7 @@ export function ConflictFinderPanel({
         setError(String(e));
         setLoading(false);
       });
-  }, [open, repo, report]);
+  }, [open, repo, report, isDemo]);
 
   useEffect(() => {
     if (!open) return;
@@ -88,6 +97,7 @@ export function ConflictFinderPanel({
               ) : null}
               <button
                 type="button"
+                data-demo-target="conflict-finder-close"
                 className="ml-auto font-mono text-[11px] text-zinc-500 hover:text-zinc-200"
                 onClick={onClose}
               >
