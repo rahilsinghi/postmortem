@@ -7,6 +7,7 @@ import { Group, Panel, type PanelImperativeHandle, Separator } from "react-resiz
 
 import { AskPanel } from "../../../../components/AskPanel";
 import { DecisionSidePanel } from "../../../../components/DecisionSidePanel";
+import { ConflictFinderButton } from "../../../../components/ConflictFinderButton";
 import { InterviewButton } from "../../../../components/InterviewButton";
 import { InterviewDrawer } from "../../../../components/InterviewDrawer";
 import { LedgerGraph } from "../../../../components/LedgerGraph";
@@ -166,6 +167,7 @@ export function LedgerPage({
           </span>
           <span className="h-4 w-px bg-zinc-800" />
           <InterviewButton variant="toolbar" owner={owner} repo={repo} />
+          <ConflictFinderButton repo={`${owner}/${repo}`} />
           <span className="h-4 w-px bg-zinc-800" />
           <button
             type="button"

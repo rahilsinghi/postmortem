@@ -112,6 +112,18 @@ CREATE TABLE IF NOT EXISTS interviews (
 );
 CREATE INDEX IF NOT EXISTS idx_interviews_repo
     ON interviews(repo_owner, repo_name);
+
+-- Conflict Finder cache: one row per repo. An Opus pass scans the full
+-- ledger for decisions that contradict across supersedes chains or within
+-- overlapping categories. Demo-cheap — re-opening the panel replays the
+-- cached JSON rather than re-paying the extractor call.
+CREATE TABLE IF NOT EXISTS conflicts_cache (
+    repo          VARCHAR NOT NULL PRIMARY KEY,
+    generated_at  TIMESTAMP NOT NULL,
+    model         VARCHAR NOT NULL,
+    conflicts_json JSON NOT NULL,
+    token_usage   JSON NOT NULL
+);
 """
 
 

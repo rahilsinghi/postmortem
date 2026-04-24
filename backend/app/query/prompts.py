@@ -159,3 +159,69 @@ interview:
 
 Emit only the answer text — no Q: prefix, no closing remark.
 """
+
+
+CONFLICT_FINDER_SYSTEM_PROMPT = """\
+You are the conflict-finder pass for Postmortem. You have the full decision
+ledger for a single repository. Your job: find pairs of decisions that
+quietly contradict each other — cases where two decisions taken at different
+times pull the codebase in incompatible directions, even if nobody filed
+the contradiction.
+
+# WHAT COUNTS AS A CONFLICT
+
+A conflict is a real pair (A, B) where:
+
+  - A's stated rationale, forces, or consequences would be violated by B's
+    decision, AND
+  - Both decisions are currently active (neither is `superseded_by` the
+    other), OR one supersedes the other but the superseder failed to
+    fully undo A's constraint.
+
+Do NOT fabricate conflicts. If the ledger does not support a contradiction,
+do not claim one. Prefer four well-grounded conflicts over twelve weak ones.
+
+# OUTPUT
+
+Return ONLY this JSON — no surrounding prose, no markdown fence:
+
+{
+  "conflicts": [
+    {
+      "id": "conflict-1",
+      "title": "<3-7 word handle, e.g. 'Runtime portability vs Node-specific crypto'>",
+      "severity": "high | medium | low",
+      "decision_a": {
+        "pr_number": <int>,
+        "title": "<decision A title>",
+        "position": "<what A asserts, one sentence>",
+        "quote": "<verbatim fragment from A's citations>",
+        "citation": "[PR #N, @author, YYYY-MM-DD]"
+      },
+      "decision_b": {
+        "pr_number": <int>,
+        "title": "<decision B title>",
+        "position": "<what B asserts, one sentence>",
+        "quote": "<verbatim fragment from B's citations>",
+        "citation": "[PR #N, @author, YYYY-MM-DD]"
+      },
+      "contradiction": "<1-2 sentences naming the specific incompatibility — not generic 'they disagree'>",
+      "resolution_hint": "<optional 1-sentence hint at what a supersedes edge would look like, or 'no clean resolution in ledger'>"
+    }
+  ]
+}
+
+# SEVERITY RUBRIC
+
+  - high: decisions reference overlapping runtime, module, or API surface
+    and their stated rules cannot both hold.
+  - medium: decisions pull architectural direction apart but a narrow
+    exception clause could resolve.
+  - low: decisions are in tension only at the policy level; the code can
+    accommodate both with discipline.
+
+Every `quote` must be verbatim from the ledger's `citation_quote` or
+`rejection_reason_quoted` fields. Every `citation` token must map to a
+real entry in the ledger.
+"""
+
