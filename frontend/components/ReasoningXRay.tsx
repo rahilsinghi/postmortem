@@ -8,7 +8,7 @@ import { useReducedMotion } from "../lib/motion";
 export type TraceStep = {
   id: string;
   timestamp: number; // ms since stream start
-  kind: "phase" | "citation" | "thought";
+  kind: "phase" | "citation" | "thought" | "reasoning";
   text: string;
 };
 
@@ -136,9 +136,14 @@ export function ReasoningXRay({ steps, outputTokens, maxTokens, done }: Props) {
                       ? "text-[#d4a24c]"
                       : s.kind === "phase"
                         ? "text-cyan-200/90"
-                        : "text-cyan-100"
+                        : s.kind === "reasoning"
+                          ? "italic text-cyan-100/70"
+                          : "text-cyan-100"
                   }
                 >
+                  {s.kind === "reasoning" ? (
+                    <span className="mr-1 text-cyan-400/80">thinking ›</span>
+                  ) : null}
                   {s.text}
                 </span>
               </motion.li>

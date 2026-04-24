@@ -54,6 +54,10 @@ export type ThoughtEvent = {
   label: string;
 };
 
+export type ReasoningEvent = {
+  text: string;
+};
+
 export type QueryEvents = {
   onPhase: (phase: QueryPhase) => void;
   onStats: (stats: StatsEvent) => void;
@@ -63,6 +67,12 @@ export type QueryEvents = {
   onError: (message: string) => void;
   onSubgraph?: (subgraph: SubgraphEvent) => void;
   onThought?: (thought: ThoughtEvent) => void;
+  /**
+   * Raw Opus extended-thinking tokens streamed as they arrive. Multiple
+   * chunks may arrive per sentence; the Reasoning X-Ray groups consecutive
+   * ones for display.
+   */
+  onReasoning?: (reasoning: ReasoningEvent) => void;
 };
 
 export function startQuery(
@@ -147,6 +157,15 @@ export function startQuery(
       handlers.onThought?.(parsed);
     } catch {
       // ignore — forward-compat: unknown shapes are safe to skip
+    }
+  });
+
+  es.addEventListener("reasoning", (ev) => {
+    try {
+      const parsed = JSON.parse((ev as MessageEvent<string>).data) as ReasoningEvent;
+      handlers.onReasoning?.(parsed);
+    } catch {
+      // ignore — forward-compat
     }
   });
 

@@ -41,11 +41,20 @@ SELF_CHECK_MODEL = "claude-opus-4-7"
 QUERY_MAX_TOKENS = 4096
 SELF_CHECK_MAX_TOKENS = 4096
 
+# Opus 4.7 only supports `thinking.type = "adaptive"`; the "enabled" shape
+# (budget_tokens) 400s on this model. The model also defaults to
+# `display: "omitted"` which silently strips thinking text — we opt into
+# "summarized" so the tokens actually reach the `reasoning` SSE event.
+
 
 @dataclass
 class QueryOptions:
     effort: str = "high"  # "high" | "xhigh"
     self_check: bool = True
+    # When True (default), ask Opus to emit its reasoning tokens so the
+    # Reasoning X-Ray can show the model's actual thinking, not just the
+    # deterministic backend phase labels.
+    extended_thinking: bool = True
 
 
 def _sse_event(event: str, data: Any) -> str:
@@ -148,18 +157,47 @@ async def stream_query(
         "cache_creation_input_tokens": 0,
         "cache_read_input_tokens": 0,
     }
+    stream_kwargs: dict[str, Any] = {
+        "model": QUERY_MODEL,
+        "max_tokens": QUERY_MAX_TOKENS,
+        "system": system_blocks,
+        "messages": [{"role": "user", "content": user_text}],
+    }
+    if opts.extended_thinking:
+        stream_kwargs["thinking"] = {"type": "adaptive", "display": "summarized"}
+        # Opus 4.7's adaptive thinking only surfaces thinking_delta events
+        # at `effort: "max"` — `high` and `xhigh` both silently skip the
+        # thinking block on ledger-grounded lookups. The Reasoning X-Ray
+        # is the product's showpiece for the "Keep Thinking" prize, so
+        # we pin the model to `max` whenever extended_thinking is on.
+        # Cost impact is bounded by the 4096-token max_tokens cap; tracker
+        # records real usage so the UI still shows accurate cost.
+        stream_kwargs["output_config"] = {"effort": "max"}
     try:
-        async with client.messages.stream(
-            model=QUERY_MODEL,
-            max_tokens=QUERY_MAX_TOKENS,
-            system=system_blocks,
-            messages=[{"role": "user", "content": user_text}],
-        ) as stream:
-            async for text_chunk in stream.text_stream:
-                if not text_chunk:
+        async with client.messages.stream(**stream_kwargs) as stream:
+            # Iterate raw stream events so we can separate thinking_delta
+            # from text_delta. `stream.text_stream` only yields the final
+            # answer text — the thinking tokens live on content_block_delta
+            # events with delta.type == "thinking_delta".
+            async for event in stream:
+                etype = getattr(event, "type", None)
+                if etype != "content_block_delta":
                     continue
-                collected_text.append(text_chunk)
-                yield _sse_event("delta", {"text": text_chunk})
+                delta = getattr(event, "delta", None)
+                dtype = getattr(delta, "type", None)
+                if dtype == "text_delta":
+                    text_chunk = getattr(delta, "text", "") or ""
+                    if not text_chunk:
+                        continue
+                    collected_text.append(text_chunk)
+                    yield _sse_event("delta", {"text": text_chunk})
+                elif dtype == "thinking_delta":
+                    thinking_chunk = getattr(delta, "thinking", "") or ""
+                    if not thinking_chunk:
+                        continue
+                    # Stream the raw reasoning tokens so the X-Ray can
+                    # render Opus's actual thought process, chunk by chunk.
+                    yield _sse_event("reasoning", {"text": thinking_chunk})
 
             final_message = await stream.get_final_message()
             usage = final_message.usage

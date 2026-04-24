@@ -6,17 +6,36 @@ from app.ledger.load import LedgerSnapshot
 from app.query.engine import QueryOptions, stream_query
 
 
+class _FakeTextDelta:
+    """Mimics Anthropic SDK RawContentBlockDeltaEvent.delta for text_delta."""
+
+    def __init__(self, text: str) -> None:
+        self.type = "text_delta"
+        self.text = text
+
+
+class _FakeContentBlockDelta:
+    """Mimics the SDK's raw stream event shape."""
+
+    def __init__(self, text: str) -> None:
+        self.type = "content_block_delta"
+        self.delta = _FakeTextDelta(text)
+
+
 class _FakeAsyncStream:
+    """Async-iterable stream that yields raw events (stream-query now walks
+    `async for event in stream` to separate text_delta from thinking_delta
+    blocks, matching the real SDK shape)."""
+
     async def __aenter__(self) -> _FakeAsyncStream:
         return self
 
     async def __aexit__(self, *_: Any) -> None:
         return None
 
-    @property
-    def text_stream(self) -> Any:
+    def __aiter__(self) -> Any:
         async def gen() -> Any:
-            yield "## Answer\nok [PR #1, @alice, 2024-01-01]\n"
+            yield _FakeContentBlockDelta("## Answer\nok [PR #1, @alice, 2024-01-01]\n")
 
         return gen()
 

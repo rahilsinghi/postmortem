@@ -74,6 +74,36 @@ export function AskPanel({
     setXraySteps((prev) => [...prev, { id: `${kind}-${prev.length}`, timestamp: ts, kind, text }]);
   }, []);
 
+  /**
+   * Extended-thinking chunks arrive token-by-token. Appending each to its
+   * own TraceStep would flood the X-Ray with dozens of one-word lines, so
+   * we concatenate consecutive reasoning chunks into the last reasoning
+   * step and only start a new one when another event kind breaks the run.
+   * A soft cap at ~140 chars per step keeps each line readable; after the
+   * cap we roll a new step so paragraphs of thinking split naturally.
+   */
+  const appendReasoning = useCallback((chunk: string) => {
+    const ts = performance.now() - streamStartRef.current;
+    setXraySteps((prev) => {
+      const last = prev[prev.length - 1];
+      const trimmed = chunk.replace(/\s+/g, " ");
+      if (last && last.kind === "reasoning" && last.text.length < 140) {
+        const next = prev.slice(0, -1);
+        next.push({ ...last, text: (last.text + trimmed).slice(0, 400) });
+        return next;
+      }
+      return [
+        ...prev,
+        {
+          id: `reasoning-${prev.length}`,
+          timestamp: ts,
+          kind: "reasoning",
+          text: trimmed.trimStart(),
+        },
+      ];
+    });
+  }, []);
+
   const run = useCallback(
     (q: string, runMode: "query" | "impact" = mode) => {
       if (!q.trim()) return;
@@ -123,6 +153,7 @@ export function AskPanel({
         onError: setError,
         onSubgraph: (sub) => onSubgraph?.(sub.anchor_pr, sub.included_prs),
         onThought: (t) => pushStep("thought", t.label),
+        onReasoning: (r) => appendReasoning(r.text),
       };
 
       if (isDemo) {
@@ -145,7 +176,17 @@ export function AskPanel({
         });
       }
     },
-    [repo, selfCheckEnabled, mode, selectedDecision, onSubgraph, decisions, pushStep, isDemo],
+    [
+      repo,
+      selfCheckEnabled,
+      mode,
+      selectedDecision,
+      onSubgraph,
+      decisions,
+      pushStep,
+      appendReasoning,
+      isDemo,
+    ],
   );
 
   const canRunImpact = selectedDecision !== null && selectedDecision !== undefined;
